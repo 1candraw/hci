@@ -1,0 +1,8 @@
+backend/node_modules
+frontend/node_modules
+
+hci/.env
+backend/src/.env
+frontend/.env
+
+frontend/dist
