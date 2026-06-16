@@ -1,7 +1,7 @@
 /**
  * Fungsi untuk menghitung rekomendasi menggunakan metode SAW (5 Kriteria)
  * @param {Array} alternatives - List data alat berat dari database
- * @param {Object} weights - Bobot dari user (misal: { c1: 0.3, c2: 0.2, c3: 0.2, c4: 0.15, c5: 0.15 })
+ * @param {Object} weights - Bobot dari user (misal: { c1: 0.30, c2: 0.20, c3: 0.20, c4: 0.15, c5: 0.15 })
  */
 const calculateSAW = (alternatives, weights) => {
   if (!alternatives || alternatives.length === 0) return [];
@@ -13,7 +13,10 @@ const calculateSAW = (alternatives, weights) => {
   const galis = alternatives.map(a => Number(a.kedalaman_gali));
   const operasionals = alternatives.map(a => Number(a.berat_operasional));
 
+  // Kriteria Cost: cari nilai minimum
   const minHarga = Math.min(...hargas);
+  
+  // Kriteria Benefit: cari nilai maksimum
   const maxTenaga = Math.max(...tenagas);
   const maxBucket = Math.max(...buckets);
   const maxGali = Math.max(...galis);
@@ -33,15 +36,12 @@ const calculateSAW = (alternatives, weights) => {
     const r5 = Number(alt.berat_operasional) / maxOperasional;
 
     // Hitung Nilai Akhir V (Normalisasi x Bobot)
-    const totalScore = 
+    const finalScore = 
       (r1 * weights.c1) + 
       (r2 * weights.c2) + 
       (r3 * weights.c3) + 
       (r4 * weights.c4) + 
-      (r5 * weights.weights.hasOwnProperty('c5') ? weights.c5 : weights.c5 || 0); 
-      // fleksibel jika total kriteria dikalikan bobot masing-masing
-
-    const finalScore = (r1 * weights.c1) + (r2 * weights.c2) + (r3 * weights.c3) + (r4 * weights.c4) + (r5 * weights.c5);
+      (r5 * weights.c5);
 
     return {
       id: alt.id,
@@ -49,18 +49,24 @@ const calculateSAW = (alternatives, weights) => {
       brand: alt.brand,
       model: alt.model,
       spesifikasi: {
-        harga: alt.harga,
-        tenaga_mesin: alt.tenaga_mesin,
-        kapasitas_bucket: alt.kapasitas_bucket,
-        kedalaman_gali: alt.kedalaman_gali,
-        berat_operasional: alt.berat_operasional
+        harga: Number(alt.harga),
+        tenaga_mesin: Number(alt.tenaga_mesin),
+        kapasitas_bucket: Number(alt.kapasitas_bucket),
+        kedalaman_gali: Number(alt.kedalaman_gali),
+        berat_operasional: Number(alt.berat_operasional)
       },
-      normalisasi: { r1, r2, r3, r4, r5 },
-      skor_akhir: Number(finalScore.toFixed(4)) // 4 angka di belakang koma untuk akurasi data akademik
+      normalisasi: { 
+        r1: Number(r1.toFixed(4)), 
+        r2: Number(r2.toFixed(4)), 
+        r3: Number(r3.toFixed(4)), 
+        r4: Number(r4.toFixed(4)), 
+        r5: Number(r5.toFixed(4)) 
+      },
+      skor_akhir: Number(finalScore.toFixed(4)) // Ambil 4 angka di belakang koma untuk akurasi akademik
     };
   });
 
-  // 3. Urutkan berdasarkan skor tertinggi (Ranking)
+  // 3. Urutkan berdasarkan skor tertinggi ke terendah (Ranking)
   return results.sort((a, b) => b.skor_akhir - a.skor_akhir);
 };
 
