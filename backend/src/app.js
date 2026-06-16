@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/auth.routes');
 const alatBeratRoutes = require('./routes/alatBerat.routes');
+const sawRoutes = require('./routes/saw.routes');
 
 const app = express();
 
@@ -18,5 +19,6 @@ app.get('/', (req, res) => {
 // Nanti semua routes (auth, saw, transaksi) akan di-import di sini
 app.use('/api/auth', authRoutes);
 app.use('/api/alat-berat', alatBeratRoutes);
+app.use('/api/saw', sawRoutes);
 
 module.exports = app;
