@@ -1,5 +1,5 @@
 const dashboardRepository = require('../repositories/dashboard.repository');
-const sawService = require('./saw.service'); // Kita panggil lagi otak SAW-nya
+const sawService = require('./saw.service');
 
 const getDashboardSummary = async () => {
   // 1. Ambil angka statistik dasar
@@ -9,15 +9,14 @@ const getDashboardSummary = async () => {
   let topRekomendasi = [];
   try {
     const sawData = await sawService.getRecommendations();
-    // Gunakan fungsi .slice(0, 3) untuk mengambil juara 1, 2, dan 3 saja
-    topRekomendasi = sawData.rekomendasi.slice(0, 3).map(item => ({
-      peringkat: topRekomendasi.length + 1, // Penomoran otomatis
+    
+    // Perbaikan: Tambahkan parameter 'index' di dalam .map()
+    topRekomendasi = sawData.rekomendasi.slice(0, 3).map((item, index) => ({
+      peringkat: index + 1, // Sekarang urutannya pasti benar (1, 2, 3)
       nama: item.name,
       skor: item.skor_akhir
     }));
   } catch (error) {
-    // Jika data SAW belum cukup, biarkan array topRekomendasi kosong 
-    // agar dashboard tidak ikut error/crash
     console.error("Info: Belum ada data SAW untuk ditampilkan di dashboard.");
   }
 
