@@ -18,7 +18,9 @@ const getAll = async (req, res) => {
 
 const create = async (req, res) => {
   try {
-    const newId = await alatBeratService.addAlatBerat(req.body);
+    const userId = req.user.id;
+    const newId = await alatBeratService.addAlatBerat(req.body, userId);
+    
     res.status(201).json({
       success: true,
       message: 'Alat berat berhasil ditambahkan ke katalog',

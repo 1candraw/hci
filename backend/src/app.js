@@ -3,6 +3,8 @@ const cors = require('cors');
 const authRoutes = require('./routes/auth.routes');
 const alatBeratRoutes = require('./routes/alatBerat.routes');
 const sawRoutes = require('./routes/saw.routes');
+const reportRoutes = require('./routes/report.routes');
+const dashboardRoutes = require('./routes/dashboard.routes')
 
 const app = express();
 
@@ -20,5 +22,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/alat-berat', alatBeratRoutes);
 app.use('/api/saw', sawRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 module.exports = app;

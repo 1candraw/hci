@@ -1,10 +1,11 @@
 const alatBeratRepository = require('../repositories/alatBerat.repository');
+const auditLogService = require('./auditlog.service');
 
 const getAllAlatBerat = async (tipe_katalog) => {
   return await alatBeratRepository.findAll(tipe_katalog);
 };
 
-const addAlatBerat = async (data) => {
+const addAlatBerat = async (data, userId) => {
   // Validasi dasar agar angka spesifikasi penting tidak bernilai negatif
   if (data.harga < 0 || data.kapasitas_bucket < 0) {
     throw new Error('Harga dan spesifikasi teknis tidak boleh bernilai negatif');
@@ -18,6 +19,15 @@ const addAlatBerat = async (data) => {
   };
 
   const newId = await alatBeratRepository.create(alatBeratData);
+
+  await auditLogService.logActivity(
+    userId, 
+    'INSERT', 
+    'alat_berat', 
+    newId, 
+    `Menambahkan alat berat baru: ${data.brand} ${data.model}`
+  );
+
   return newId;
 };
 
