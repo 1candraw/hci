@@ -7,6 +7,7 @@ const reportRoutes = require('./routes/report.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const quotationRoutes = require('./routes/quotation.routes');
 const transactionRoutes = require('./routes/transaction.routes');
+const auditRoutes = require('./routes/audit.routes'); 
 
 const app = express();
 
@@ -28,5 +29,6 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/quotations', quotationRoutes);
 app.use('/api/transaksi', transactionRoutes);
+app.use('/api/audit', auditRoutes); 
 
 module.exports = app;

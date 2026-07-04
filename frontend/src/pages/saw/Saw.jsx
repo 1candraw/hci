@@ -1,3 +1,5 @@
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { useState, useEffect } from 'react';
 import { sawService } from '../../services/saw.service';
 
@@ -10,13 +12,12 @@ const Saw = () => {
     fetchRanking();
   }, []);
 
-const fetchRanking = async () => {
+  const fetchRanking = async () => {
     try {
       setLoading(true);
       setError(''); 
       const result = await sawService.getRekomendasi();
       
-      // Mengambil array dari dalam result.data.rekomendasi
       let dataArray = [];
       if (result && result.data && Array.isArray(result.data.rekomendasi)) {
         dataArray = result.data.rekomendasi;
@@ -25,7 +26,6 @@ const fetchRanking = async () => {
       if (dataArray.length === 0) {
          setError('Perhitungan berhasil, tapi tidak ada data mesin yang dikembalikan.');
       } else {
-        // Copy array lalu sort berdasarkan skor_akhir dari tertinggi ke terendah
         const sortedData = [...dataArray].sort((a, b) => (b.skor_akhir || 0) - (a.skor_akhir || 0));
         setRanking(sortedData);
       }
@@ -38,12 +38,61 @@ const fetchRanking = async () => {
     }
   };
 
-  // Fungsi pembuat medali untuk Top 3
   const getMedal = (index) => {
     if (index === 0) return '🥇';
     if (index === 1) return '🥈';
     if (index === 2) return '🥉';
     return <span style={{ paddingLeft: '8px', color: '#6b7280' }}>{index + 1}</span>;
+  };
+
+  // FUNGSI INI SEKARANG SUDAH DI DALAM KOMPONEN SAW
+  const exportToPDF = () => {
+    if (ranking.length === 0) {
+      alert("Tidak ada data untuk diekspor!");
+      return;
+    }
+
+    const doc = new jsPDF();
+    
+    // Judul Dokumen
+    doc.setFontSize(16);
+    doc.text("Laporan Hasil Analisis Rekomendasi Alat Berat (SAW)", 14, 15);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text("Sistem Pendukung Keputusan - heavy care.id", 14, 22);
+    
+    // Tanggal Cetak
+    const tanggalCetak = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    doc.setFontSize(10);
+    doc.text(`Dicetak pada: ${tanggalCetak}`, 14, 28);
+
+    // Menyiapkan Data Tabel
+    const tableColumn = ["Peringkat", "Nama Unit", "Merek", "Kategori", "Skor Akhir"];
+    const tableRows = [];
+
+    ranking.forEach((item, index) => {
+      const rowData = [
+        index + 1,
+        item.nama_unit || item.name || '-',
+        item.brand || '-',
+        item.kategori || 'Excavator',
+        Number(item.skor_akhir || 0).toFixed(3)
+      ];
+      tableRows.push(rowData);
+    });
+
+    // Menggambar Tabel
+   autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 35,
+      theme: 'grid',
+      styles: { fontSize: 10, cellPadding: 3 },
+      headStyles: { fillColor: [59, 130, 246] } 
+    });
+
+    // Simpan File
+    doc.save("Laporan_Rekomendasi_AlatBerat.pdf");
   };
 
   return (
@@ -53,9 +102,15 @@ const fetchRanking = async () => {
           <h2 style={styles.title}>Analisis Rekomendasi (SAW)</h2>
           <p style={styles.subtitle}>Sistem Pendukung Keputusan Pemilihan Alat Berat</p>
         </div>
-        <button onClick={fetchRanking} style={styles.refreshBtn}>
-          🔄 Hitung Ulang
-        </button>
+        
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={exportToPDF} style={{ ...styles.refreshBtn, backgroundColor: '#ef4444' }}>
+            📄 Export PDF
+          </button>
+          <button onClick={fetchRanking} style={styles.refreshBtn}>
+            🔄 Hitung Ulang
+          </button>
+        </div>
       </div>
 
       {error && <div style={styles.errorBox}>{error}</div>}
@@ -80,9 +135,9 @@ const fetchRanking = async () => {
                   <td style={styles.tdActive}>
                     <span style={{ fontSize: '1.5rem' }}>{getMedal(index)}</span>
                   </td>
-                  <td style={styles.td}><strong>{item.name}</strong></td>
+                  <td style={styles.td}><strong>{item.name || item.nama_unit}</strong></td>
                   <td style={styles.td}>{item.brand}</td>
-                  <td style={styles.td}>{item.kategori}</td>
+                  <td style={styles.td}>{item.kategori || 'Excavator'}</td>
                   <td style={styles.td}>
                     <span style={styles.scoreBadge}>
                       {Number(item.skor_akhir).toFixed(3)}

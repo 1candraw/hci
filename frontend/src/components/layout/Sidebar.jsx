@@ -36,6 +36,14 @@ const Sidebar = () => {
               📝 Transaksi & Quotation
             </Link>
           </li>
+
+          <li>
+            {/* Tambahkan ini di bawah menu transaksi atau laporan */}
+            <Link to="/audit-log" style={location.pathname === '/audit-log' ? styles.activeLink : styles.link}>
+              <span style={{ marginRight: '10px' }}>📋</span>
+              Audit Log
+                </Link>
+          </li>
         </ul>
       </div>
     </aside>

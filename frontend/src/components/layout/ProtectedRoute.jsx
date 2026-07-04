@@ -1,7 +1,8 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
-const ProtectedRoute = () => {
+// 1. Tambahkan parameter allowedRoles di sini
+const ProtectedRoute = ({ allowedRoles }) => {
   const { user, loading } = useAuth();
 
   // Jika sistem masih mengecek localStorage, tampilkan loading sementara
@@ -14,7 +15,14 @@ const ProtectedRoute = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Jika ada user (sudah login), persilakan masuk ke halaman yang dituju
+  // 2. TAMBAHAN BARU: Pengecekan Hak Akses (Role)
+  // Jika rute meminta role tertentu, dan role user tidak ada di dalam daftar itu
+  if (allowedRoles && !allowedRoles.includes(user?.role)) {
+    alert("Akses Ditolak: Anda tidak memiliki hak akses ke halaman ini.");
+    return <Navigate to="/" replace />; // Lempar kembali ke halaman utama (Dashboard)
+  }
+
+  // Jika aman, persilakan masuk ke halaman yang dituju
   return <Outlet />;
 };
 
