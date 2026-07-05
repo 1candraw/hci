@@ -18,7 +18,7 @@ const Sidebar = () => {
           </li>
           <li>
             <Link to="/katalog" style={location.pathname === '/katalog' ? styles.activeLink : styles.link}>
-              🚜 Katalog Alat Berat
+              🚜 Katalog 
             </Link>
           </li>
           
@@ -33,17 +33,24 @@ const Sidebar = () => {
 
           <li>
             <Link to="/transaksi" style={location.pathname === '/transaksi' ? styles.activeLink : styles.link}>
-              📝 Transaksi & Quotation
+              📝 Transaksi 
             </Link>
           </li>
 
           <li>
-            {/* Tambahkan ini di bawah menu transaksi atau laporan */}
+            <Link to="/saw" style={location.pathname === '/saw' ? styles.activeLink : styles.link}>
+            💡 Rekomendasi Alat 
+              </Link>
+          </li>
+
+          <li>
             <Link to="/audit-log" style={location.pathname === '/audit-log' ? styles.activeLink : styles.link}>
               <span style={{ marginRight: '10px' }}>📋</span>
               Audit Log
                 </Link>
           </li>
+
+          
         </ul>
       </div>
     </aside>

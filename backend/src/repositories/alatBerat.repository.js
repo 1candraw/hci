@@ -1,37 +1,42 @@
-const db = require('../config/database');
+const db = require('../config/database'); 
 
-const findAll = async (tipe_katalog) => {
-  let query = 'SELECT * FROM alat_berat';
-  const params = [];
+/**
+ * Mengambil data alat berat dari database
+ * @param {string} tipeKatalog - Kategori sistem (misal: 'saw' atau 'umum')
+ * @param {string} filterKapasitas - 'Semua', '5', '20', atau '30'
+ */
+const findAll = async (tipeKatalog, filterKapasitas) => {
+  // Query disesuaikan persis dengan kolom di tabel alat_berat milikmu
+  let query = `
+    SELECT 
+      id, 
+      name, 
+      brand, 
+      model,
+      harga, 
+      tenaga_mesin, 
+      kapasitas_bucket, 
+      kedalaman_gali, 
+      berat_operasional, 
+      kapasitas_ton 
+    FROM alat_berat 
+    WHERE tipe_katalog = ?
+  `;
+  
+  // Parameter pertama pasti 'saw' sesuai lemparan dari service
+  const queryParams = [tipeKatalog]; 
 
-  // Jika ada filter tipe_katalog ('saw' atau 'umum')
-  if (tipe_katalog) {
-    query += ' WHERE tipe_katalog = ?';
-    params.push(tipe_katalog);
+  // Terapkan Filter Tonase (jika user memilih kelas spesifik)
+  if (filterKapasitas && filterKapasitas !== 'Semua') {
+    query += " AND kapasitas_ton = ?";
+    queryParams.push(filterKapasitas);
   }
 
-  const [rows] = await db.query(query, params);
+  // Eksekusi query
+  const [rows] = await db.query(query, queryParams);
   return rows;
 };
 
-const create = async (data) => {
-  const {
-    kategori_id, tipe_katalog, name, brand, model,
-    harga, tenaga_mesin, kapasitas_bucket, kedalaman_gali,
-    berat_operasional, stock, description
-  } = data;
-
-  const [result] = await db.query(
-    `INSERT INTO alat_berat 
-    (kategori_id, tipe_katalog, name, brand, model, harga, tenaga_mesin, kapasitas_bucket, kedalaman_gali, berat_operasional, stock, description) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [kategori_id, tipe_katalog, name, brand, model, harga, tenaga_mesin, kapasitas_bucket, kedalaman_gali, berat_operasional, stock, description]
-  );
-  
-  return result.insertId;
-};
-
 module.exports = {
-  findAll,
-  create
+  findAll
 };

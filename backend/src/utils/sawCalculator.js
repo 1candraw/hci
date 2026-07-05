@@ -1,73 +1,76 @@
 /**
- * Fungsi untuk menghitung rekomendasi menggunakan metode SAW (5 Kriteria)
- * @param {Array} alternatives - List data alat berat dari database
- * @param {Object} weights - Bobot dari user (misal: { c1: 0.30, c2: 0.20, c3: 0.20, c4: 0.15, c5: 0.15 })
+ * Menghitung skor matriks SAW untuk sekumpulan data mesin
+ * @param {Array} alternatives - Kumpulan data mesin dari database
+ * @param {Object} weights - Nilai bobot desimal (c1 sampai c5)
  */
 const calculateSAW = (alternatives, weights) => {
-  if (!alternatives || alternatives.length === 0) return [];
+  // 1. CARI NILAI MAX & MIN (Pastikan semuanya dibaca sebagai Angka murni)
+  let maxMin = {
+    c1_min: Number(alternatives[0].harga),               // Harga (Cost)
+    c2_max: Number(alternatives[0].tenaga_mesin),        // Tenaga Mesin (Benefit)
+    c3_max: Number(alternatives[0].kapasitas_bucket),    // Kapasitas Bucket (Benefit)
+    c4_max: Number(alternatives[0].kedalaman_gali),      // Kedalaman Gali (Benefit)
+    c5_min: Number(alternatives[0].berat_operasional)    // Berat Operasional (Cost)
+  };
 
-  // 1. Ambil nilai untuk mencari Max dan Min dari masing-masing kriteria
-  const hargas = alternatives.map(a => Number(a.harga));
-  const tenagas = alternatives.map(a => Number(a.tenaga_mesin));
-  const buckets = alternatives.map(a => Number(a.kapasitas_bucket));
-  const galis = alternatives.map(a => Number(a.kedalaman_gali));
-  const operasionals = alternatives.map(a => Number(a.berat_operasional));
+  // Looping untuk mencari nilai ekstrim
+  alternatives.forEach(mesin => {
+    // Paksa konversi ke Number untuk setiap iterasi baris mesin
+    const harga = Number(mesin.harga);
+    const tenaga = Number(mesin.tenaga_mesin);
+    const bucket = Number(mesin.kapasitas_bucket);
+    const gali = Number(mesin.kedalaman_gali);
+    const berat = Number(mesin.berat_operasional);
 
-  // Kriteria Cost: cari nilai minimum
-  const minHarga = Math.min(...hargas);
-  
-  // Kriteria Benefit: cari nilai maksimum
-  const maxTenaga = Math.max(...tenagas);
-  const maxBucket = Math.max(...buckets);
-  const maxGali = Math.max(...galis);
-  const maxOperasional = Math.max(...operasionals);
+    // Kriteria Cost (Cari nilai terkecil)
+    if (harga < maxMin.c1_min) maxMin.c1_min = harga;
+    if (berat < maxMin.c5_min) maxMin.c5_min = berat;
+    
+    // Kriteria Benefit (Cari nilai terbesar)
+    if (tenaga > maxMin.c2_max) maxMin.c2_max = tenaga;
+    if (bucket > maxMin.c3_max) maxMin.c3_max = bucket;
+    if (gali > maxMin.c4_max) maxMin.c4_max = gali;
+  });
 
-  // 2. Normalisasi Matriks (R) dan Hitung Nilai Preferensi (V)
-  const results = alternatives.map(alt => {
-    // C1: Harga (Cost) -> Min / Nilai
-    const r1 = minHarga / Number(alt.harga);
-    // C2: Tenaga Mesin (Benefit) -> Nilai / Max
-    const r2 = Number(alt.tenaga_mesin) / maxTenaga;
-    // C3: Kapasitas Bucket (Benefit) -> Nilai / Max
-    const r3 = Number(alt.kapasitas_bucket) / maxBucket;
-    // C4: Kedalaman Gali Maksimal (Benefit) -> Nilai / Max
-    const r4 = Number(alt.kedalaman_gali) / maxGali;
-    // C5: Berat Operasional (Benefit) -> Nilai / Max
-    const r5 = Number(alt.berat_operasional) / maxOperasional;
+  // 2. PROSES NORMALISASI MATRIKS (R) & PERHITUNGAN SKOR AKHIR (V)
+  const rankedResults = alternatives.map(mesin => {
+    // Amankan dari nilai 0 atau kosong agar tidak terjadi Infinity/NaN saat pembagian
+    const harga = Number(mesin.harga) || 1;
+    const berat = Number(mesin.berat_operasional) || 1;
+    const tenaga = Number(mesin.tenaga_mesin) || 0;
+    const bucket = Number(mesin.kapasitas_bucket) || 0;
+    const gali = Number(mesin.kedalaman_gali) || 0;
 
-    // Hitung Nilai Akhir V (Normalisasi x Bobot)
-    const finalScore = 
-      (r1 * weights.c1) + 
-      (r2 * weights.c2) + 
-      (r3 * weights.c3) + 
-      (r4 * weights.c4) + 
+    // Normalisasi Cost: Nilai Min / Nilai Asli
+    let r1 = maxMin.c1_min / harga; 
+    let r5 = maxMin.c5_min / berat; 
+    
+    // Normalisasi Benefit: Nilai Asli / Nilai Max
+    let r2 = tenaga / (maxMin.c2_max || 1); 
+    let r3 = bucket / (maxMin.c3_max || 1); 
+    let r4 = gali / (maxMin.c4_max || 1); 
+
+    // Menghitung Skor Akhir (V)
+    let skor_akhir = 
+      (r1 * weights.c1) +
+      (r2 * weights.c2) +
+      (r3 * weights.c3) +
+      (r4 * weights.c4) +
       (r5 * weights.c5);
 
+    // Menggabungkan data asli DB dengan skor akhir
     return {
-      id: alt.id,
-      name: alt.name,
-      brand: alt.brand,
-      model: alt.model,
-      spesifikasi: {
-        harga: Number(alt.harga),
-        tenaga_mesin: Number(alt.tenaga_mesin),
-        kapasitas_bucket: Number(alt.kapasitas_bucket),
-        kedalaman_gali: Number(alt.kedalaman_gali),
-        berat_operasional: Number(alt.berat_operasional)
-      },
-      normalisasi: { 
-        r1: Number(r1.toFixed(4)), 
-        r2: Number(r2.toFixed(4)), 
-        r3: Number(r3.toFixed(4)), 
-        r4: Number(r4.toFixed(4)), 
-        r5: Number(r5.toFixed(4)) 
-      },
-      skor_akhir: Number(finalScore.toFixed(4)) // Ambil 4 angka di belakang koma untuk akurasi akademik
+      ...mesin,
+      skor_akhir: skor_akhir 
     };
   });
 
-  // 3. Urutkan berdasarkan skor tertinggi ke terendah (Ranking)
-  return results.sort((a, b) => b.skor_akhir - a.skor_akhir);
+  // 3. URUTKAN HASIL (Ranking dari Skor Tertinggi ke Terendah)
+  rankedResults.sort((a, b) => b.skor_akhir - a.skor_akhir);
+
+  return rankedResults;
 };
 
-module.exports = { calculateSAW };
+module.exports = {
+  calculateSAW
+};

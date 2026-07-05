@@ -1,16 +1,16 @@
 import api from '../api/axios';
 
-const getRekomendasi = async () => {
-  try {
-    // Ubah method menjadi POST dan alamatnya menjadi /saw
-    // Kita kirimkan objek kosong {} sebagai body request jika diperlukan
-    const response = await api.post('/saw', {}); 
-    return response.data;
-  } catch (error) {
-    throw error.response?.data?.message || 'Gagal mengambil data perhitungan SAW';
-  }
-};
-
 export const sawService = {
-  getRekomendasi
+  getRekomendasi: async (payloadData) => {
+    try {
+      // Kita gunakan instance 'api' milikmu. 
+      // Otomatis akan menembak ke baseURL + '/saw' dan membawa token Auth.
+      // Jangan lupa selipkan payloadData agar bobot slider dari UI terkirim ke Backend.
+      const response = await api.post('/saw', payloadData); 
+      return response.data;
+    } catch (error) {
+      // Menangkap error dengan rapi jika backend menolak
+      throw error.response?.data?.message || 'Gagal memproses data perhitungan SAW';
+    }
+  }
 };
