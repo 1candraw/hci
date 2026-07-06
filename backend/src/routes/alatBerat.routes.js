@@ -2,19 +2,17 @@ const express = require('express');
 const router = express.Router();
 const alatBeratController = require('../controllers/alatBerat.controller');
 
-// Import Middleware keamanan yang sudah kita buat sebelumnya
-const { authenticate } = require('../middlewares/auth.middleware');
-const { authorize } = require('../middlewares/role.middleware');
+// Asumsi kamu punya middleware otentikasi untuk mengecek token JWT
+// Ganti path-nya jika middleware-mu ada di folder lain
+const { authenticate } = require('../middlewares/auth.middleware'); 
 
-// Endpoint melihat katalog (Terbuka untuk umum / tanpa middleware auth)
-router.get('/', alatBeratController.getAll);
+// GET semua data (bisa diakses publik atau harus login, sesuaikan kebutuhan)
+router.get('/', authenticate, alatBeratController.getAlatBerat);
 
-// Endpoint menambah katalog (HANYA untuk Sales dan Manager)
-router.post(
-  '/', 
-  authenticate, 
-  authorize(['Sales', 'Manager']), 
-  alatBeratController.create
-);
+// POST tambah data (Wajib login agar ketahuan siapa yang input)
+router.post('/', authenticate, alatBeratController.addAlatBerat);
+
+// PUT persetujuan Manager (Hanya bisa diakses jika login)
+router.put('/approve/:id', authenticate, alatBeratController.approveAlatBerat);
 
 module.exports = router;

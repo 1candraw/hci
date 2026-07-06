@@ -1,37 +1,88 @@
-const alatBeratService = require('../services/alatBerat.service');
+const alatBeratRepo = require('../repositories/alatBerat.repository');
 
-const getAll = async (req, res) => {
+// 1. Mendapatkan daftar alat berat
+const getAlatBerat = async (req, res) => {
   try {
-    // Mengambil query parameter (misal: ?tipe_katalog=saw)
-    const { tipe_katalog } = req.query; 
+    // Tangkap filter dari query URL (misal: ?status=pending)
+    const { tipe, kapasitas, status } = req.query; 
     
-    const data = await alatBeratService.getAllAlatBerat(tipe_katalog);
+    const data = await alatBeratRepo.findAll(tipe, kapasitas, status);
+    
     res.status(200).json({
       success: true,
       message: 'Berhasil mengambil data alat berat',
       data: data
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Error getAlatBerat:", error);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server.' });
   }
 };
 
-const create = async (req, res) => {
+// 2. Menambahkan alat berat baru (Logika Multi-Tier Approval ada di sini)
+const addAlatBerat = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const newId = await alatBeratService.addAlatBerat(req.body, userId);
+    const dataInput = req.body;
     
+    // CATATAN PENTING: req.user didapat dari middleware otentikasi (JWT) yang kamu buat
+    const userId = req.user.id; 
+    const userRole = req.user.role; // Asumsi: 'sales' atau 'manager'
+
+    // Tentukan status persetujuan berdasarkan role
+    if (userRole === 'manager') {
+      // Jalur VIP: Manager yang input, otomatis Approved
+      dataInput.status_approval = 'approved';
+      dataInput.created_by = userId;
+      dataInput.approved_by = userId; 
+    } else {
+      // Jalur Biasa: Sales yang input, masuk daftar antrean (Pending)
+      dataInput.status_approval = 'pending';
+      dataInput.created_by = userId;
+      dataInput.approved_by = null;
+    }
+
+    const newId = await alatBeratRepo.create(dataInput);
+
     res.status(201).json({
       success: true,
-      message: 'Alat berat berhasil ditambahkan ke katalog',
-      data: { id: newId }
+      message: userRole === 'manager' 
+        ? 'Data berhasil disimpan dan langsung disetujui (VIP).' 
+        : 'Data berhasil disimpan sebagai draf (Menunggu persetujuan Manager).',
+      insertId: newId
     });
+
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    console.error("Error addAlatBerat:", error);
+    res.status(500).json({ success: false, message: 'Gagal menyimpan data.' });
+  }
+};
+
+// 3. Manager Menyetujui Data (Approve)
+const approveAlatBerat = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const managerId = req.user.id;
+    const userRole = req.user.role;
+
+    if (userRole !== 'manager') {
+      return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Manager yang dapat memberikan persetujuan.' });
+    }
+
+    const affectedRows = await alatBeratRepo.updateStatus(id, 'approved', managerId);
+    
+    if (affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Data tidak ditemukan.' });
+    }
+
+    res.status(200).json({ success: true, message: 'Data alat berat berhasil disetujui.' });
+  } catch (error) {
+    console.error("Error approveAlatBerat:", error);
+    res.status(500).json({ success: false, message: 'Gagal menyetujui data.' });
   }
 };
 
 module.exports = {
-  getAll,
-  create
+  getAlatBerat,
+  addAlatBerat,
+  approveAlatBerat
 };

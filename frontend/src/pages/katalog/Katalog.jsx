@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom'; // <-- Tambahan Import Link
+import { Link } from 'react-router-dom';
 import { alatBeratService } from '../../services/alatBerat.service';
 
 const Katalog = () => {
   const [alatBerat, setAlatBerat] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // 1. IDENTIFIKASI ROLE PENGGUNA
+  // Sesuaikan baris ini dengan cara sistemmu menyimpan data login (misal dari Context Auth atau localStorage).
+  // Contoh penggunaan asli: const userRole = localStorage.getItem('role') || 'customer';
+  // Untuk pengetesan saat ini, saya set default-nya ke 'sales' agar tombolnya langsung terlihat.
+  const [userRole, setUserRole] = useState('sales'); 
 
   // useEffect akan otomatis dijalankan saat halaman pertama kali dibuka
   useEffect(() => {
@@ -27,8 +33,14 @@ const Katalog = () => {
     <div style={styles.container}>
       <div style={styles.header}>
         <h2 style={styles.title}>Katalog Alat Berat</h2>
-        {/* Catatan: Tombol ini nanti bisa disembunyikan kalau yang login adalah Customer */}
-        <button style={styles.addBtn}>+ Tambah Unit</button>
+        
+        {/* 2. LOGIKA PENYEMBUNYIAN TOMBOL (Hanya tampil untuk Sales & Manager) */}
+        {(userRole === 'sales' || userRole === 'manager') && (
+          // Asumsi path '/master-alat-berat' adalah route untuk halaman MasterAlatBerat.jsx yang kita buat tadi
+          <Link to="/master-alat-berat" style={{ textDecoration: 'none' }}>
+            <button style={styles.addBtn}>+ Tambah / Kelola Unit</button>
+          </Link>
+        )}
       </div>
 
       {/* --- MULAI BANNER REKOMENDASI SAW --- */}
