@@ -19,14 +19,22 @@ const getAlatBerat = async (req, res) => {
   }
 };
 
-// 2. Menambahkan alat berat baru (Logika Multi-Tier Approval ada di sini)
+// 2. Menambahkan alat berat baru (Logika Multi-Tier Approval & Upload Gambar)
 const addAlatBerat = async (req, res) => {
   try {
     const dataInput = req.body;
     
+    // --- TAMBAHAN UNTUK MULTER ---
+    // Jika ada file gambar yang diupload, kita buatkan URL statisnya
+    if (req.file) {
+      // Hasilnya akan otomatis menjadi seperti: http://localhost:5000/uploads/alatberat-12345.jpg
+      dataInput.image_url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    }
+    // -----------------------------
+    
     // CATATAN PENTING: req.user didapat dari middleware otentikasi (JWT) yang kamu buat
     const userId = req.user.id; 
-    const userRole = req.user.role; // Asumsi: 'sales' atau 'manager'
+    const userRole = req.user.role ? req.user.role.toLowerCase() : ''; // Asumsi: 'sales' atau 'manager'
 
     // Tentukan status persetujuan berdasarkan role
     if (userRole === 'manager') {
@@ -62,7 +70,7 @@ const approveAlatBerat = async (req, res) => {
   try {
     const { id } = req.params;
     const managerId = req.user.id;
-    const userRole = req.user.role;
+    const userRole = req.user.role ? req.user.role.toLowerCase() : '';
 
     if (userRole !== 'manager') {
       return res.status(403).json({ success: false, message: 'Akses ditolak. Hanya Manager yang dapat memberikan persetujuan.' });

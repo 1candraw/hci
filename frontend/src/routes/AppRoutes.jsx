@@ -8,6 +8,9 @@ import Saw from '../pages/saw/Saw';
 import Transaksi from '../pages/transactions/Transaksi';
 import AuditLog from '../pages/dashboard/AuditLog';
 
+// TAMBAHKAN IMPORT INI (Sesuaikan path folder-nya jika berbeda)
+import MasterAlatBerat from '../pages/alatBerat/MasterAlatBerat';
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -24,6 +27,11 @@ const AppRoutes = () => {
           
           {/* LAPIS 2: RUTE KHUSUS (Pembatasan berdasarkan Hak Akses/Role) */}
           
+          {/* Fitur Master Data: HANYA untuk Sales dan Manager (Customer dilarang masuk) */}
+          <Route element={<ProtectedRoute allowedRoles={['Sales', 'Manager']} />}>
+            <Route path="/master-alat-berat" element={<MasterAlatBerat />} />
+          </Route>
+
           {/* Fitur SAW: Biasanya difokuskan untuk Customer, Sales, dan Manager */}
           <Route element={<ProtectedRoute allowedRoles={['Customer', 'Sales', 'Manager']} />}>
             <Route path="/saw" element={<Saw />} />

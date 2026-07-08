@@ -10,7 +10,8 @@ const Sidebar = () => {
       <div style={styles.menuContainer}>
         <h3 style={styles.menuTitle}>Menu Utama</h3>
         <ul style={styles.menuList}>
-          {/* Menu untuk semua orang */}
+          
+          {/* MENU UMUM (Bisa diakses semua orang) */}
           <li>
             <Link to="/" style={location.pathname === '/' ? styles.activeLink : styles.link}>
               📊 Dashboard Analytics
@@ -18,38 +19,45 @@ const Sidebar = () => {
           </li>
           <li>
             <Link to="/katalog" style={location.pathname === '/katalog' ? styles.activeLink : styles.link}>
-              🚜 Katalog 
+              🚜 Katalog
             </Link>
           </li>
-          
-          {/* Menu khusus berdasarkan Role */}
-          {(user?.role === 'Manager' || user?.role === 'Sales') && (
-            <li>
-              <Link to="/saw" style={location.pathname === '/saw' ? styles.activeLink : styles.link}>
-                🧮 Analisis SAW
-              </Link>
-            </li>
-          )}
-
           <li>
             <Link to="/transaksi" style={location.pathname === '/transaksi' ? styles.activeLink : styles.link}>
               📝 Transaksi 
             </Link>
           </li>
-
           <li>
             <Link to="/saw" style={location.pathname === '/saw' ? styles.activeLink : styles.link}>
-            💡 Rekomendasi Alat 
-              </Link>
+              💡 Rekomendasi Alat 
+            </Link>
           </li>
 
-          <li>
-            <Link to="/audit-log" style={location.pathname === '/audit-log' ? styles.activeLink : styles.link}>
-              <span style={{ marginRight: '10px' }}>📋</span>
-              Audit Log
+          {/* MENU KHUSUS SALES & MANAGER */}
+          {(user?.role === 'Manager' || user?.role === 'Sales') && (
+            <>
+              <li>
+                <Link to="/master-alat-berat" style={location.pathname === '/master-alat-berat' ? styles.activeLink : styles.link}>
+                  ⚙️ Kelola Alat Berat
                 </Link>
-          </li>
+              </li>
+              {/* Jika Analisis SAW ingin dibedakan menunya untuk tim internal */}
+              <li>
+                <Link to="/saw" style={location.pathname === '/saw' ? styles.activeLink : styles.link}>
+                  🧮 Analisis SAW
+                </Link>
+              </li>
+            </>
+          )}
 
+          {/* MENU SANGAT RAHASIA (Khusus Manager & Operasional) */}
+          {(user?.role === 'Manager' || user?.role === 'Operasional') && (
+            <li>
+              <Link to="/audit-log" style={location.pathname === '/audit-log' ? styles.activeLink : styles.link}>
+                <span style={{ marginRight: '10px' }}>📋</span> Audit Log
+              </Link>
+            </li>
+          )}
           
         </ul>
       </div>
