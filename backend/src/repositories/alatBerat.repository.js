@@ -1,6 +1,6 @@
 const db = require('../config/database'); 
 
-// 1. Mengambil semua data (Bisa difilter berdasarkan tipe_katalog atau status_approval)
+// 1. Mengambil semua data
 const findAll = async (tipeKatalog, filterKapasitas, statusApproval) => {
   let query = `SELECT * FROM alat_berat WHERE 1=1`;
   const queryParams = [];
@@ -20,13 +20,19 @@ const findAll = async (tipeKatalog, filterKapasitas, statusApproval) => {
     queryParams.push(statusApproval);
   }
 
-  query += " ORDER BY created_at DESC"; // Urutkan dari yang terbaru
+  query += " ORDER BY created_at DESC"; 
 
   const [rows] = await db.query(query, queryParams);
   return rows;
 };
 
-// 2. Menambah data baru ke database (Oleh Sales atau Manager)
+// 2. Mengambil 1 data spesifik (Untuk mengecek status)
+const findById = async (id) => {
+  const [rows] = await db.query("SELECT * FROM alat_berat WHERE id = ?", [id]);
+  return rows[0]; 
+};
+
+// 3. Menambah data baru 
 const create = async (data) => {
   const query = `
     INSERT INTO alat_berat 
@@ -46,7 +52,39 @@ const create = async (data) => {
   return result.insertId;
 };
 
-// 3. Memperbarui status persetujuan (Khusus Manager)
+// 4. Memperbarui seluruh data alat berat (Edit)
+const update = async (id, data) => {
+  // Kita buat query dinamis agar field yang kosong/tidak diubah tetap aman
+  let updateFields = [];
+  let values = [];
+
+  // Looping objek data untuk menyusun field yang akan di-update
+  for (const [key, value] of Object.entries(data)) {
+    // Abaikan field yang tidak boleh di-update secara langsung
+    if (!['id', 'created_at', 'updated_at', 'created_by'].includes(key)) {
+      updateFields.push(`${key} = ?`);
+      values.push(value);
+    }
+  }
+
+  if (updateFields.length === 0) return 0; // Tidak ada yang di-update
+
+  const query = `UPDATE alat_berat SET ${updateFields.join(', ')} WHERE id = ?`;
+  values.push(id);
+
+  const [result] = await db.query(query, values);
+  return result.affectedRows;
+};
+
+// 5. Menghapus data permanen (Hard Delete)
+const remove = async (id) => {
+  await db.query(`DELETE FROM saw_results WHERE alat_berat_id = ?`, [id]);
+  const query = `DELETE FROM alat_berat WHERE id = ?`;
+  const [result] = await db.query(query, [id]);
+  return result.affectedRows;
+};
+
+// 6. Memperbarui status persetujuan
 const updateStatus = async (id, status, managerId) => {
   const query = `
     UPDATE alat_berat 
@@ -59,6 +97,9 @@ const updateStatus = async (id, status, managerId) => {
 
 module.exports = {
   findAll,
+  findById,
   create,
+  update,
+  remove,
   updateStatus
 };
