@@ -8,7 +8,7 @@ const Sidebar = () => {
   return (
     <aside style={styles.sidebar}>
       <div style={styles.menuContainer}>
-        <h3 style={styles.menuTitle}>Menu Utama</h3>
+        <h3 style={styles.menuTitle}>Menu</h3>
         <ul style={styles.menuList}>
           
           {/* MENU UMUM (Bisa diakses semua orang) */}
@@ -19,17 +19,17 @@ const Sidebar = () => {
           </li>
           <li>
             <Link to="/katalog" style={location.pathname === '/katalog' ? styles.activeLink : styles.link}>
-              🚜 Katalog
+              🚜 Product Catalog
             </Link>
           </li>
           <li>
             <Link to="/transaksi" style={location.pathname === '/transaksi' ? styles.activeLink : styles.link}>
-              📝 Transaksi 
+              📝 Orders 
             </Link>
           </li>
           <li>
             <Link to="/saw" style={location.pathname === '/saw' ? styles.activeLink : styles.link}>
-              💡 Rekomendasi Alat 
+              💡 Recomendations 
             </Link>
           </li>
 
@@ -38,13 +38,7 @@ const Sidebar = () => {
             <>
               <li>
                 <Link to="/master-alat-berat" style={location.pathname === '/master-alat-berat' ? styles.activeLink : styles.link}>
-                  ⚙️ Kelola Alat Berat
-                </Link>
-              </li>
-              {/* Jika Analisis SAW ingin dibedakan menunya untuk tim internal */}
-              <li>
-                <Link to="/saw" style={location.pathname === '/saw' ? styles.activeLink : styles.link}>
-                  🧮 Analisis SAW
+                  ⚙️ Manage
                 </Link>
               </li>
             </>

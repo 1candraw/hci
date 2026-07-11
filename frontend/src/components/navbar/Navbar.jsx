@@ -6,7 +6,7 @@ const Navbar = () => {
   return (
     <nav style={styles.navbar}>
       <div style={styles.brand}>
-        <strong>heavy care.id</strong>
+        <strong>Heavy Care ID</strong>
       </div>
       <div style={styles.userMenu}>
         <span style={styles.userInfo}>

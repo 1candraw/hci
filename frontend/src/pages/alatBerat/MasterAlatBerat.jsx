@@ -94,11 +94,11 @@ const MasterAlatBerat = () => {
       if (isEditing) {
         // Panggil service Update
         await alatBeratService.update(formData.id, submitData);
-        alert(isManager ? 'Data VIP berhasil diubah!' : 'Perubahan disimpan sebagai Draf (Menunggu Approve Manager)!');
+        alert(isManager ? 'Data  berhasil diubah!' : 'Perubahan disimpan sebagai Draf (Menunggu Approve Manager)!');
       } else {
         // Panggil service Create
         await alatBeratService.create(submitData);
-        alert(isManager ? 'Data VIP berhasil disimpan!' : 'Draf berhasil dikirim ke Manager!');
+        alert(isManager ? 'Data  berhasil disimpan!' : 'Draf berhasil dikirim ke Manager!');
       }
 
       setIsModalOpen(false);
@@ -149,7 +149,7 @@ const MasterAlatBerat = () => {
           <h2 style={styles.title}>Manajemen Data Alat Berat</h2>
         </div>
         <div>
-          <button onClick={openAddModal} style={styles.addBtn}>+ Tambah Unit</button>
+          <button onClick={openAddModal} style={styles.addBtn}>+ Add Unit</button>
         </div>
       </div>
 
@@ -300,7 +300,7 @@ const MasterAlatBerat = () => {
               <div style={styles.modalFooter}>
                 <button type="button" onClick={() => setIsModalOpen(false)} style={styles.btnCancel}>Batal</button>
                 <button type="submit" disabled={isLoading} style={styles.btnSave}>
-                  {isLoading ? 'Menyimpan...' : (isManager ? 'Simpan & Setujui (VIP)' : 'Simpan Draf (Pending)')}
+                  {isLoading ? 'Menyimpan...' : (isManager ? 'Simpan' : 'Simpan')}
                 </button>
               </div>
             </form>
