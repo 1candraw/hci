@@ -8,13 +8,14 @@ const dashboardRoutes = require('./routes/dashboard.routes');
 const quotationRoutes = require('./routes/quotation.routes');
 const transactionRoutes = require('./routes/transaction.routes');
 const auditRoutes = require('./routes/audit.routes'); 
-const path = require('path');
 
 const app = express();
 
+const path = require('path');
+
 // Middleware dasar
 app.use(cors()); // Mengizinkan React berkomunikasi dengan API ini
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads'))); // Agar file gambar bisa diakses publik
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads'))); // Agar file gambar bisa diakses publik
 app.use(express.json()); // Agar bisa membaca format JSON dari request body
 app.use(express.urlencoded({ extended: true })); // Untuk membaca form data
 

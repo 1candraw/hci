@@ -137,7 +137,7 @@ const Saw = () => {
         </div>
         <div>
           <button onClick={exportToPDF} style={{ ...styles.actionBtn, backgroundColor: '#ef4444' }}>
-            📄 Export PDF
+            Export PDF
           </button>
         </div>
       </div>

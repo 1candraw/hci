@@ -59,16 +59,16 @@ const Katalog = () => {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h2 style={styles.title}>Katalog Alat Berat</h2>
+        <h2 style={styles.title}>Heavy Equipment Catalog</h2>
       </div>
 
       <div style={styles.banner}>
         <div>
-          <h3 style={styles.bannerTitle}>Bingung Memilih Mesin yang Tepat? 🤔</h3>
+          <h3 style={styles.bannerTitle}>Bingung Memilih Mesin yang Tepat?</h3>
           <p style={styles.bannerText}>Gunakan fitur asisten pintar kami untuk mendapatkan rekomendasi alat berat terbaik.</p>
         </div>
         <Link to="/saw">
-          <button style={styles.bannerBtn}>Cari Mesin Terbaik ✨</button>
+          <button style={styles.bannerBtn}>Get Recommendations</button>
         </Link>
       </div>
 
