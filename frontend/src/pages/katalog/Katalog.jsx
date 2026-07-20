@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { alatBeratService } from '../../services/alatBerat.service';
+// +++ TAMBAHAN UNTUK FITUR PESAN: Import komponen modal form pemesanan +++
+import FormPemesananModal from '../../components/forms/FormPemesananModal';
 
 const Katalog = () => {
   const [alatBerat, setAlatBerat] = useState([]);
@@ -9,9 +11,13 @@ const Katalog = () => {
   
   // State untuk fitur Compare & Detail
   const [compareList, setCompareList] = useState([]);
-  const [selectedItem, setSelectedItem] = useState(null); // Untuk menyimpan data mesin yang sedang dilihat detailnya
+  const [selectedItem, setSelectedItem] = useState(null); 
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
+
+  // +++ TAMBAHAN UNTUK FITUR PESAN: State untuk mengontrol modal pesanan +++
+  const [isOrderOpen, setIsOrderOpen] = useState(false);
+  const [orderItem, setOrderItem] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -47,13 +53,19 @@ const Katalog = () => {
       alert('Pilih 2 mesin terlebih dahulu untuk dibandingkan.');
       return;
     }
-    setIsCompareOpen(true); // Buka pop-up komparasi
+    setIsCompareOpen(true); 
   };
 
   // --- HANDLER FITUR DETAIL ---
   const handleDetailClick = (mesin) => {
     setSelectedItem(mesin);
     setIsDetailOpen(true);
+  };
+
+  // +++ TAMBAHAN UNTUK FITUR PESAN: Handler saat tombol Pesan ditekan +++
+  const handleOrderClick = (mesin) => {
+    setOrderItem(mesin);
+    setIsOrderOpen(true);
   };
 
   return (
@@ -108,7 +120,12 @@ const Katalog = () => {
                     />
                     Bandingkan
                   </label>
-                  <button onClick={() => handleDetailClick(item)} style={styles.detailBtn}>Detail Unit</button>
+                  
+                  {/* +++ TAMBAHAN UNTUK FITUR PESAN: Tombol Pesan di Card +++ */}
+                  <div style={{display: 'flex', gap: '0.5rem'}}>
+                    <button onClick={() => handleDetailClick(item)} style={styles.detailBtn}>Detail</button>
+                    <button onClick={() => handleOrderClick(item)} style={styles.orderBtn}>Pesan</button>
+                  </div>
                 </div>
               </div>
             );
@@ -169,6 +186,17 @@ const Katalog = () => {
                       <tr><td style={styles.specLabel}>Berat Operasional</td><td style={styles.specValue}>{selectedItem.berat_operasional || '-'} Kg</td></tr>
                     </tbody>
                   </table>
+
+                  {/* +++ TAMBAHAN UNTUK FITUR PESAN: Tombol Pesan di Modal Detail +++ */}
+                  <button 
+                    onClick={() => {
+                      setIsDetailOpen(false); // Tutup modal detail
+                      handleOrderClick(selectedItem); // Buka modal pesan
+                    }} 
+                    style={styles.orderBtnModal}
+                  >
+                    Ajukan Pemesanan
+                  </button>
                 </div>
               </div>
             </div>
@@ -179,6 +207,7 @@ const Katalog = () => {
       {/* --- MODAL POP-UP KOMPARASI --- */}
       {isCompareOpen && compareList.length === 2 && (
         <div style={styles.modalOverlay}>
+          {/* ... (Kode komparasi tetap sama seperti aslinya, saya persingkat di sini agar tidak kepanjangan) ... */}
           <div style={{...styles.modalContent, maxWidth: '900px'}}>
             <div style={styles.modalHeader}>
               <h3>Perbandingan Alat Berat</h3>
@@ -250,6 +279,17 @@ const Katalog = () => {
           </div>
         </div>
       )}
+
+      {/* +++ TAMBAHAN UNTUK FITUR PESAN: Render Modal Pemesanan di sini +++ */}
+      <FormPemesananModal 
+        isOpen={isOrderOpen}
+        onClose={() => setIsOrderOpen(false)}
+        alatBeratId={orderItem?.id}
+        namaAlat={orderItem?.name}
+        sumberPesanan="katalog" 
+        sawResultId={null} 
+      />
+
     </div>
   );
 };
@@ -278,19 +318,22 @@ const styles = {
   specBadge: { backgroundColor: '#f3f4f6', color: '#4b5563', padding: '0.3rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', border: '1px solid #e5e7eb' },
   actionBox: { padding: '1rem', borderTop: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   compareLabel: { fontSize: '0.85rem', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '0.4rem' },
+  
   detailBtn: { padding: '0.4rem 0.8rem', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold' },
+  // +++ TAMBAHAN UNTUK FITUR PESAN: Style untuk tombol pesan baru +++
+  orderBtn: { padding: '0.4rem 0.8rem', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold' },
+  orderBtnModal: { marginTop: '1.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold', width: '100%', boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)' },
+  
   floatingDock: { position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#1f2937', color: 'white', padding: '1rem 2rem', zIndex: 1000, boxShadow: '0 -4px 10px rgba(0,0,0,0.1)' },
   dockContent: { maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   compareExecuteBtn: { backgroundColor: '#3b82f6', color: 'white', padding: '0.6rem 1.5rem', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', transition: '0.3s' },
   
-  // MODAL STYLES
   modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: '1rem' },
   modalContent: { backgroundColor: 'white', borderRadius: '8px', width: '100%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 10px 15px rgba(0,0,0,0.2)' },
   modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.2rem 1.5rem', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, backgroundColor: 'white', zIndex: 10 },
   closeBtn: { background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#6b7280' },
   modalBody: { padding: '1.5rem' },
   
-  // Detail Unit Styles
   detailGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' },
   detailImageBox: { width: '100%', height: '250px', backgroundColor: '#f3f4f6', borderRadius: '8px', overflow: 'hidden' },
   detailImage: { width: '100%', height: '100%', objectFit: 'contain' },
@@ -299,7 +342,6 @@ const styles = {
   specLabel: { padding: '0.5rem 0', borderBottom: '1px solid #e5e7eb', color: '#6b7280', width: '40%' },
   specValue: { padding: '0.5rem 0', borderBottom: '1px solid #e5e7eb', color: '#1f2937', fontWeight: '600', textAlign: 'right' },
 
-  // Compare Styles
   compareTable: { width: '100%', borderCollapse: 'collapse', fontSize: '0.95rem' },
   cTh: { padding: '1rem', backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb', color: '#374151' },
   cTr: { borderBottom: '1px solid #e5e7eb' },

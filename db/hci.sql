@@ -139,10 +139,14 @@ CREATE TABLE IF NOT EXISTS `payments` (
 -- Dumping structure for table hci.quotations
 CREATE TABLE IF NOT EXISTS `quotations` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `nomor_pemesanan` varchar(50) DEFAULT NULL,
   `customer_id` int NOT NULL,
   `alat_berat_id` int NOT NULL,
   `sales_id` int DEFAULT NULL,
   `manager_id` int DEFAULT NULL,
+  `sumber_pesanan` enum('katalog','saw') DEFAULT 'katalog',
+  `saw_result_id` int DEFAULT NULL,
+  `metode_pembayaran` enum('cash','leasing') DEFAULT 'cash',
   `harga_penawaran` decimal(15,2) DEFAULT NULL,
   `ongkos_kirim` decimal(15,2) DEFAULT NULL,
   `diskon` decimal(15,2) DEFAULT NULL,
@@ -151,15 +155,18 @@ CREATE TABLE IF NOT EXISTS `quotations` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `nomor_pemesanan` (`nomor_pemesanan`),
   KEY `customer_id` (`customer_id`),
   KEY `alat_berat_id` (`alat_berat_id`),
+  KEY `quotations_ibfk_3` (`saw_result_id`),
   CONSTRAINT `quotations_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `quotations_ibfk_2` FOREIGN KEY (`alat_berat_id`) REFERENCES `alat_berat` (`id`) ON DELETE CASCADE
+  CONSTRAINT `quotations_ibfk_2` FOREIGN KEY (`alat_berat_id`) REFERENCES `alat_berat` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `quotations_ibfk_3` FOREIGN KEY (`saw_result_id`) REFERENCES `saw_results` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table hci.quotations: ~1 rows (approximately)
-INSERT INTO `quotations` (`id`, `customer_id`, `alat_berat_id`, `sales_id`, `manager_id`, `harga_penawaran`, `ongkos_kirim`, `diskon`, `status`, `catatan`, `created_at`, `updated_at`) VALUES
-	(1, 5, 1, 1, 6, 1250000000.00, 5000000.00, 25000000.00, 'PROSES_PENGIRIMAN', 'Mohon penawaran harga terbaik beserta ongkos kirim untuk pengerjaan proyek di daerah Tegal.', '2026-07-03 17:13:58', '2026-07-03 18:21:14');
+INSERT INTO `quotations` (`id`, `nomor_pemesanan`, `customer_id`, `alat_berat_id`, `sales_id`, `manager_id`, `sumber_pesanan`, `saw_result_id`, `metode_pembayaran`, `harga_penawaran`, `ongkos_kirim`, `diskon`, `status`, `catatan`, `created_at`, `updated_at`) VALUES
+	(1, NULL, 5, 1, 1, 6, 'katalog', NULL, 'cash', 1250000000.00, 5000000.00, 25000000.00, 'PROSES_PENGIRIMAN', 'Mohon penawaran harga terbaik beserta ongkos kirim untuk pengerjaan proyek di daerah Tegal.', '2026-07-03 17:13:58', '2026-07-03 18:21:14');
 
 -- Dumping structure for table hci.roles
 CREATE TABLE IF NOT EXISTS `roles` (
@@ -190,7 +197,7 @@ CREATE TABLE IF NOT EXISTS `saw_results` (
   KEY `alat_berat_id` (`alat_berat_id`),
   CONSTRAINT `saw_results_ibfk_1` FOREIGN KEY (`saw_session_id`) REFERENCES `saw_sessions` (`id`),
   CONSTRAINT `saw_results_ibfk_2` FOREIGN KEY (`alat_berat_id`) REFERENCES `alat_berat` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=561 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=593 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table hci.saw_results: ~296 rows (approximately)
 INSERT INTO `saw_results` (`id`, `saw_session_id`, `alat_berat_id`, `score`, `ranking`, `created_at`) VALUES
@@ -499,7 +506,39 @@ INSERT INTO `saw_results` (`id`, `saw_session_id`, `alat_berat_id`, `score`, `ra
 	(557, 174, 13, 0.8712, 1, '2026-07-11 11:23:22'),
 	(558, 174, 12, 0.7595, 2, '2026-07-11 11:23:22'),
 	(559, 174, 2, 0.6717, 3, '2026-07-11 11:23:22'),
-	(560, 174, 1, 0.6658, 4, '2026-07-11 11:23:22');
+	(560, 174, 1, 0.6658, 4, '2026-07-11 11:23:22'),
+	(561, 175, 13, 0.8627, 1, '2026-07-18 10:00:38'),
+	(562, 175, 12, 0.7980, 2, '2026-07-18 10:00:38'),
+	(563, 175, 1, 0.7033, 3, '2026-07-18 10:00:38'),
+	(564, 175, 2, 0.6602, 4, '2026-07-18 10:00:38'),
+	(565, 176, 13, 0.8980, 1, '2026-07-18 10:00:54'),
+	(566, 176, 12, 0.7130, 2, '2026-07-18 10:00:54'),
+	(567, 176, 1, 0.6453, 3, '2026-07-18 10:00:54'),
+	(568, 176, 2, 0.6146, 4, '2026-07-18 10:00:54'),
+	(569, 177, 13, 0.9041, 1, '2026-07-18 10:01:00'),
+	(570, 177, 12, 0.6909, 2, '2026-07-18 10:01:00'),
+	(571, 177, 1, 0.6257, 3, '2026-07-18 10:01:00'),
+	(572, 177, 2, 0.6157, 4, '2026-07-18 10:01:00'),
+	(573, 178, 13, 0.9025, 1, '2026-07-18 10:01:04'),
+	(574, 178, 12, 0.6661, 2, '2026-07-18 10:01:04'),
+	(575, 178, 1, 0.6016, 3, '2026-07-18 10:01:04'),
+	(576, 178, 2, 0.5837, 4, '2026-07-18 10:01:04'),
+	(577, 179, 13, 0.8627, 1, '2026-07-18 10:01:52'),
+	(578, 179, 12, 0.7980, 2, '2026-07-18 10:01:52'),
+	(579, 179, 1, 0.7033, 3, '2026-07-18 10:01:52'),
+	(580, 179, 2, 0.6602, 4, '2026-07-18 10:01:52'),
+	(581, 180, 13, 0.8627, 1, '2026-07-18 10:09:55'),
+	(582, 180, 12, 0.7980, 2, '2026-07-18 10:09:55'),
+	(583, 180, 1, 0.7033, 3, '2026-07-18 10:09:55'),
+	(584, 180, 2, 0.6602, 4, '2026-07-18 10:09:55'),
+	(585, 181, 13, 0.8627, 1, '2026-07-20 21:51:56'),
+	(586, 181, 12, 0.7980, 2, '2026-07-20 21:51:56'),
+	(587, 181, 1, 0.7033, 3, '2026-07-20 21:51:56'),
+	(588, 181, 2, 0.6602, 4, '2026-07-20 21:51:56'),
+	(589, 182, 13, 0.8627, 1, '2026-07-20 23:42:39'),
+	(590, 182, 12, 0.7980, 2, '2026-07-20 23:42:39'),
+	(591, 182, 1, 0.7033, 3, '2026-07-20 23:42:39'),
+	(592, 182, 2, 0.6602, 4, '2026-07-20 23:42:39');
 
 -- Dumping structure for table hci.saw_sessions
 CREATE TABLE IF NOT EXISTS `saw_sessions` (
@@ -514,7 +553,7 @@ CREATE TABLE IF NOT EXISTS `saw_sessions` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `saw_sessions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=175 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=183 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table hci.saw_sessions: ~157 rows (approximately)
 INSERT INTO `saw_sessions` (`id`, `user_id`, `harga_weight`, `tenaga_mesin_weight`, `kapasitas_bucket_weight`, `kedalaman_gali_weight`, `berat_operasional_weight`, `created_at`) VALUES
@@ -691,7 +730,15 @@ INSERT INTO `saw_sessions` (`id`, `user_id`, `harga_weight`, `tenaga_mesin_weigh
 	(171, 5, 3.00, 3.00, 3.00, 3.00, 3.00, '2026-07-11 03:33:43'),
 	(172, 6, 3.00, 3.00, 3.00, 3.00, 3.00, '2026-07-11 10:32:08'),
 	(173, 1, 2.00, 4.00, 4.00, 4.00, 2.00, '2026-07-11 11:15:46'),
-	(174, 5, 1.00, 5.00, 5.00, 5.00, 5.00, '2026-07-11 11:23:22');
+	(174, 5, 1.00, 5.00, 5.00, 5.00, 5.00, '2026-07-11 11:23:22'),
+	(175, 6, 3.00, 3.00, 3.00, 3.00, 3.00, '2026-07-18 10:00:38'),
+	(176, 6, 2.00, 4.00, 2.00, 4.00, 2.00, '2026-07-18 10:00:54'),
+	(177, 6, 1.00, 4.00, 2.00, 4.00, 2.00, '2026-07-18 10:01:00'),
+	(178, 6, 1.00, 4.00, 2.00, 4.00, 1.00, '2026-07-18 10:01:04'),
+	(179, 6, 3.00, 3.00, 3.00, 3.00, 3.00, '2026-07-18 10:01:52'),
+	(180, 5, 3.00, 3.00, 3.00, 3.00, 3.00, '2026-07-18 10:09:55'),
+	(181, 1, 3.00, 3.00, 3.00, 3.00, 3.00, '2026-07-20 21:51:56'),
+	(182, 1, 3.00, 3.00, 3.00, 3.00, 3.00, '2026-07-20 23:42:39');
 
 -- Dumping structure for table hci.transactions
 CREATE TABLE IF NOT EXISTS `transactions` (

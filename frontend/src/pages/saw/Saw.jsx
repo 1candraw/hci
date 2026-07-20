@@ -2,6 +2,8 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useState, useEffect } from 'react';
 import { sawService } from '../../services/saw.service';
+// +++ TAMBAHAN: Import komponen modal form pemesanan +++
+import FormPemesananModal from '../../components/forms/FormPemesananModal';
 
 const Saw = () => {
   const [ranking, setRanking] = useState([]);
@@ -18,6 +20,10 @@ const Saw = () => {
     kedalaman_gali_weight: 3,
     berat_operasional_weight: 3,
   });
+
+  // +++ TAMBAHAN: State untuk mengontrol modal pesanan +++
+  const [isOrderOpen, setIsOrderOpen] = useState(false);
+  const [orderItem, setOrderItem] = useState(null);
 
   useEffect(() => {
     fetchRanking();
@@ -128,6 +134,12 @@ const Saw = () => {
     doc.save(`Laporan_Rekomendasi_${filterTonase}Ton.pdf`);
   };
 
+  // +++ TAMBAHAN: Handler saat tombol Pesan ditekan +++
+  const handleOrderClick = (mesin) => {
+    setOrderItem(mesin);
+    setIsOrderOpen(true);
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.header}>
@@ -226,6 +238,8 @@ const Saw = () => {
                     <th style={styles.th}>Nama Unit</th>
                     <th style={styles.th}>Skor Akhir (Vi)</th>
                     <th style={styles.th}>Status</th>
+                    {/* +++ TAMBAHAN: Kolom Aksi +++ */}
+                    <th style={styles.th}>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -246,10 +260,19 @@ const Saw = () => {
                       <td style={styles.td}>
                         {index === 0 && <span style={styles.badgeTop}>Direkomendasikan</span>}
                       </td>
+                      {/* +++ TAMBAHAN: Tombol Pesan +++ */}
+                      <td style={styles.td}>
+                        <button 
+                          onClick={() => handleOrderClick(item)} 
+                          style={styles.orderBtn}
+                        >
+                          Pesan
+                        </button>
+                      </td>
                     </tr>
                   )) : (
                     <tr>
-                      <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+                      <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
                         Tidak ada data yang ditampilkan. Silakan pilih kelas tonase dan klik hitung.
                       </td>
                     </tr>
@@ -260,6 +283,18 @@ const Saw = () => {
           )}
         </div>
       </div>
+
+      {/* +++ TAMBAHAN: Render Modal Pemesanan di sini +++ */}
+      <FormPemesananModal 
+        isOpen={isOrderOpen}
+        onClose={() => setIsOrderOpen(false)}
+        // Menggunakan id atau alat_berat_id tergantung format JSON dari backend
+        alatBeratId={orderItem?.id || orderItem?.alat_berat_id}
+        namaAlat={orderItem?.name || orderItem?.nama_unit}
+        sumberPesanan="saw" 
+        sawResultId={orderItem?.saw_result_id || null} 
+      />
+
     </div>
   );
 };
@@ -290,7 +325,9 @@ const styles = {
   td: { padding: '1rem', color: '#374151', verticalAlign: 'middle' },
   tdActive: { padding: '1rem', textAlign: 'center', width: '70px', verticalAlign: 'middle' },
   scoreBadge: { padding: '0.25rem 0.75rem', backgroundColor: '#1f2937', color: 'white', borderRadius: '999px', fontSize: '0.85rem', fontWeight: 'bold' },
-  badgeTop: { padding: '0.25rem 0.5rem', backgroundColor: '#10b981', color: 'white', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold' }
+  badgeTop: { padding: '0.25rem 0.5rem', backgroundColor: '#10b981', color: 'white', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold' },
+  // +++ TAMBAHAN: Style untuk tombol pesan +++
+  orderBtn: { padding: '0.4rem 0.8rem', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold', whiteSpace: 'nowrap' }
 };
 
 export default Saw;

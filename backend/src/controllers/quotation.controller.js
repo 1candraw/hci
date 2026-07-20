@@ -1,62 +1,44 @@
-const quotationService = require('../services/quotation.service');
+const quotationRepo = require('../repositories/quotation.repository');
 
-const getAll = async (req, res) => {
+const createQuotation = async (req, res) => {
   try {
-    const data = await quotationService.getSemuaPenawaran();
-    res.status(200).json({ success: true, data });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-const createRequest = async (req, res) => {
-  try {
-    const customerId = req.user.id;
-    const newId = await quotationService.ajukanPenawaran(customerId, req.body);
-    res.status(201).json({ success: true, message: 'Penawaran berhasil diajukan', data: { id: newId } });
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
-
-const updateBySales = async (req, res) => {
-  try {
-    const salesId = req.user.id;
-    const quotationId = req.params.id;
-    await quotationService.prosesSales(salesId, quotationId, req.body);
-    res.status(200).json({ success: true, message: 'Penawaran berhasil diproses oleh Sales' });
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
-
-const approveByManager = async (req, res) => {
-  try {
-    const managerId = req.user.id;
-    const quotationId = req.params.id;
-    const { status } = req.body;
-    await quotationService.persetujuanManager(managerId, quotationId, status);
-    res.status(200).json({ success: true, message: `Penawaran berhasil di-${status}` });
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
-
-const updateByOperasional = async (req, res) => {
-  try {
-    const operasionalId = req.user.id;
-    const quotationId = req.params.id;
-    const { status } = req.body;
+    // 1. Ambil ID Customer dari token JWT yang sedang login
+    const customer_id = req.user.id; 
     
-    await quotationService.prosesOperasional(operasionalId, quotationId, status);
-    
-    res.status(200).json({ 
-      success: true, 
-      message: `Dokumen pengiriman telah di-update, status saat ini: ${status}` 
+    // 2. Tangkap data dari form React
+    const { alat_berat_id, sumber_pesanan, saw_result_id, metode_pembayaran, catatan } = req.body;
+
+    // 3. Generate Nomor Pemesanan Unik ala Enterprise (Contoh: PO-202607-A8F2)
+    const date = new Date();
+    const yearMonth = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const nomor_pemesanan = `PO-${yearMonth}-${randomStr}`;
+
+    // 4. Susun data untuk dilempar ke Repository
+    const newQuotation = {
+      nomor_pemesanan,
+      customer_id,
+      alat_berat_id,
+      sumber_pesanan,
+      saw_result_id,
+      metode_pembayaran,
+      catatan
+    };
+
+    // 5. Simpan ke database
+    const insertId = await quotationRepo.create(newQuotation);
+
+    res.status(201).json({
+      message: 'Pemesanan berhasil diajukan',
+      data: { id: insertId, nomor_pemesanan }
     });
+
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    console.error('Error createQuotation:', error);
+    res.status(500).json({ message: 'Gagal mengajukan pemesanan', error: error.message });
   }
 };
 
-module.exports = { getAll, createRequest, updateBySales, approveByManager, updateByOperasional };
+module.exports = {
+  createQuotation
+};
