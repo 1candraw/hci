@@ -21,6 +21,28 @@ const create = async (data) => {
   return result.insertId;
 };
 
+// +++ TAMBAHAN: Fungsi getAll dengan JOIN Tabel +++
+const getAll = async () => {
+  const query = `
+    SELECT 
+      q.id, 
+      q.nomor_pemesanan, 
+      q.status, 
+      q.created_at,
+      u.fullname AS nama_customer, 
+      a.name AS nama_alat
+    FROM quotations q
+    LEFT JOIN users u ON q.customer_id = u.id
+    LEFT JOIN alat_berat a ON q.alat_berat_id = a.id
+    ORDER BY q.created_at DESC
+  `;
+  
+  const [rows] = await db.query(query);
+  return rows;
+};
+
+// Jangan lupa mengekspor getAll agar bisa dipakai di Controller
 module.exports = {
-  create
+  create,
+  getAll
 };

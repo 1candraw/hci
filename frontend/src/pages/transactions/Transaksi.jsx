@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { transaksiService } from '../../services/transaksi.service';
+import { useNavigate } from 'react-router-dom';
 
 const Transaksi = () => {
   const { user } = useAuth();
+  const navigate = useNavigate(); 
   const [quotations, setQuotations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -23,6 +25,9 @@ const Transaksi = () => {
       if (Array.isArray(result)) dataArray = result;
       else if (result?.data && Array.isArray(result.data)) dataArray = result.data;
       
+      // +++ TAMBAHKAN BARIS INI UNTUK MENGINTIP DATA +++
+      console.log("DATA TRANSAKSI DARI BACKEND:", dataArray);
+
       setQuotations(dataArray);
     } catch (err) {
       setError(typeof err === 'string' ? err : 'Terjadi kesalahan sistem');
@@ -32,7 +37,7 @@ const Transaksi = () => {
   };
 
   // Fungsi untuk Manager mengubah status menjadi "Disetujui"
- const handleApprove = async (id) => {
+  const handleApprove = async (id) => {
     if (!window.confirm('Yakin ingin menyetujui dokumen ini?')) return;
     
     try {
@@ -45,7 +50,7 @@ const Transaksi = () => {
     }
   };
 
-const getStatusBadge = (status) => {
+  const getStatusBadge = (status) => {
     switch (status) {
       case 'PENDING': 
         return <span style={{...styles.badge, backgroundColor: '#fef3c7', color: '#d97706'}}>Menunggu Harga</span>;
@@ -68,7 +73,9 @@ const getStatusBadge = (status) => {
           <p style={styles.subtitle}>Kelola permintaan penawaran harga alat berat</p>
         </div>
         {user?.role === 'Customer' && (
-          <button style={styles.actionBtn}>+ Buat Permintaan</button>
+          <button onClick={() => navigate('/katalog')} style={styles.actionBtn}>
+            + Buat Permintaan
+          </button>
         )}
       </div>
 
@@ -100,7 +107,6 @@ const getStatusBadge = (status) => {
                     <td style={styles.td}>{item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID') : '-'}</td>
                     <td style={styles.td}>{getStatusBadge(item.status)}</td>
                     <td style={styles.td}>
-                      {/* Tombol Approve disesuaikan dengan ENUM MENUNGGU_APPROVAL */}
                       {user?.role === 'Manager' && item.status === 'MENUNGGU_APPROVAL' && (
                         <button onClick={() => handleApprove(item.id)} style={styles.approveBtn}>
                           ✅ Approve
@@ -119,7 +125,7 @@ const getStatusBadge = (status) => {
   );
 };
 
-// Styling UI (dengan tambahan tombol Approve)
+// Styling UI
 const styles = {
   container: { padding: '1.5rem', backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' },

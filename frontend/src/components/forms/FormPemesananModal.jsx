@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+// Import useNavigate dari react-router-dom untuk fungsi redirect
+import { useNavigate } from 'react-router-dom'; 
 import { quotationService } from '../../services/quotation.service';
 
 const FormPemesananModal = ({ 
@@ -13,6 +15,9 @@ const FormPemesananModal = ({
   const [catatan, setCatatan] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [pesan, setPesan] = useState({ type: '', text: '' });
+  
+  // Inisialisasi fungsi navigasi
+  const navigate = useNavigate();
 
   if (!isOpen) return null;
 
@@ -38,6 +43,9 @@ const FormPemesananModal = ({
         setCatatan('');
         onClose();
         setPesan({ type: '', text: '' });
+        
+        // Arahkan user ke halaman transaksi setelah 2 detik
+        navigate('/transaksi'); 
       }, 2000);
 
     } catch (error) {
@@ -116,13 +124,13 @@ const FormPemesananModal = ({
   );
 };
 
-// --- STYLING MODAL (Disesuaikan dengan tema aplikasimu) ---
+// --- STYLING MODAL ---
 const styles = {
   overlay: {
     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
     display: 'flex', justifyContent: 'center', alignItems: 'center',
-    zIndex: 9999, // Pastikan ini paling depan
+    zIndex: 9999,
     padding: '1rem'
   },
   modal: {
