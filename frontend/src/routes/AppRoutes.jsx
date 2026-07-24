@@ -8,8 +8,11 @@ import Saw from '../pages/saw/Saw';
 import Transaksi from '../pages/transactions/Transaksi';
 import AuditLog from '../pages/dashboard/AuditLog';
 
-// TAMBAHKAN IMPORT INI (Sesuaikan path folder-nya jika berbeda)
+// IMPORT MASTER DATA
 import MasterAlatBerat from '../pages/alatBerat/MasterAlatBerat';
+
+// +++ TAMBAHAN: IMPORT TRANSAKSI DETAIL +++
+import TransaksiDetail from '../pages/transactions/TransaksiDetail';
 
 const AppRoutes = () => {
   return (
@@ -24,6 +27,9 @@ const AppRoutes = () => {
           <Route path="/" element={<Dashboard />} />
           <Route path="/katalog" element={<Katalog />} />
           <Route path="/transaksi" element={<Transaksi />} />
+          
+          {/* +++ TAMBAHAN: RUTE DETAIL TRANSAKSI +++ */}
+          <Route path="/transaksi/:id" element={<TransaksiDetail />} />
           
           {/* LAPIS 2: RUTE KHUSUS (Pembatasan berdasarkan Hak Akses/Role) */}
           

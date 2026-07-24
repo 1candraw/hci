@@ -112,7 +112,8 @@ const Transaksi = () => {
                           ✅ Approve
                         </button>
                       )}
-                      <button style={styles.detailBtn}>Detail</button>
+                      <button onClick={() => navigate(`/transaksi/${item.id}`)} 
+                        style={styles.detailBtn}>Detail</button>
                     </td>
                   </tr>
                 ))

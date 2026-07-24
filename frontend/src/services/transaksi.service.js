@@ -20,7 +20,23 @@ const updateStatus = async (id, status) => {
   }
 };
 
+// Di dalam file service frontend kamu
+const getById = async (id) => {
+  // Sesuaikan dengan konfigurasi axios milikmu (misal: axiosInstance.get)
+  const response = await api.get(`/quotations/${id}`); 
+  return response.data;
+};
+
+// +++ TAMBAHKAN FUNGSI INI +++
+const submitPenawaran = async (id, data) => {
+  // Sesuaikan instance axios-mu (misal: axiosInstance.put atau api.put)
+  const response = await api.put(`/quotations/${id}/penawaran`, data);
+  return response.data;
+};
+
 export const transaksiService = {
   getAll,
-  updateStatus
+  getById,
+  updateStatus,
+  submitPenawaran
 };
