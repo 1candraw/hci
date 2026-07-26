@@ -15,4 +15,10 @@ router.get('/:id', authenticate, quotationController.getById);
 // +++ TAMBAHAN: PUT submit penawaran oleh Sales +++
 router.put('/:id/penawaran', authenticate, quotationController.submitPenawaran);
 
+// PUT eksekusi dari Manager (Approve/Reject)
+router.put('/:id/review', authenticate, quotationController.reviewPenawaran);
+
+// POST request token Midtrans
+router.post('/:id/pay-dp', authenticate, quotationController.createPaymentToken);
+
 module.exports = router;

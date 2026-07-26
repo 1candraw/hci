@@ -2,7 +2,6 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useState, useEffect } from 'react';
 import { sawService } from '../../services/saw.service';
-// +++ TAMBAHAN: Import komponen modal form pemesanan +++
 import FormPemesananModal from '../../components/forms/FormPemesananModal';
 
 const Saw = () => {

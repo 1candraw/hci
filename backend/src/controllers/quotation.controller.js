@@ -1,3 +1,4 @@
+const midtransClient = require('midtrans-client');
 const quotationRepo = require('../repositories/quotation.repository');
 
 const createQuotation = async (req, res) => {
@@ -39,7 +40,7 @@ const createQuotation = async (req, res) => {
   }
 };
 
-// +++ TAMBAHAN: Fungsi untuk mengambil semua data (untuk tabel Transaksi) +++
+//Fungsi untuk mengambil semua data (untuk tabel Transaksi)
 const getAllQuotations = async (req, res) => {
   try {
     const quotations = await quotationRepo.getAll();
@@ -50,7 +51,7 @@ const getAllQuotations = async (req, res) => {
   }
 };
 
-// +++ TAMBAHAN: Fungsi untuk mengambil 1 spesifik data (untuk halaman Detail) +++
+//Fungsi untuk mengambil 1 spesifik data (untuk halaman Detail)
 const getById = async (req, res) => {
   try {
     const id = req.params.id;
@@ -67,7 +68,7 @@ const getById = async (req, res) => {
   }
 };
 
-// +++ TAMBAHAN: Fungsi untuk menangani request dari form Sales +++
+//Fungsi untuk menangani request dari form Sales
 const submitPenawaran = async (req, res) => {
 
   console.log("=== API SUBMIT PENAWARAN TERPANGGIL ===");
@@ -99,9 +100,91 @@ const submitPenawaran = async (req, res) => {
   }
 };
 
+//Fungsi untuk Manager menyetujui atau menolak pesanan
+const reviewPenawaran = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const manager_id = req.user.id; // Ambil ID Manager dari token
+    const { action } = req.body; // Isinya nanti 'approve' atau 'reject'
+
+    // Tentukan status berdasarkan aksi Manager
+    let statusFinal = '';
+    if (action === 'approve') {
+      statusFinal = 'APPROVED';
+    } else if (action === 'reject') {
+      statusFinal = 'REJECTED';
+    } else {
+      return res.status(400).json({ message: 'Aksi tidak valid' });
+    }
+
+    const affectedRows = await quotationRepo.updateStatusManager(id, statusFinal, manager_id);
+
+    if (affectedRows === 0) {
+      return res.status(404).json({ message: 'Data pesanan tidak ditemukan' });
+    }
+
+    res.status(200).json({ message: `Pesanan berhasil di-${action}!` });
+  } catch (error) {
+    console.error('Error reviewPenawaran:', error);
+    res.status(500).json({ message: 'Terjadi kesalahan saat memproses review', error: error.message });
+  }
+};
+
+//Fungsi untuk membuat token pembayaran Midtrans (DP)
+const createPaymentToken = async (req, res) => {
+  try {
+    const id = req.params.id;
+    
+    // 1. Ambil data pesanan dari database
+    const detail = await quotationRepo.getById(id);
+    if (!detail) {
+      return res.status(404).json({ message: 'Data pesanan tidak ditemukan' });
+    }
+
+    // 2. Hitung jumlah DP (Uang Muka) -> Misalnya kita set 10% dari Total Final
+    const totalAkhir = Number(detail.harga_penawaran) + Number(detail.ongkos_kirim) - Number(detail.diskon);
+    const dpAmount = Math.round(totalAkhir * 0.1); // DP 10% (dibulatkan agar tidak ada desimal)
+
+    // 3. Konfigurasi koneksi ke Midtrans
+    let snap = new midtransClient.Snap({
+      isProduction: false, // Wajib false karena kita masih pakai mode Sandbox
+      serverKey: process.env.MIDTRANS_SERVER_KEY
+    });
+
+    // 4. Siapkan parameter pesanan (struk digital)
+    let parameter = {
+      "transaction_details": {
+        // Order ID harus unik, jadi kita gabung nomor pesanan + timestamp detik ini
+        "order_id": `DP-${detail.nomor_dokumen}-${Date.now()}`,
+        "gross_amount": dpAmount // Tagihan yang harus dibayar
+      },
+      "customer_details": {
+        "first_name": detail.perusahaan,
+        "email": detail.email_perusahaan || "customer@heavycare.id",
+        "phone": detail.telepon_perusahaan || "0800000000"
+      }
+    };
+
+    // 5. Tembak ke Midtrans untuk minta Token
+    const transaction = await snap.createTransaction(parameter);
+    
+    // 6. Kembalikan tokennya ke Frontend React
+    res.status(200).json({ 
+      token: transaction.token, 
+      dp_amount: dpAmount 
+    });
+
+  } catch (error) {
+    console.error('Error createPaymentToken:', error);
+    res.status(500).json({ message: 'Gagal membuat token pembayaran', error: error.message });
+  }
+};
+
 module.exports = {
   createQuotation,
-  getAllQuotations, // Export fungsi ini
-  getById,           // Export fungsi ini
-  submitPenawaran    // Export fungsi ini
+  getAllQuotations, 
+  getById,           
+  submitPenawaran,    
+  reviewPenawaran,    
+  createPaymentToken     
 };

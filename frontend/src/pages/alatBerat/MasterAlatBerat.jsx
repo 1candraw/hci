@@ -205,12 +205,12 @@ const MasterAlatBerat = () => {
                   <td style={styles.td}>
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                       <button onClick={() => openEditModal(item)} style={styles.btnEdit}>✏️ Edit</button>
-                      <button onClick={() => handleDelete(item.id)} style={styles.btnDelete}>🗑️ Hapus</button>
+                      <button onClick={() => handleDelete(item.id)} style={styles.btnDelete}>Hapus</button>
                       
                       {/* TOMBOL APPROVAL KHUSUS MANAGER (Muncul jika status 'pending' atau 'pending_delete') */}
                       {isManager && ['pending', 'pending_delete'].includes((item.status_approval || '').toLowerCase().trim()) && (
                         <button onClick={() => handleApprove(item.id)} style={styles.btnApprove} title="Setujui Data">
-                          ✅ Approve
+                          Approve
                         </button>
                       )}
                     </div>

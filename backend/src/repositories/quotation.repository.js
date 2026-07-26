@@ -52,6 +52,9 @@ const getById = async (id) => {
       q.metode_pembayaran,
       q.catatan,
       q.sumber_pesanan,
+      q.harga_penawaran, 
+      q.ongkos_kirim,    
+      q.diskon,          
       u.fullname AS perusahaan, 
       u.email AS email_perusahaan,
       u.phone AS telepon_perusahaan,
@@ -92,10 +95,23 @@ const updatePenawaran = async (id, data) => {
   return result.affectedRows; // Mengembalikan jumlah baris yang berhasil diubah
 };
 
+// TAMBAHKAN FUNGSI BARU INI UNTUK MANAGER ---
+const updateStatusManager = async (id, status, manager_id) => {
+  const query = `
+    UPDATE quotations 
+    SET status = ?, manager_id = ? 
+    WHERE id = ?
+  `;
+  
+  const [result] = await db.query(query, [status, manager_id, id]);
+  return result.affectedRows;
+};
+
 // Jangan lupa mengekspor getById
 module.exports = {
   create,
   getAll,
   getById,
-  updatePenawaran
+  updatePenawaran,
+  updateStatusManager
 };

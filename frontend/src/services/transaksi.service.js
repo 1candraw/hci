@@ -34,9 +34,25 @@ const submitPenawaran = async (id, data) => {
   return response.data;
 };
 
+// +++ TAMBAHKAN FUNGSI INI +++
+const reviewPenawaran = async (id, action) => {
+  // action akan berisi teks 'approve' atau 'reject'
+  const response = await api.put(`/quotations/${id}/review`, { action });
+  return response.data;
+};
+
+// +++ FUNGSI UNTUK MENGAMBIL TOKEN MIDTRANS +++
+const payDP = async (id) => {
+  const response = await api.post(`/quotations/${id}/pay-dp`);
+  return response.data;
+};
+
+
 export const transaksiService = {
   getAll,
   getById,
   updateStatus,
-  submitPenawaran
+  submitPenawaran,
+  reviewPenawaran,
+  payDP
 };
