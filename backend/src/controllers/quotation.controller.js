@@ -180,11 +180,31 @@ const createPaymentToken = async (req, res) => {
   }
 };
 
+// +++ TAMBAHKAN FUNGSI INI +++
+const updateStatusPesanan = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { status } = req.body; // Status baru yang akan dikirim dari React
+
+    const affectedRows = await quotationRepo.updateStatus(id, status);
+    if (affectedRows === 0) {
+      return res.status(404).json({ message: 'Data pesanan tidak ditemukan' });
+    }
+
+    res.status(200).json({ message: `Status berhasil diubah menjadi ${status}` });
+  } catch (error) {
+    console.error('Error updateStatusPesanan:', error);
+    res.status(500).json({ message: 'Terjadi kesalahan server', error: error.message });
+  }
+};
+
+
 module.exports = {
   createQuotation,
   getAllQuotations, 
   getById,           
   submitPenawaran,    
   reviewPenawaran,    
-  createPaymentToken     
+  createPaymentToken,
+  updateStatusPesanan
 };

@@ -107,11 +107,20 @@ const updateStatusManager = async (id, status, manager_id) => {
   return result.affectedRows;
 };
 
+// +++ TAMBAHKAN FUNGSI INI +++
+const updateStatus = async (id, status) => {
+  const query = `UPDATE quotations SET status = ? WHERE id = ?`;
+  const [result] = await db.query(query, [status, id]);
+  return result.affectedRows;
+};
+
+
 // Jangan lupa mengekspor getById
 module.exports = {
   create,
   getAll,
   getById,
   updatePenawaran,
-  updateStatusManager
+  updateStatusManager,
+  updateStatus
 };

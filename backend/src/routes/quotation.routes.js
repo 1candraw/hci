@@ -21,4 +21,7 @@ router.put('/:id/review', authenticate, quotationController.reviewPenawaran);
 // POST request token Midtrans
 router.post('/:id/pay-dp', authenticate, quotationController.createPaymentToken);
 
+// PUT update status pesanan (fleksibel untuk berbagai tahapan)
+router.put('/:id/status', authenticate, quotationController.updateStatusPesanan);
+
 module.exports = router;
