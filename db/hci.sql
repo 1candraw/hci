@@ -78,7 +78,7 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `entity`, `entity_id`, `des
 -- Dumping structure for table hci.delivery_orders
 CREATE TABLE IF NOT EXISTS `delivery_orders` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `transaction_id` int DEFAULT NULL,
+  `quotation_id` int DEFAULT NULL,
   `surat_jalan_number` varchar(100) DEFAULT NULL,
   `driver_name` varchar(100) DEFAULT NULL,
   `vehicle_number` varchar(50) DEFAULT NULL,
@@ -87,8 +87,8 @@ CREATE TABLE IF NOT EXISTS `delivery_orders` (
   `received_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `transaction_id` (`transaction_id`),
-  CONSTRAINT `delivery_orders_ibfk_1` FOREIGN KEY (`transaction_id`) REFERENCES `transactions` (`id`)
+  KEY `fk_delivery_quotation` (`quotation_id`),
+  CONSTRAINT `fk_delivery_quotation` FOREIGN KEY (`quotation_id`) REFERENCES `quotations` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table hci.delivery_orders: ~0 rows (approximately)
@@ -150,7 +150,7 @@ CREATE TABLE IF NOT EXISTS `quotations` (
   `harga_penawaran` decimal(15,2) DEFAULT NULL,
   `ongkos_kirim` decimal(15,2) DEFAULT NULL,
   `diskon` decimal(15,2) DEFAULT NULL,
-  `status` enum('PENDING','MENUNGGU_APPROVAL','APPROVED','REJECTED','DP_DIBAYAR','VERIFIKASI_DP_SALES','PROSES_OPERASIONAL') DEFAULT 'PENDING',
+  `status` enum('PENDING','MENUNGGU_APPROVAL','APPROVED','REJECTED','DP_DIBAYAR','VERIFIKASI_DP_SALES','PROSES_OPERASIONAL','SIAP_KIRIM','PENGIRIMAN','SELESAI') DEFAULT 'PENDING',
   `catatan` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -167,7 +167,7 @@ CREATE TABLE IF NOT EXISTS `quotations` (
 -- Dumping data for table hci.quotations: ~3 rows (approximately)
 INSERT INTO `quotations` (`id`, `nomor_pemesanan`, `customer_id`, `alat_berat_id`, `sales_id`, `manager_id`, `sumber_pesanan`, `saw_result_id`, `metode_pembayaran`, `harga_penawaran`, `ongkos_kirim`, `diskon`, `status`, `catatan`, `created_at`, `updated_at`) VALUES
 	(2, 'PO-202607-J3P5', 5, 13, 1, 6, 'katalog', NULL, 'leasing', 550000000.00, 20000000.00, 10000000.00, 'APPROVED', 'hi', '2026-07-22 13:00:20', '2026-07-26 08:02:53'),
-	(3, 'PO-202607-OFOX', 5, 13, 1, 6, 'katalog', NULL, 'leasing', 550000000.00, 20000000.00, 10000000.00, 'PROSES_OPERASIONAL', 'Tolong bungkus ga pakai karet', '2026-07-31 14:25:17', '2026-07-31 15:46:39'),
+	(3, 'PO-202607-OFOX', 5, 13, 1, 6, 'katalog', NULL, 'leasing', 550000000.00, 20000000.00, 10000000.00, 'SIAP_KIRIM', 'Tolong bungkus ga pakai karet', '2026-07-31 14:25:17', '2026-08-07 14:48:35'),
 	(4, 'PO-202607-JGKZ', 5, 1, 1, 6, 'saw', NULL, 'cash', 500000000.00, 20000000.00, 5000000.00, 'APPROVED', 'Warna yang pink 1', '2026-07-31 14:26:00', '2026-07-31 14:29:07');
 
 -- Dumping structure for table hci.roles
@@ -791,22 +791,26 @@ CREATE TABLE IF NOT EXISTS `transaction_items` (
 -- Dumping structure for table hci.unit_checklists
 CREATE TABLE IF NOT EXISTS `unit_checklists` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `transaction_id` int DEFAULT NULL,
+  `quotation_id` int DEFAULT NULL,
   `operator_id` int DEFAULT NULL,
   `engine_check` tinyint(1) DEFAULT NULL,
   `hydraulic_check` tinyint(1) DEFAULT NULL,
   `bucket_check` tinyint(1) DEFAULT NULL,
-  `tire_check` tinyint(1) DEFAULT NULL,
+  `body_check` tinyint(1) DEFAULT NULL,
+  `undercarriage_check` tinyint(1) DEFAULT NULL,
+  `accessories_check` tinyint(1) DEFAULT NULL,
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `unit_checklists_ibfk_trans` (`transaction_id`),
   KEY `unit_checklists_ibfk_user` (`operator_id`),
-  CONSTRAINT `unit_checklists_ibfk_trans` FOREIGN KEY (`transaction_id`) REFERENCES `transactions` (`id`),
+  KEY `fk_checklist_quotation` (`quotation_id`),
+  CONSTRAINT `fk_checklist_quotation` FOREIGN KEY (`quotation_id`) REFERENCES `quotations` (`id`) ON DELETE CASCADE,
   CONSTRAINT `unit_checklists_ibfk_user` FOREIGN KEY (`operator_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table hci.unit_checklists: ~0 rows (approximately)
+-- Dumping data for table hci.unit_checklists: ~1 rows (approximately)
+INSERT INTO `unit_checklists` (`id`, `quotation_id`, `operator_id`, `engine_check`, `hydraulic_check`, `bucket_check`, `body_check`, `undercarriage_check`, `accessories_check`, `notes`, `created_at`) VALUES
+	(1, 3, 7, 1, 1, 1, 1, 1, 1, '', '2026-08-07 14:48:35');
 
 -- Dumping structure for table hci.users
 CREATE TABLE IF NOT EXISTS `users` (

@@ -198,6 +198,27 @@ const updateStatusPesanan = async (req, res) => {
   }
 };
 
+// +++ TAMBAHKAN FUNGSI INI +++
+const submitChecklistPDI = async (req, res) => {
+  try {
+    const id = req.params.id; // ID Quotation
+    const operatorId = req.user.id; // Mengambil ID dari user yang sedang login (Operasional)
+    const checklistData = req.body;
+
+    // 1. Simpan data PDI ke tabel unit_checklists
+    await quotationRepo.submitPDI(id, operatorId, checklistData);
+
+    // 2. Ubah status pesanan menjadi SIAP_KIRIM
+    await quotationRepo.updateStatus(id, 'SIAP_KIRIM');
+
+    res.status(200).json({ message: 'PDI selesai, Unit Siap Dikirim!' });
+  } catch (error) {
+    console.error('Error submitChecklistPDI:', error);
+    res.status(500).json({ message: 'Terjadi kesalahan server', error: error.message });
+  }
+};
+
+// ... pastikan submitChecklistPDI dimasukkan ke module.exports di bawah
 
 module.exports = {
   createQuotation,
@@ -206,5 +227,6 @@ module.exports = {
   submitPenawaran,    
   reviewPenawaran,    
   createPaymentToken,
-  updateStatusPesanan
+  updateStatusPesanan,
+  submitChecklistPDI
 };

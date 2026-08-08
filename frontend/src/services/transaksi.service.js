@@ -39,11 +39,18 @@ const updateStatus = async (id, status) => {
   return response.data;
 };
 
+// +++ TAMBAHKAN FUNGSI BARU INI +++
+const submitPDI = async (id, data) => {
+  const response = await api.post(`/quotations/${id}/pdi`, data);
+  return response.data;
+};
+
 export const transaksiService = {
   getAll,
   getById,
   submitPenawaran,
   reviewPenawaran,
   payDP,
-  updateStatus
+  updateStatus,
+  submitPDI
 };

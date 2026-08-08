@@ -41,7 +41,7 @@ const getAll = async () => {
   return rows;
 };
 
-// +++ TAMBAHAN: Fungsi getById dengan rincian lengkap untuk halaman Detail +++
+//Fungsi getById dengan rincian lengkap untuk halaman Detail +++
 const getById = async (id) => {
   const query = `
     SELECT 
@@ -70,7 +70,7 @@ const getById = async (id) => {
   return rows[0]; 
 };
 
-// +++ TAMBAHAN: Fungsi untuk Sales menginput harga dan meneruskan ke Manager +++
+//Fungsi untuk Sales menginput harga dan meneruskan ke Manager +++
 const updatePenawaran = async (id, data) => {
   const query = `
     UPDATE quotations 
@@ -114,6 +114,33 @@ const updateStatus = async (id, status) => {
   return result.affectedRows;
 };
 
+// +++ TAMBAHKAN FUNGSI INI +++
+const submitPDI = async (quotationId, operatorId, data) => {
+  const { engine, hydraulic, bucket, body, undercarriage, accessories, notes } = data;
+  
+  const query = `
+    INSERT INTO unit_checklists 
+    (quotation_id, operator_id, engine_check, hydraulic_check, bucket_check, body_check, undercarriage_check, accessories_check, notes) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+  
+  const [result] = await db.query(query, [
+    quotationId, 
+    operatorId, 
+    engine ? 1 : 0, 
+    hydraulic ? 1 : 0, 
+    bucket ? 1 : 0, 
+    body ? 1 : 0, 
+    undercarriage ? 1 : 0, 
+    accessories ? 1 : 0, 
+    notes || ''
+  ]);
+  
+  return result.insertId;
+};
+
+// ... pastikan submitPDI dimasukkan ke module.exports di bawah
+
 
 // Jangan lupa mengekspor getById
 module.exports = {
@@ -122,5 +149,6 @@ module.exports = {
   getById,
   updatePenawaran,
   updateStatusManager,
-  updateStatus
+  updateStatus,
+  submitPDI
 };

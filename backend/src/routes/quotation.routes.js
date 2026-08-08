@@ -24,4 +24,7 @@ router.post('/:id/pay-dp', authenticate, quotationController.createPaymentToken)
 // PUT update status pesanan (fleksibel untuk berbagai tahapan)
 router.put('/:id/status', authenticate, quotationController.updateStatusPesanan);
 
+// POST submit form PDI oleh Operasional
+router.post('/:id/pdi', authenticate, quotationController.submitChecklistPDI);
+
 module.exports = router;
