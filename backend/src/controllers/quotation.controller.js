@@ -218,7 +218,25 @@ const submitChecklistPDI = async (req, res) => {
   }
 };
 
-// ... pastikan submitChecklistPDI dimasukkan ke module.exports di bawah
+// +++ TAMBAHKAN FUNGSI INI DI CONTROLLER +++
+const createDeliveryOrder = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const deliveryData = req.body; 
+
+    // 1. Simpan data pengiriman
+    await quotationRepo.submitDeliveryOrder(id, deliveryData);
+
+    // 2. Ubah status menjadi PENGIRIMAN
+    await quotationRepo.updateStatus(id, 'PENGIRIMAN');
+
+    res.status(200).json({ message: 'Surat Jalan berhasil diterbitkan, Unit dalam perjalanan!' });
+  } catch (error) {
+    console.error('Error createDeliveryOrder:', error);
+    res.status(500).json({ message: 'Terjadi kesalahan server', error: error.message });
+  }
+};
+
 
 module.exports = {
   createQuotation,
@@ -228,5 +246,6 @@ module.exports = {
   reviewPenawaran,    
   createPaymentToken,
   updateStatusPesanan,
-  submitChecklistPDI
+  submitChecklistPDI,
+  createDeliveryOrder
 };

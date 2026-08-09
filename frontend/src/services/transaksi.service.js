@@ -45,6 +45,13 @@ const submitPDI = async (id, data) => {
   return response.data;
 };
 
+// Tambahkan ini di atas export
+const submitDeliveryOrder = async (id, data) => {
+  const response = await api.post(`/quotations/${id}/delivery`, data);
+  return response.data;
+};
+
+
 export const transaksiService = {
   getAll,
   getById,
@@ -52,5 +59,6 @@ export const transaksiService = {
   reviewPenawaran,
   payDP,
   updateStatus,
-  submitPDI
+  submitPDI,
+  submitDeliveryOrder
 };

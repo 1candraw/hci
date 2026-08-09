@@ -27,4 +27,7 @@ router.put('/:id/status', authenticate, quotationController.updateStatusPesanan)
 // POST submit form PDI oleh Operasional
 router.post('/:id/pdi', authenticate, quotationController.submitChecklistPDI);
 
+// POST terbitkan surat jalan oleh Operasional
+router.post('/:id/delivery', authenticate, quotationController.createDeliveryOrder);
+
 module.exports = router;

@@ -139,7 +139,23 @@ const submitPDI = async (quotationId, operatorId, data) => {
   return result.insertId;
 };
 
-// ... pastikan submitPDI dimasukkan ke module.exports di bawah
+// +++ TAMBAHKAN FUNGSI INI DI REPOSITORY +++
+const submitDeliveryOrder = async (quotationId, data) => {
+  const { driverName, vehicleNumber, destination } = data;
+  
+  // Membuat nomor surat jalan otomatis (Contoh: SJ-202608-1234)
+  const date = new Date();
+  const sjNumber = `SJ-${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}-${Math.floor(Math.random() * 10000)}`;
+
+  const query = `
+    INSERT INTO delivery_orders 
+    (quotation_id, surat_jalan_number, driver_name, vehicle_number, destination) 
+    VALUES (?, ?, ?, ?, ?)
+  `;
+  
+  const [result] = await db.query(query, [quotationId, sjNumber, driverName, vehicleNumber, destination]);
+  return result.insertId;
+};
 
 
 // Jangan lupa mengekspor getById
@@ -150,5 +166,6 @@ module.exports = {
   updatePenawaran,
   updateStatusManager,
   updateStatus,
-  submitPDI
+  submitPDI,
+  submitDeliveryOrder
 };
