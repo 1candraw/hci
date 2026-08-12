@@ -237,6 +237,18 @@ const createDeliveryOrder = async (req, res) => {
   }
 };
 
+// +++ TAMBAHKAN FUNGSI INI DI BAWAH +++
+const receiveUnit = async (req, res) => {
+  try {
+    const id = req.params.id;
+    await quotationRepo.confirmDelivery(id);
+    res.status(200).json({ message: 'Unit berhasil diterima. Status menjadi SELESAI.' });
+  } catch (error) {
+    console.error('Error receiveUnit:', error);
+    res.status(500).json({ message: 'Terjadi kesalahan server', error: error.message });
+  }
+};
+// Pastikan receiveUnit diekspor
 
 module.exports = {
   createQuotation,
@@ -247,5 +259,6 @@ module.exports = {
   createPaymentToken,
   updateStatusPesanan,
   submitChecklistPDI,
-  createDeliveryOrder
+  createDeliveryOrder,
+  receiveUnit
 };

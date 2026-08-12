@@ -30,4 +30,7 @@ router.post('/:id/pdi', authenticate, quotationController.submitChecklistPDI);
 // POST terbitkan surat jalan oleh Operasional
 router.post('/:id/delivery', authenticate, quotationController.createDeliveryOrder);
 
+// PUT konfirmasi penerimaan unit oleh Customer
+router.put('/:id/receive', authenticate, quotationController.receiveUnit);
+
 module.exports = router;

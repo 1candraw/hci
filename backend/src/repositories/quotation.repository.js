@@ -157,6 +157,28 @@ const submitDeliveryOrder = async (quotationId, data) => {
   return result.insertId;
 };
 
+// +++ TAMBAHKAN FUNGSI INI DI BAWAH +++
+const confirmDelivery = async (quotationId) => {
+  // 1. Catat bahwa barang sudah diterima (Timestamp otomatis)
+  const updateDeliveryQuery = `
+    UPDATE delivery_orders 
+    SET received_by_customer = 1, received_at = NOW() 
+    WHERE quotation_id = ?
+  `;
+  await db.query(updateDeliveryQuery, [quotationId]);
+  
+  // 2. Ubah status pesanan menjadi SELESAI
+  const updateStatusQuery = `
+    UPDATE quotations 
+    SET status = 'SELESAI' 
+    WHERE id = ?
+  `;
+  await db.query(updateStatusQuery, [quotationId]);
+  
+  return true;
+};
+// Pastikan confirmDelivery diekspor
+
 
 // Jangan lupa mengekspor getById
 module.exports = {
@@ -167,5 +189,6 @@ module.exports = {
   updateStatusManager,
   updateStatus,
   submitPDI,
-  submitDeliveryOrder
+  submitDeliveryOrder,
+  confirmDelivery
 };

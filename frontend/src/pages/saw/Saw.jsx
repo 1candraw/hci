@@ -235,7 +235,7 @@ const Saw = () => {
                   <tr>
                     <th style={styles.th}>Peringkat</th>
                     <th style={styles.th}>Nama Unit</th>
-                    <th style={styles.th}>Skor Akhir (Vi)</th>
+                    <th style={styles.th}>Skor</th>
                     <th style={styles.th}>Status</th>
                     {/* +++ TAMBAHAN: Kolom Aksi +++ */}
                     <th style={styles.th}>Aksi</th>

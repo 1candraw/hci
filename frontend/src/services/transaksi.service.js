@@ -51,6 +51,11 @@ const submitDeliveryOrder = async (id, data) => {
   return response.data;
 };
 
+// +++ TAMBAHKAN FUNGSI INI +++
+const receiveUnit = async (id) => {
+  const response = await api.put(`/quotations/${id}/receive`);
+  return response.data;
+};
 
 export const transaksiService = {
   getAll,
@@ -60,5 +65,6 @@ export const transaksiService = {
   payDP,
   updateStatus,
   submitPDI,
-  submitDeliveryOrder
+  submitDeliveryOrder,
+  receiveUnit
 };
