@@ -12,8 +12,8 @@ const upload = require('../middlewares/upload.middleware');
 
 // --- DAFTAR ROUTING ---
 
-// GET semua data
-router.get('/', authenticate, alatBeratController.getAlatBerat);
+// GET semua data alat berat (Publik untuk Landing Page & Internal)
+router.get('/', alatBeratController.getAlatBerat);
 
 // POST tambah data (Sisipkan upload.single('imageFile') untuk menangkap gambar)
 router.post('/', authenticate, upload.single('imageFile'), alatBeratController.addAlatBerat);

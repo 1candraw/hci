@@ -14,25 +14,26 @@ const storage = multer.diskStorage({
     cb(null, uploadDir); 
   },
   filename: function (req, file, cb) {
-    // Membuat nama file unik: alatberat-123456789.jpg
+    // Membuat nama file unik: slip-123456789.jpg atau alatberat-123456.jpg
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'alatberat-' + uniqueSuffix + path.extname(file.originalname));
+    const prefix = file.fieldname === 'proof_file' ? 'slip-' : 'upload-';
+    cb(null, prefix + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
-// Filter khusus gambar
+// Filter file gambar dan PDF
 const fileFilter = (req, file, cb) => {
-  const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+  const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'application/pdf'];
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Format file tidak didukung! Hanya gunakan JPG, JPEG, atau PNG.'), false);
+    cb(new Error('Format file tidak didukung! Hanya gunakan JPG, JPEG, PNG, WEBP, atau PDF.'), false);
   }
 };
 
 const upload = multer({ 
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // Batas maksimal diperbesar jadi 5 MB
+  limits: { fileSize: 10 * 1024 * 1024 }, // Batas maksimal 10 MB
   fileFilter: fileFilter
 });
 

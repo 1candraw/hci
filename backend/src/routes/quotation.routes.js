@@ -2,9 +2,19 @@ const express = require('express');
 const router = express.Router();
 const quotationController = require('../controllers/quotation.controller');
 const { authenticate } = require('../middlewares/auth.middleware'); 
+const upload = require('../middlewares/upload.middleware');
 
 // POST ajukan pesanan baru (Endpoint: /api/quotations)
 router.post('/', authenticate, quotationController.createQuotation);
+
+// ★ PUBLIK: POST RFQ tamu tanpa login (Endpoint: /api/quotations/guest)
+router.post('/guest', quotationController.createGuestQuotation);
+
+// ★ PUBLIK: GET lacak pesanan by nomor (Endpoint: /api/quotations/track/:nomor)
+router.get('/track/:nomor', quotationController.trackQuotation);
+
+// ★ PUBLIK / USER: Upload bukti bayar DP (support ID atau nomor_pemesanan)
+router.post('/:identifier/upload-dp', upload.single('proof_file'), quotationController.uploadDPProof);
 
 // GET ambil semua pesanan untuk tabel transaksi (Endpoint: /api/quotations)
 router.get('/', authenticate, quotationController.getAllQuotations);
@@ -30,7 +40,7 @@ router.post('/:id/pdi', authenticate, quotationController.submitChecklistPDI);
 // POST terbitkan surat jalan oleh Operasional
 router.post('/:id/delivery', authenticate, quotationController.createDeliveryOrder);
 
-// PUT konfirmasi penerimaan unit oleh Customer
-router.put('/:id/receive', authenticate, quotationController.receiveUnit);
+// PUT konfirmasi penerimaan unit oleh Customer / Guest (support ID atau Nomor Pemesanan)
+router.put('/:id/receive', quotationController.receiveUnit);
 
 module.exports = router;

@@ -250,6 +250,137 @@ const receiveUnit = async (req, res) => {
 };
 // Pastikan receiveUnit diekspor
 
+// ★ GUEST RFQ: Endpoint publik tanpa token JWT
+const createGuestQuotation = async (req, res) => {
+  try {
+    const { alat_berat_id, metode_pembayaran, guest_name, guest_company, guest_phone, guest_email, guest_location } = req.body;
+
+    // Validasi field wajib
+    if (!alat_berat_id || !guest_name || !guest_company || !guest_phone || !guest_email) {
+      return res.status(400).json({ message: 'Field wajib: alat_berat_id, guest_name, guest_company, guest_phone, guest_email' });
+    }
+
+    // Generate nomor RFQ format HC-YYYYMM-XXXX
+    const date = new Date();
+    const yearMonth = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const nomor_pemesanan = `HC-${yearMonth}-${randomStr}`;
+
+    const newGuest = {
+      nomor_pemesanan,
+      alat_berat_id,
+      metode_pembayaran: metode_pembayaran || 'cash',
+      guest_name,
+      guest_company,
+      guest_phone,
+      guest_email,
+      guest_location: guest_location || null,
+    };
+
+    const insertId = await quotationRepo.createGuest(newGuest);
+
+    res.status(201).json({
+      message: 'RFQ berhasil diajukan! Simpan nomor tracking Anda.',
+      data: { id: insertId, nomor_pemesanan }
+    });
+  } catch (error) {
+    console.error('Error createGuestQuotation:', error);
+    res.status(500).json({ message: 'Gagal mengajukan RFQ', error: error.message });
+  }
+};
+
+// ★ TRACKING PUBLIK: Cek status pesanan tanpa login
+const trackQuotation = async (req, res) => {
+  try {
+    const { nomor } = req.params;
+    if (!nomor) return res.status(400).json({ message: 'Nomor pesanan wajib diisi' });
+
+    const quotation = await quotationRepo.getByNomor(nomor.trim().toUpperCase());
+    if (!quotation) {
+      return res.status(404).json({ message: 'Nomor pesanan tidak ditemukan. Pastikan nomor yang Anda masukkan benar.' });
+    }
+
+    // Map status ke step index (0-based) untuk visual stepper
+    const STATUS_STEP_MAP = {
+      'PENDING':              0,
+      'MENUNGGU_APPROVAL':    1,
+      'APPROVED':             1,
+      'REJECTED':             1,
+      'DP_DIBAYAR':           2,
+      'VERIFIKASI_DP_SALES':  2,
+      'PROSES_OPERASIONAL':   3,
+      'SIAP_KIRIM':           3,
+      'PENGIRIMAN':           4,
+      'SELESAI':              5,
+    };
+
+    const stepIndex = STATUS_STEP_MAP[quotation.status] ?? 0;
+
+    // Hitung total jika sudah ada penawaran
+    const totalAkhir = quotation.harga_penawaran
+      ? Number(quotation.harga_penawaran) + Number(quotation.ongkos_kirim || 0) - Number(quotation.diskon || 0)
+      : null;
+
+    res.status(200).json({
+      ...quotation,
+      step_index: stepIndex,
+      total_akhir: totalAkhir,
+    });
+  } catch (error) {
+    console.error('Error trackQuotation:', error);
+    res.status(500).json({ message: 'Terjadi kesalahan saat melacak pesanan', error: error.message });
+  }
+};
+
+// ★ BUKTI BAYAR DP: Upload slip dan data rekening pengirim (support ID atau nomor_pemesanan)
+const uploadDPProof = async (req, res) => {
+  try {
+    const { identifier } = req.params;
+    const { bank_name, account_number, account_name, amount } = req.body;
+
+    let proof_url = null;
+    if (req.file) {
+      proof_url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    }
+
+    const quotation = await quotationRepo.getByNomor(identifier);
+    if (!quotation) {
+      return res.status(404).json({ success: false, message: 'Pesanan tidak ditemukan' });
+    }
+
+    // Hitung DP otomatis jika amount tidak dikirim (10% dari total akhir)
+    const totalAkhir = quotation.harga_penawaran 
+      ? Number(quotation.harga_penawaran) + Number(quotation.ongkos_kirim || 0) - Number(quotation.diskon || 0)
+      : 0;
+    const dpAmount = amount ? Number(amount) : Math.round(totalAkhir * 0.1);
+
+    const dpData = {
+      bank_name: bank_name || req.body.bank,
+      account_number: account_number || req.body.no_rek,
+      account_name: account_name || req.body.nama_pemilik || quotation.guest_name || quotation.nama_customer || '-',
+      proof_url: proof_url,
+      amount: dpAmount,
+    };
+
+    const affected = await quotationRepo.saveDPPayment(identifier, dpData);
+    if (affected === 0) {
+      return res.status(404).json({ success: false, message: 'Gagal memperbarui data pembayaran DP' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Bukti pembayaran DP berhasil dikirim! Tim Sales kami akan memverifikasi pembayaran Anda.',
+      data: {
+        ...dpData,
+        status: 'DP_DIBAYAR'
+      }
+    });
+  } catch (error) {
+    console.error('Error uploadDPProof:', error);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan saat memproses bukti pembayaran', error: error.message });
+  }
+};
+
 module.exports = {
   createQuotation,
   getAllQuotations, 
@@ -260,5 +391,8 @@ module.exports = {
   updateStatusPesanan,
   submitChecklistPDI,
   createDeliveryOrder,
-  receiveUnit
+  receiveUnit,
+  createGuestQuotation,
+  trackQuotation,
+  uploadDPProof,
 };

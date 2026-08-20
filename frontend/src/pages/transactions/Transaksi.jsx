@@ -53,13 +53,26 @@ const Transaksi = () => {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'PENDING': 
-        return <span style={{...styles.badge, backgroundColor: '#fef3c7', color: '#d97706'}}>Menunggu Harga</span>;
+        return <span style={{...styles.badge, backgroundColor: '#fef3c7', color: '#d97706'}}>Menunggu Penawaran</span>;
       case 'MENUNGGU_APPROVAL': 
         return <span style={{...styles.badge, backgroundColor: '#dbeafe', color: '#2563eb'}}>Menunggu Approval</span>;
       case 'APPROVED': 
-        return <span style={{...styles.badge, backgroundColor: '#d1fae5', color: '#059669'}}>Disetujui</span>;
+        return <span style={{...styles.badge, backgroundColor: '#d1fae5', color: '#059669'}}>Disetujui Manager</span>;
+      case 'REJECTED': 
+        return <span style={{...styles.badge, backgroundColor: '#fee2e2', color: '#dc2626'}}>Ditolak</span>;
+      case 'DP_DIBAYAR': 
+        return <span style={{...styles.badge, backgroundColor: '#e0e7ff', color: '#4338ca'}}>DP Dibayar</span>;
+      case 'VERIFIKASI_DP_SALES': 
+        return <span style={{...styles.badge, backgroundColor: '#ede9fe', color: '#7c3aed'}}>Verifikasi DP</span>;
+      case 'PROSES_OPERASIONAL': 
+        return <span style={{...styles.badge, backgroundColor: '#cffafe', color: '#0891b2'}}>Inspeksi PDI</span>;
+      case 'SIAP_KIRIM': 
+        return <span style={{...styles.badge, backgroundColor: '#dcfce7', color: '#16a34a'}}>Siap Kirim</span>;
+      case 'PENGIRIMAN': 
       case 'PROSES_PENGIRIMAN': 
-        return <span style={{...styles.badge, backgroundColor: '#e0e7ff', color: '#4338ca'}}>Proses Pengiriman</span>;
+        return <span style={{...styles.badge, backgroundColor: '#fef9c3', color: '#a16207'}}>Dalam Pengiriman</span>;
+      case 'SELESAI': 
+        return <span style={{...styles.badge, backgroundColor: '#bbf7d0', color: '#15803d'}}>Selesai ✓</span>;
       default: 
         return <span style={styles.badge}>{status || 'Draft'}</span>;
     }
@@ -69,8 +82,8 @@ const Transaksi = () => {
     <div style={styles.container}>
       <div style={styles.header}>
         <div>
-          <h2 style={styles.title}>Manajemen Transaksi & Quotation</h2>
-          <p style={styles.subtitle}>Kelola permintaan penawaran harga alat berat</p>
+          <h2 style={styles.title}>Manajemen Transaksi & Pesanan</h2>
+          <p style={styles.subtitle}>Kelola semua permintaan penawaran harga alat berat (Customer & Guest RFQ)</p>
         </div>
         {user?.role === 'Customer' && (
           <button onClick={() => navigate('/katalog')} style={styles.actionBtn}>
@@ -88,8 +101,9 @@ const Transaksi = () => {
             <thead>
               <tr>
                 <th style={styles.th}>No. Dokumen</th>
-                <th style={styles.th}>Perusahaan</th>
+                <th style={styles.th}>Customer / PIC</th>
                 <th style={styles.th}>Unit Diminta</th>
+                <th style={styles.th}>Sumber</th>
                 <th style={styles.th}>Tanggal</th>
                 <th style={styles.th}>Status</th>
                 <th style={styles.th}>Aksi</th>
@@ -97,14 +111,30 @@ const Transaksi = () => {
             </thead>
             <tbody>
               {quotations.length === 0 ? (
-                <tr><td colSpan="6" style={{textAlign: 'center', padding: '1rem'}}>Belum ada data transaksi</td></tr>
+                <tr><td colSpan="7" style={{textAlign: 'center', padding: '2rem', color: '#6b7280'}}>Belum ada data pesanan masuk</td></tr>
               ) : (
                 quotations.map((item) => (
                   <tr key={item.id} style={styles.tr}>
-                    <td style={styles.td}><strong>{item.nomor_dokumen || item.id}</strong></td>
-                    <td style={styles.td}>{item.perusahaan || '-'}</td>
-                    <td style={styles.td}>{item.nama_unit || '-'}</td>
-                    <td style={styles.td}>{item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID') : '-'}</td>
+                    <td style={styles.td}>
+                      <strong style={{color: '#1e40af'}}>{item.nomor_dokumen || item.nomor_pemesanan || item.id}</strong>
+                    </td>
+                    <td style={styles.td}>
+                      <strong>{item.perusahaan || item.nama_customer || '-'}</strong>
+                      {item.nama_customer && item.perusahaan && item.nama_customer !== item.perusahaan && (
+                        <div style={{fontSize: '0.8rem', color: '#6b7280'}}>PIC: {item.nama_customer}</div>
+                      )}
+                    </td>
+                    <td style={styles.td}>{item.nama_unit || item.nama_alat || '-'}</td>
+                    <td style={styles.td}>
+                      <span style={{
+                        ...styles.badge,
+                        backgroundColor: item.sumber_pesanan === 'guest' ? '#fef3c7' : '#f3f4f6',
+                        color: item.sumber_pesanan === 'guest' ? '#b45309' : '#4b5563'
+                      }}>
+                        {item.sumber_pesanan === 'guest' ? '🌐 Guest RFQ' : (item.sumber_pesanan ? item.sumber_pesanan.toUpperCase() : 'KATALOG')}
+                      </span>
+                    </td>
+                    <td style={styles.td}>{item.tanggal || item.created_at ? new Date(item.tanggal || item.created_at).toLocaleDateString('id-ID') : '-'}</td>
                     <td style={styles.td}>{getStatusBadge(item.status)}</td>
                     <td style={styles.td}>
                       {user?.role === 'Manager' && item.status === 'MENUNGGU_APPROVAL' && (
@@ -113,7 +143,9 @@ const Transaksi = () => {
                         </button>
                       )}
                       <button onClick={() => navigate(`/transaksi/${item.id}`)} 
-                        style={styles.detailBtn}>Detail</button>
+                        style={styles.detailBtn}>
+                        {user?.role === 'Sales' && item.status === 'PENDING' ? '✏ Input Harga' : 'Detail'}
+                      </button>
                     </td>
                   </tr>
                 ))

@@ -2,52 +2,56 @@ import { Routes, Route } from 'react-router-dom';
 import Login from '../pages/auth/Login';
 import ProtectedRoute from '../components/layout/ProtectedRoute';
 import DashboardLayout from '../layouts/DashboardLayout';
+import PublicLayout from '../layouts/PublicLayout';
 import Katalog from '../pages/katalog/Katalog';
 import Dashboard from '../pages/dashboard/Dashboard';
 import Saw from '../pages/saw/Saw';
 import Transaksi from '../pages/transactions/Transaksi';
 import AuditLog from '../pages/dashboard/AuditLog';
-
-// IMPORT MASTER DATA
 import MasterAlatBerat from '../pages/alatBerat/MasterAlatBerat';
-
-// +++ TAMBAHAN: IMPORT TRANSAKSI DETAIL +++
 import TransaksiDetail from '../pages/transactions/TransaksiDetail';
+
+// ★ Halaman Publik (Guest Flow)
+import LandingPage from '../pages/public/LandingPage';
+import TrackingPage from '../pages/public/TrackingPage';
 
 const AppRoutes = () => {
   return (
     <Routes>
+      {/* ── RUTE LOGIN ── */}
       <Route path="/login" element={<Login />} />
-      
-      {/* LAPIS 1: Pastikan user sudah login (berlaku untuk semua rute di dalamnya) */}
+
+      {/* ── RUTE PUBLIK (tanpa login) ── */}
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/tracking" element={<TrackingPage />} />
+      </Route>
+
+      {/* ── RUTE DASHBOARD (wajib login) ── */}
       <Route element={<ProtectedRoute />}>
         <Route element={<DashboardLayout />}>
-          
-          {/* RUTE UMUM: Bisa diakses oleh SEMUA role yang sudah login */}
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/katalog" element={<Katalog />} />
+
+          {/* Rute umum semua role */}
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/katalog"   element={<Katalog />} />
           <Route path="/transaksi" element={<Transaksi />} />
-          
-          {/* +++ TAMBAHAN: RUTE DETAIL TRANSAKSI +++ */}
           <Route path="/transaksi/:id" element={<TransaksiDetail />} />
-          
-          {/* LAPIS 2: RUTE KHUSUS (Pembatasan berdasarkan Hak Akses/Role) */}
-          
-          {/* Fitur Master Data: HANYA untuk Sales dan Manager (Customer dilarang masuk) */}
+
+          {/* Master Data: Sales & Manager */}
           <Route element={<ProtectedRoute allowedRoles={['Sales', 'Manager']} />}>
             <Route path="/master-alat-berat" element={<MasterAlatBerat />} />
           </Route>
 
-          {/* Fitur SAW: Biasanya difokuskan untuk Customer, Sales, dan Manager */}
+          {/* SAW: Customer, Sales, Manager */}
           <Route element={<ProtectedRoute allowedRoles={['Customer', 'Sales', 'Manager']} />}>
             <Route path="/saw" element={<Saw />} />
           </Route>
 
-          {/* Fitur Audit Log: SANGAT RAHASIA, hanya untuk Manager dan Operasional */}
+          {/* Audit Log: Manager & Operasional */}
           <Route element={<ProtectedRoute allowedRoles={['Manager', 'Operasional']} />}>
             <Route path="/audit-log" element={<AuditLog />} />
           </Route>
-          
+
         </Route>
       </Route>
     </Routes>
