@@ -2,28 +2,50 @@ const dashboardRepository = require('../repositories/dashboard.repository');
 const sawService = require('./saw.service');
 
 const getDashboardSummary = async () => {
-  // 1. Ambil angka statistik dasar
-  const stats = await dashboardRepository.getStats();
+  // 1. Ambil seluruh data statistik realtime dari database
+  const [
+    stats,
+    statusDist,
+    brandDist,
+    tonaseDist,
+    recentTransactions,
+    monthlyTrend,
+  ] = await Promise.all([
+    dashboardRepository.getStats(),
+    dashboardRepository.getStatusDistribution(),
+    dashboardRepository.getBrandDistribution(),
+    dashboardRepository.getTonaseDistribution(),
+    dashboardRepository.getRecentTransactions(),
+    dashboardRepository.getMonthlyTrend(),
+  ]);
 
-  // 2. Ambil 3 rekomendasi alat berat terbaik dari perhitungan SAW
+  // 2. Ambil 3 rekomendasi alat berat terbaik dari perhitungan SAW jika ada
   let topRekomendasi = [];
   try {
     const sawData = await sawService.getRecommendations();
-    
-    // Perbaikan: Tambahkan parameter 'index' di dalam .map()
-    topRekomendasi = sawData.rekomendasi.slice(0, 3).map((item, index) => ({
-      peringkat: index + 1, // Sekarang urutannya pasti benar (1, 2, 3)
-      nama: item.name,
-      skor: item.skor_akhir
-    }));
+    if (sawData && sawData.rekomendasi) {
+      topRekomendasi = sawData.rekomendasi.slice(0, 3).map((item, index) => ({
+        peringkat: index + 1,
+        nama: item.name || item.nama_unit,
+        brand: item.brand,
+        skor: Number(item.skor_akhir || 0).toFixed(4),
+        harga: item.harga,
+      }));
+    }
   } catch (error) {
-    console.error("Info: Belum ada data SAW untuk ditampilkan di dashboard.");
+    // Silent fallback jika belum ada data SAW
   }
 
-  // 3. Kembalikan semua data dalam satu paket rapi
+  // 3. Kembalikan data lengkap untuk konsol analitik realtime
   return {
     statistik: stats,
-    top_unggulan: topRekomendasi
+    grafik_status: statusDist,
+    distribusi_brand: brandDist,
+    distribusi_tonase: tonaseDist,
+    transaksi_terbaru: recentTransactions,
+    tren_bulanan: monthlyTrend,
+    top_unggulan: topRekomendasi,
+    last_updated: new Date().toISOString(),
   };
 };
 
