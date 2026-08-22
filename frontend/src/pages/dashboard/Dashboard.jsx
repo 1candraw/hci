@@ -37,17 +37,17 @@ import {
 const STATUS_BADGE = {
   PENDING: { label: 'RFQ Baru (Pending)', bg: '#fef3c7', text: '#b45309', border: '#f59e0b' },
   MENUNGGU_APPROVAL: { label: 'Menunggu Approval', bg: '#e0e7ff', text: '#3730a3', border: '#818cf8' },
-  APPROVED: { label: 'Disetujui (Menunggu DP)', bg: '#dcfce7', text: '#15803d', border: '#4ade80' },
+  APPROVED: { label: 'Disetujui (Menunggu DP)', bg: '#ecfccb', text: '#15803d', border: '#84cc16' },
   REJECTED: { label: 'Ditolak', bg: '#fee2e2', text: '#991b1b', border: '#f87171' },
   DP_DIBAYAR: { label: 'DP Masuk (Verifikasi)', bg: '#e0e7ff', text: '#4338ca', border: '#818cf8' },
   VERIFIKASI_DP_SALES: { label: 'DP Diverifikasi Sales', bg: '#ede9fe', text: '#6d28d9', border: '#c4b5fd' },
   PROSES_OPERASIONAL: { label: 'Proses PDI', bg: '#cffafe', text: '#0e7490', border: '#67e8f9' },
-  SIAP_KIRIM: { label: 'PDI Lolos (Siap Kirim)', bg: '#dcfce7', text: '#15803d', border: '#86efac' },
+  SIAP_KIRIM: { label: 'PDI Lolos (Siap Kirim)', bg: '#ecfccb', text: '#15803d', border: '#84cc16' },
   PENGIRIMAN: { label: 'Dalam Pengiriman', bg: '#fef9c3', text: '#a16207', border: '#facc15' },
   SELESAI: { label: 'Selesai (BAST Terbit)', bg: '#bbf7d0', text: '#166534', border: '#22c55e' },
 };
 
-const PIE_COLORS = ['#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#06b6d4', '#ec4899'];
+const PIE_COLORS = ['#74c02c', '#0d141e', '#10b981', '#3b82f6', '#8b5cf6', '#06b6d4'];
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -102,12 +102,6 @@ const Dashboard = () => {
     ? data.distribusi_brand
     : [{ name: 'Excavator', value: 1 }];
 
-  const monthlyTrendData = data?.tren_bulanan && data.tren_bulanan.length > 0
-    ? data.tren_bulanan
-    : [
-        { bulan: 'Bulan Ini', total_transaksi: stats.total_penawaran },
-      ];
-
   const recentTransactions = data?.transaksi_terbaru || [];
 
   return (
@@ -147,10 +141,10 @@ const Dashboard = () => {
       {/* ── Baris 1: 4 Kartu KPI Ringkasan ── */}
       <div style={s.kpiGrid}>
         {/* KPI 1: Total Pesanan RFQ */}
-        <div style={{ ...s.kpiCard, borderLeft: '4px solid #f59e0b' }}>
+        <div style={{ ...s.kpiCard, borderLeft: '4px solid #74c02c' }}>
           <div style={s.kpiHeader}>
             <span style={s.kpiLabel}>TOTAL TRANSAKSI / RFQ</span>
-            <div style={{ ...s.kpiIconBox, backgroundColor: '#fef3c7', color: '#b45309' }}>
+            <div style={{ ...s.kpiIconBox, backgroundColor: '#ecfccb', color: '#15803d' }}>
               <ClipboardList size={18} />
             </div>
           </div>
@@ -159,7 +153,7 @@ const Dashboard = () => {
             <span style={s.kpiUnit}>Dokumen</span>
           </div>
           <div style={s.kpiSubtext}>
-            <TrendingUp size={13} style={{ color: '#10b981' }} />
+            <TrendingUp size={13} style={{ color: '#15803d' }} />
             <span>Estimasi Nilai: Rp {(Number(stats.total_revenue || 0) / 1e6).toLocaleString('id-ID')} Jt</span>
           </div>
         </div>
@@ -173,7 +167,7 @@ const Dashboard = () => {
             </div>
           </div>
           <div style={s.kpiValueRow}>
-            <span style={{ ...s.kpiNumber, color: Number(stats.menunggu_aksi) > 0 ? '#dc2626' : '#0f172a' }}>
+            <span style={{ ...s.kpiNumber, color: Number(stats.menunggu_aksi) > 0 ? '#dc2626' : '#0d141e' }}>
               {stats.menunggu_aksi}
             </span>
             <span style={s.kpiUnit}>Pesanan</span>
@@ -253,17 +247,17 @@ const Dashboard = () => {
                 <Tooltip 
                   cursor={{ fill: '#f8fafc' }} 
                   contentStyle={{ 
-                    borderRadius: '10px', 
-                    border: '1px solid #e2e8f0', 
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                    fontSize: '12px',
-                    fontWeight: '700'
+                    backgroundColor: '#0d141e', 
+                    color: '#ffffff', 
+                    borderRadius: '8px', 
+                    border: 'none',
+                    fontSize: '12px'
                   }} 
                 />
                 <Bar 
                   dataKey="jumlah" 
-                  name="Jumlah Dokumen" 
-                  fill="#f59e0b" 
+                  name="Jumlah Pesanan" 
+                  fill="#74c02c" 
                   radius={[6, 6, 0, 0]} 
                   barSize={34} 
                 />
@@ -276,10 +270,10 @@ const Dashboard = () => {
         <div style={s.chartCard}>
           <div style={s.chartHeader}>
             <div>
-              <h3 style={s.chartTitle}>Distribusi Brand Alat Berat</h3>
-              <p style={s.chartSub}>Komposisi inventori unit berdasarkan merek</p>
+              <h3 style={s.chartTitle}>Komposisi Brand Excavator</h3>
+              <p style={s.chartSub}>Persentase unit alat berat berdasarkan merk</p>
             </div>
-            <span style={s.chartBadge}>Inventori</span>
+            <span style={{ ...s.chartBadge, backgroundColor: '#ecfccb', color: '#15803d' }}>Katalog</span>
           </div>
 
           <div style={{ width: '100%', height: 290 }}>
@@ -288,12 +282,13 @@ const Dashboard = () => {
                 <Pie
                   data={pieBrandData}
                   cx="50%"
-                  cy="45%"
-                  innerRadius={65}
+                  cy="50%"
+                  innerRadius={55}
                   outerRadius={95}
-                  paddingAngle={5}
+                  paddingAngle={4}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  nameKey="name"
+                  label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
                   labelLine={false}
                 >
                   {pieBrandData.map((entry, index) => (
@@ -302,13 +297,13 @@ const Dashboard = () => {
                 </Pie>
                 <Tooltip 
                   contentStyle={{ 
+                    backgroundColor: '#0d141e', 
+                    color: '#ffffff', 
                     borderRadius: '8px', 
-                    border: '1px solid #e2e8f0', 
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                    border: 'none',
                     fontSize: '12px' 
                   }} 
                 />
-                <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -319,12 +314,12 @@ const Dashboard = () => {
       <div style={s.recentCard}>
         <div style={s.recentHeader}>
           <div>
-            <h3 style={s.chartTitle}>Pesanan & Pengajuan RFQ Terbaru (Live Feed)</h3>
-            <p style={s.chartSub}>Daftar transaksi terkini dari pelanggan publik maupun internal</p>
+            <h3 style={s.chartTitle}>5 Pesanan & RFQ Terbaru</h3>
+            <p style={s.chartSub}>Daftar transaksi yang baru masuk atau diperbarui di sistem</p>
           </div>
           <Link to="/transaksi" style={s.viewAllBtn}>
             <span>Lihat Semua Pesanan</span>
-            <ArrowUpRight size={14} />
+            <ArrowUpRight size={15} />
           </Link>
         </div>
 
@@ -333,40 +328,28 @@ const Dashboard = () => {
             <table style={s.table}>
               <thead>
                 <tr style={s.thRow}>
-                  <th style={s.th}>NOMOR PESANAN</th>
-                  <th style={s.th}>CUSTOMER / KONTRAKTOR</th>
+                  <th style={s.th}>NO. PESANAN</th>
+                  <th style={s.th}>PEMOHON / PERUSAHAAN</th>
                   <th style={s.th}>UNIT EXCAVATOR</th>
-                  <th style={s.th}>SUMBER</th>
-                  <th style={s.th}>ESTIMASI HARGA</th>
-                  <th style={s.th}>STATUS TERKINI</th>
-                  <th style={{ ...s.th, textAlign: 'right' }}>AKSI</th>
+                  <th style={s.th}>STATUS PROGRES</th>
+                  <th style={{ ...s.th, textAlign: 'center' }}>AKSI</th>
                 </tr>
               </thead>
               <tbody>
-                {recentTransactions.map((item) => {
-                  const badge = STATUS_BADGE[item.status] || { label: item.status, bg: '#f1f5f9', text: '#475569', border: '#cbd5e1' };
+                {recentTransactions.map((tx) => {
+                  const badge = STATUS_BADGE[tx.status] || { label: tx.status, bg: '#f1f5f9', text: '#475569', border: '#cbd5e1' };
                   return (
-                    <tr key={item.id} style={s.tr}>
+                    <tr key={tx.id} style={s.tr}>
                       <td style={s.tdNomor}>
-                        <strong>{item.nomor_pemesanan}</strong>
+                        <strong>{tx.nomor_pemesanan || `RFQ-#${tx.id}`}</strong>
                       </td>
                       <td style={s.td}>
-                        <div style={s.custName}>{item.customer_name}</div>
-                        <div style={s.custLoc}>{item.lokasi || '-'}</div>
+                        <div style={s.custName}>{tx.customer_name || tx.fullname || '-'}</div>
+                        <div style={s.custLoc}>{tx.customer_company || tx.lokasi_pengiriman || '-'}</div>
                       </td>
                       <td style={s.td}>
-                        <div style={s.unitName}>{item.unit_name}</div>
-                        <div style={s.unitBrand}>{item.unit_brand || 'Excavator'}</div>
-                      </td>
-                      <td style={s.td}>
-                        <span style={s.sourceTag}>
-                          {item.sumber_pesanan === 'guest' ? '🌐 Guest RFQ' : '👤 Internal / Member'}
-                        </span>
-                      </td>
-                      <td style={s.td}>
-                        <strong style={{ color: '#059669' }}>
-                          Rp {Number(item.nilai_transaksi || 0).toLocaleString('id-ID')}
-                        </strong>
+                        <div style={s.unitName}>{tx.nama_alat || `${tx.brand || ''} ${tx.model || ''}`}</div>
+                        <div style={s.unitBrand}>Kelas {tx.kapasitas_ton || 5} Ton</div>
                       </td>
                       <td style={s.td}>
                         <span style={{
@@ -378,9 +361,9 @@ const Dashboard = () => {
                           {badge.label}
                         </span>
                       </td>
-                      <td style={{ ...s.td, textAlign: 'right' }}>
-                        <Link to={`/transaksi/${item.id}`} style={s.detailLink}>
-                          Buka Detail →
+                      <td style={{ ...s.td, textAlign: 'center' }}>
+                        <Link to={`/transaksi/${tx.id}`} style={s.detailLink}>
+                          Lihat Detail
                         </Link>
                       </td>
                     </tr>
@@ -391,10 +374,8 @@ const Dashboard = () => {
           </div>
         ) : (
           <div style={s.emptyTransactions}>
-            <Package size={36} style={{ color: '#94a3b8', marginBottom: '0.5rem' }} />
-            <p style={{ color: '#64748b', fontSize: '0.9rem', margin: 0 }}>
-              Belum ada data transaksi yang tercatat di sistem.
-            </p>
+            <ClipboardList size={36} style={{ color: '#94a3b8', marginBottom: '0.5rem' }} />
+            <p style={{ color: '#64748b', fontSize: '0.88rem' }}>Belum ada aktivitas pesanan baru.</p>
           </div>
         )}
       </div>
@@ -404,97 +385,99 @@ const Dashboard = () => {
 
 const s = {
   page: {
-    padding: '0 0 2rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.5rem',
     fontFamily: "'Plus Jakarta Sans', sans-serif",
   },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: '1.75rem',
     flexWrap: 'wrap',
     gap: '1rem',
+    backgroundColor: '#ffffff',
+    padding: '1.4rem 1.75rem',
+    borderRadius: '16px',
+    border: '1.5px solid #e2e8f0',
+    boxShadow: '0 4px 14px -2px rgba(13, 20, 30, 0.04)',
   },
   liveBadge: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.45rem',
-    backgroundColor: '#ecfdf5',
-    border: '1px solid #a7f3d0',
+    backgroundColor: '#ecfccb',
+    color: '#15803d',
+    border: '1px solid #d9f99d',
     padding: '0.2rem 0.65rem',
     borderRadius: '999px',
-    marginBottom: '0.5rem',
+    fontSize: '0.72rem',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900',
+    letterSpacing: '0.8px',
+    marginBottom: '0.35rem',
   },
   pulseDot: {
     width: '7px',
     height: '7px',
     borderRadius: '50%',
-    backgroundColor: '#10b981',
-    boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.25)',
+    backgroundColor: '#74c02c',
   },
   liveText: {
-    fontSize: '0.68rem',
-    fontWeight: '800',
-    color: '#065f46',
-    letterSpacing: '0.8px',
+    lineHeight: 1,
   },
   title: {
-    fontSize: '1.55rem',
+    fontSize: '1.45rem',
+    fontFamily: "'Sora', sans-serif",
     fontWeight: '900',
-    color: '#0f172a',
-    margin: '0 0 0.25rem',
-    fontFamily: "'Outfit', sans-serif",
-    letterSpacing: '-0.3px',
+    color: '#0d141e',
+    margin: '0 0 0.2rem',
+    letterSpacing: '-0.03em',
   },
   subtitle: {
-    fontSize: '0.88rem',
+    fontSize: '0.86rem',
     color: '#64748b',
     margin: 0,
   },
   headerActions: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.75rem',
+    gap: '0.85rem',
   },
   timestampBox: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.4rem',
-    fontSize: '0.78rem',
+    gap: '0.35rem',
+    fontSize: '0.76rem',
     color: '#64748b',
-    backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
-    padding: '0.5rem 0.8rem',
-    borderRadius: '8px',
   },
   refreshBtn: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.45rem',
-    padding: '0.55rem 0.95rem',
-    backgroundColor: '#0f172a',
-    color: '#fbbf24',
+    padding: '0.6rem 1.1rem',
+    backgroundColor: '#0d141e',
+    color: '#74c02c',
     border: 'none',
     borderRadius: '8px',
-    fontSize: '0.82rem',
-    fontWeight: '800',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900',
+    fontSize: '0.85rem',
     cursor: 'pointer',
-    boxShadow: '0 2px 8px rgba(15, 23, 42, 0.15)',
-    transition: 'all 0.15s',
+    boxShadow: '0 2px 8px rgba(13, 20, 30, 0.2)',
   },
   // KPI Grid
   kpiGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
-    gap: '1.25rem',
-    marginBottom: '1.75rem',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+    gap: '1.15rem',
   },
   kpiCard: {
     backgroundColor: '#ffffff',
-    borderRadius: '12px',
-    border: '1px solid #e2e8f0',
-    padding: '1.35rem 1.25rem',
-    boxShadow: '0 2px 8px rgba(15, 23, 42, 0.03)',
+    borderRadius: '14px',
+    border: '1.5px solid #e2e8f0',
+    padding: '1.25rem 1.4rem',
+    boxShadow: '0 2px 8px rgba(13, 20, 30, 0.03)',
   },
   kpiHeader: {
     display: 'flex',
@@ -504,14 +487,15 @@ const s = {
   },
   kpiLabel: {
     fontSize: '0.68rem',
-    fontWeight: '800',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900',
     color: '#64748b',
     letterSpacing: '1px',
   },
   kpiIconBox: {
-    width: '32px',
-    height: '32px',
-    borderRadius: '7px',
+    width: '34px',
+    height: '34px',
+    borderRadius: '8px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -524,9 +508,9 @@ const s = {
   },
   kpiNumber: {
     fontSize: '1.85rem',
+    fontFamily: "'Sora', sans-serif",
     fontWeight: '900',
-    color: '#0f172a',
-    fontFamily: "'Outfit', sans-serif",
+    color: '#0d141e',
     lineHeight: 1,
   },
   kpiUnit: {
@@ -547,14 +531,14 @@ const s = {
     display: 'grid',
     gridTemplateColumns: '1.35fr 1fr',
     gap: '1.5rem',
-    marginBottom: '1.75rem',
+    marginBottom: '0.25rem',
   },
   chartCard: {
     backgroundColor: '#ffffff',
     borderRadius: '14px',
-    border: '1px solid #e2e8f0',
+    border: '1.5px solid #e2e8f0',
     padding: '1.5rem',
-    boxShadow: '0 2px 8px rgba(15, 23, 42, 0.03)',
+    boxShadow: '0 2px 8px rgba(13, 20, 30, 0.03)',
   },
   chartHeader: {
     display: 'flex',
@@ -563,10 +547,12 @@ const s = {
     marginBottom: '1.25rem',
   },
   chartTitle: {
-    fontSize: '1.05rem',
+    fontSize: '1.08rem',
+    fontFamily: "'Sora', sans-serif",
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#0d141e',
     margin: '0 0 0.15rem',
+    letterSpacing: '-0.02em',
   },
   chartSub: {
     fontSize: '0.76rem',
@@ -575,9 +561,10 @@ const s = {
   },
   chartBadge: {
     fontSize: '0.66rem',
-    fontWeight: '800',
-    color: '#b45309',
-    backgroundColor: '#fef3c7',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900',
+    color: '#15803d',
+    backgroundColor: '#ecfccb',
     padding: '0.15rem 0.5rem',
     borderRadius: '4px',
     letterSpacing: '0.5px',
@@ -586,9 +573,9 @@ const s = {
   recentCard: {
     backgroundColor: '#ffffff',
     borderRadius: '14px',
-    border: '1px solid #e2e8f0',
+    border: '1.5px solid #e2e8f0',
     padding: '1.5rem',
-    boxShadow: '0 2px 8px rgba(15, 23, 42, 0.03)',
+    boxShadow: '0 2px 8px rgba(13, 20, 30, 0.03)',
   },
   recentHeader: {
     display: 'flex',
@@ -602,9 +589,10 @@ const s = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.35rem',
-    fontSize: '0.8rem',
-    fontWeight: '700',
-    color: '#d97706',
+    fontSize: '0.82rem',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '800',
+    color: '#15803d',
     textDecoration: 'none',
   },
   tableWrap: {
@@ -618,12 +606,14 @@ const s = {
   },
   thRow: {
     borderBottom: '1.5px solid #e2e8f0',
+    backgroundColor: '#f8fafc',
   },
   th: {
-    padding: '0.6rem 0.75rem',
-    fontSize: '0.68rem',
-    fontWeight: '800',
-    color: '#64748b',
+    padding: '0.75rem 0.85rem',
+    fontSize: '0.72rem',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900',
+    color: '#475569',
     letterSpacing: '0.8px',
   },
   tr: {
@@ -631,7 +621,7 @@ const s = {
   },
   tdNomor: {
     padding: '0.85rem 0.75rem',
-    color: '#0f172a',
+    color: '#0d141e',
     fontFamily: 'monospace',
     fontSize: '0.88rem',
   },
@@ -640,8 +630,8 @@ const s = {
     color: '#334155',
   },
   custName: {
-    fontWeight: '700',
-    color: '#0f172a',
+    fontWeight: '800',
+    color: '#0d141e',
   },
   custLoc: {
     fontSize: '0.72rem',
@@ -649,26 +639,18 @@ const s = {
     marginTop: '0.1rem',
   },
   unitName: {
-    fontWeight: '700',
-    color: '#0f172a',
+    fontWeight: '800',
+    color: '#0d141e',
   },
   unitBrand: {
     fontSize: '0.72rem',
     color: '#64748b',
   },
-  sourceTag: {
-    fontSize: '0.72rem',
-    fontWeight: '700',
-    color: '#475569',
-    backgroundColor: '#f8fafc',
-    border: '1px solid #e2e8f0',
-    padding: '0.15rem 0.45rem',
-    borderRadius: '4px',
-  },
   statusPill: {
     display: 'inline-block',
     fontSize: '0.7rem',
-    fontWeight: '800',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900',
     padding: '0.2rem 0.55rem',
     borderRadius: '6px',
     whiteSpace: 'nowrap',
@@ -676,11 +658,13 @@ const s = {
   detailLink: {
     display: 'inline-block',
     fontSize: '0.78rem',
-    fontWeight: '700',
-    color: '#2563eb',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '800',
+    color: '#15803d',
     textDecoration: 'none',
-    padding: '0.3rem 0.65rem',
-    backgroundColor: '#eff6ff',
+    padding: '0.35rem 0.75rem',
+    backgroundColor: '#ecfccb',
+    border: '1px solid #d9f99d',
     borderRadius: '6px',
   },
   emptyTransactions: {

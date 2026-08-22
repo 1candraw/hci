@@ -4,6 +4,22 @@ import autoTable from 'jspdf-autotable';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { transaksiService } from '../../services/transaksi.service';
+import {
+  ArrowLeft,
+  FileText,
+  CheckCircle2,
+  XCircle,
+  Truck,
+  ShieldCheck,
+  CreditCard,
+  Download,
+  ExternalLink,
+  Clock,
+  User,
+  Building,
+  MapPin,
+  Sparkles
+} from 'lucide-react';
 
 const TransaksiDetail = () => {
   const { id } = useParams();
@@ -103,22 +119,13 @@ const TransaksiDetail = () => {
 
   // -- Handler Bayar DP (Customer) --
   const handleBayarDP = async () => {
+    if (!window.confirm("Konfirmasi bahwa Anda telah melakukan pembayaran/transfer DP untuk pesanan ini?")) return;
     try {
-      const res = await transaksiService.payDP(id);
-      if (res?.token && window.snap) {
-        window.snap.pay(res.token, {
-          onSuccess: async () => { await transaksiService.updateStatus(id, 'DP_DIBAYAR'); fetchDetail(); },
-          onPending: async () => { await transaksiService.updateStatus(id, 'DP_DIBAYAR'); fetchDetail(); },
-          onError: () => alert('Pembayaran gagal')
-        });
-      } else {
-        await transaksiService.updateStatus(id, 'DP_DIBAYAR');
-        alert('Status diubah menjadi DP DIBAYAR.');
-        fetchDetail();
-      }
-    } catch {
       await transaksiService.updateStatus(id, 'DP_DIBAYAR');
+      alert('Status berhasil diubah menjadi DP DIBAYAR. Tim Sales kami akan memverifikasi mutasi pembayaran.');
       fetchDetail();
+    } catch (err) {
+      alert(err || 'Gagal mengubah status DP.');
     }
   };
 
@@ -203,10 +210,10 @@ const TransaksiDetail = () => {
   // -- Handler Download BAST PDF --
   const handleDownloadBAST = () => {
     const doc = new jsPDF();
-    doc.setFontSize(22); doc.setTextColor(37, 99, 235); doc.setFont("helvetica", "bold");
-    doc.text("HEAVY CARE.ID", 14, 22);
+    doc.setFontSize(22); doc.setTextColor(13, 20, 30); doc.setFont("helvetica", "bold");
+    doc.text("HEAVYCARE.ID", 14, 22);
     doc.setFontSize(10); doc.setTextColor(100, 100, 100); doc.setFont("helvetica", "normal");
-    doc.text("Penyedia Alat Berat Terpercaya & Berkualitas", 14, 28);
+    doc.text("Platform Layanan Purna Jual & Distribusi Alat Berat Nasional", 14, 28);
     doc.setLineWidth(0.5); doc.line(14, 38, 196, 38);
 
     doc.setFontSize(14); doc.setTextColor(0, 0, 0); doc.setFont("helvetica", "bold");
@@ -221,7 +228,7 @@ const TransaksiDetail = () => {
     doc.text(`Metode Bayar         : ${(detail.metode_pembayaran || 'CASH').toUpperCase()}`, 14, 96);
     
     doc.setFont("helvetica", "bold");
-    doc.text(`Status                       : DITERIMA DENGAN BAIK`, 14, 103);
+    doc.text(`Status                       : DITERIMA DENGAN BAIK & LOLOS PDI`, 14, 103);
     
     doc.setFont("helvetica", "normal");
     const pernyataan = "Pihak pembeli menyatakan bahwa unit alat berat telah diterima di lokasi proyek dan telah diperiksa secara fisik dalam kondisi baik, serta kelengkapan aksesoris telah sesuai dengan Pre-Delivery Inspection (PDI) yang disepakati.";
@@ -231,7 +238,7 @@ const TransaksiDetail = () => {
     doc.text("Pihak HeavyCare ID,", 30, 150);
     doc.text("(..........................................)", 25, 175);
     doc.setFont("helvetica", "bold");
-    doc.text("Tim Logistik", 38, 182);
+    doc.text("Tim Logistik & PDI", 32, 182);
 
     doc.setFont("helvetica", "normal");
     doc.text("Pihak Pembeli,", 130, 150);
@@ -242,8 +249,13 @@ const TransaksiDetail = () => {
     doc.save(`BAST_${detail.nomor_dokumen || detail.id}.pdf`);
   };
 
-  if (loading) return <div style={{ padding: '3rem', textAlign: 'center', color: '#6b7280' }}>Memuat rincian pesanan...</div>;
-  if (!detail) return <div style={{ padding: '3rem', textAlign: 'center', color: '#ef4444' }}>Data pesanan tidak ditemukan.</div>;
+  if (loading) return (
+    <div style={{ padding: '4rem', textAlign: 'center', color: '#64748b' }}>
+      <div className="animate-spin" style={{ width: '32px', height: '32px', border: '3px solid #e2e8f0', borderTopColor: '#74c02c', borderRadius: '50%', margin: '0 auto 1rem' }} />
+      <p style={{ fontWeight: '700' }}>Memuat rincian pesanan...</p>
+    </div>
+  );
+  if (!detail) return <div style={{ padding: '3rem', textAlign: 'center', color: '#dc2626' }}>Data pesanan tidak ditemukan.</div>;
 
   const totalAkhir = detail.harga_penawaran 
     ? Number(detail.harga_penawaran) + Number(detail.ongkos_kirim || 0) - Number(detail.diskon || 0)
@@ -254,10 +266,17 @@ const TransaksiDetail = () => {
       {/* Header */}
       <div style={styles.header}>
         <div>
-          <button onClick={() => navigate('/transaksi')} style={styles.backBtn}>← Kembali ke Daftar Pesanan</button>
-          <h2 style={styles.title}>Pesanan: {detail.nomor_dokumen || detail.nomor_pemesanan || 'QO-'+detail.id}</h2>
+          <button onClick={() => navigate('/transaksi')} style={styles.backBtn}>
+            <ArrowLeft size={15} />
+            <span>Kembali ke Daftar Pesanan</span>
+          </button>
+          <h1 style={styles.title}>
+            Pesanan: {detail.nomor_dokumen || detail.nomor_pemesanan || 'QO-'+detail.id}
+          </h1>
         </div>
-        <span style={styles.badgeBesar}>{detail.status ? detail.status.replace(/_/g, ' ') : 'PENDING'}</span>
+        <div style={styles.badgeBesar}>
+          {detail.status ? detail.status.replace(/_/g, ' ') : 'PENDING'}
+        </div>
       </div>
 
       <div style={styles.grid}>
@@ -265,36 +284,37 @@ const TransaksiDetail = () => {
         <div style={styles.leftCol}>
           {/* Card Info Pemesan */}
           <div style={styles.card}>
-            <h3 style={styles.cardTitle}>Informasi Pemesan</h3>
+            <h3 style={styles.cardTitle}>Informasi Pemohon & Proyek</h3>
             <table style={styles.infoTable}>
               <tbody>
                 <tr>
-                  <td style={styles.tdLabel}>Tipe / Sumber</td>
+                  <td style={styles.tdLabel}>Sumber Dokumen</td>
                   <td>: <span style={{
-                    fontWeight: 'bold', 
-                    color: detail.sumber_pesanan === 'guest' ? '#d97706' : '#2563eb'
+                    fontWeight: '900', 
+                    fontFamily: "'Urbanist', sans-serif",
+                    color: detail.sumber_pesanan === 'guest' ? '#15803d' : '#0d141e'
                   }}>
-                    {detail.sumber_pesanan === 'guest' ? '🌐 Guest RFQ (Tanpa Akun)' : 'Pelanggan Terdaftar'}
+                    {detail.sumber_pesanan === 'guest' ? '🌐 Guest RFQ (Portal Publik)' : '👤 Member Terdaftar'}
                   </span></td>
                 </tr>
                 <tr>
-                  <td style={styles.tdLabel}>Perusahaan</td>
+                  <td style={styles.tdLabel}>Nama Perusahaan</td>
                   <td>: <strong>{detail.perusahaan || detail.guest_company || '-'}</strong></td>
                 </tr>
                 <tr>
-                  <td style={styles.tdLabel}>Nama PIC / Kontak</td>
+                  <td style={styles.tdLabel}>Nama PIC / Pemohon</td>
                   <td>: {detail.guest_name || detail.nama_customer || '-'}</td>
                 </tr>
                 <tr>
-                  <td style={styles.tdLabel}>Telepon / WhatsApp</td>
+                  <td style={styles.tdLabel}>Nomor WhatsApp</td>
                   <td>: {detail.telepon_perusahaan || detail.guest_phone || '-'}</td>
                 </tr>
                 <tr>
-                  <td style={styles.tdLabel}>Email</td>
+                  <td style={styles.tdLabel}>Email Resmi</td>
                   <td>: {detail.email_perusahaan || detail.guest_email || '-'}</td>
                 </tr>
                 <tr>
-                  <td style={styles.tdLabel}>Lokasi / Catatan</td>
+                  <td style={styles.tdLabel}>Lokasi Site Proyek</td>
                   <td>: {detail.catatan || detail.guest_location || '-'}</td>
                 </tr>
               </tbody>
@@ -303,12 +323,12 @@ const TransaksiDetail = () => {
 
           {/* Card Info Unit & Penawaran */}
           <div style={styles.card}>
-            <h3 style={styles.cardTitle}>Rincian Unit & Harga</h3>
+            <h3 style={styles.cardTitle}>Rincian Unit & Kalkulasi Biaya</h3>
             <table style={styles.infoTable}>
               <tbody>
                 <tr>
                   <td style={styles.tdLabel}>Unit Diminta</td>
-                  <td>: <strong style={{color: '#1e3a8a'}}>{detail.nama_unit}</strong></td>
+                  <td>: <strong style={{ color: '#0d141e', fontSize: '1rem' }}>{detail.nama_unit}</strong></td>
                 </tr>
                 <tr>
                   <td style={styles.tdLabel}>Metode Pembayaran</td>
@@ -317,50 +337,54 @@ const TransaksiDetail = () => {
                 {detail.harga_penawaran ? (
                   <>
                     <tr>
-                      <td style={styles.tdLabel}>Harga Penawaran</td>
+                      <td style={styles.tdLabel}>Harga Penawaran Unit</td>
                       <td>: {formatRupiah(detail.harga_penawaran)}</td>
                     </tr>
                     <tr>
-                      <td style={styles.tdLabel}>Ongkos Kirim</td>
+                      <td style={styles.tdLabel}>Ongkos Kirim Armada</td>
                       <td>: {formatRupiah(detail.ongkos_kirim)}</td>
                     </tr>
                     <tr>
-                      <td style={styles.tdLabel}>Diskon</td>
-                      <td>: <span style={{color: '#dc2626'}}>- {formatRupiah(detail.diskon)}</span></td>
+                      <td style={styles.tdLabel}>Potongan Diskon</td>
+                      <td>: <span style={{ color: '#dc2626' }}>- {formatRupiah(detail.diskon)}</span></td>
                     </tr>
-                    <tr style={{borderTop: '2px solid #e5e7eb'}}>
-                      <td style={{...styles.tdLabel, fontWeight: 'bold', color: '#0f172a', paddingTop: '0.75rem'}}>Total Akhir</td>
-                      <td style={{fontWeight: 'bold', color: '#059669', fontSize: '1.2rem', paddingTop: '0.75rem'}}>: {formatRupiah(totalAkhir)}</td>
+                    <tr style={{ borderTop: '2px solid #e2e8f0' }}>
+                      <td style={{ ...styles.tdLabel, fontWeight: '900', color: '#0d141e', paddingTop: '0.75rem' }}>Total Akhir (OTR)</td>
+                      <td style={{ fontWeight: '900', color: '#15803d', fontSize: '1.25rem', fontFamily: "'Sora', sans-serif", paddingTop: '0.75rem' }}>
+                        : {formatRupiah(totalAkhir)}
+                      </td>
                     </tr>
                     <tr>
                       <td style={styles.tdLabel}>Kewajiban DP (10%)</td>
-                      <td>: <strong style={{color: '#d97706'}}>{formatRupiah(Math.round(totalAkhir * 0.1))}</strong></td>
+                      <td>: <strong style={{ color: '#15803d' }}>{formatRupiah(Math.round(totalAkhir * 0.1))}</strong></td>
                     </tr>
                   </>
                 ) : (
                   <tr>
                     <td style={styles.tdLabel}>Status Penawaran</td>
-                    <td>: <span style={{color: '#d97706', fontWeight: 'bold'}}>Belum diinput oleh Sales</span></td>
+                    <td>: <span style={{ color: '#b45309', fontWeight: '800' }}>Belum diinput oleh Sales</span></td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
 
-          {/* Card BUKTI PEMBAYARAN DP (Muncul jika ada data DP atau status pembayaran) */}
+          {/* Card BUKTI PEMBAYARAN DP */}
           {(detail.dp_bank_name || detail.dp_proof_url || ['DP_DIBAYAR', 'VERIFIKASI_DP_SALES', 'PROSES_OPERASIONAL', 'SIAP_KIRIM', 'PENGIRIMAN', 'SELESAI'].includes(detail.status)) && (
-            <div style={{...styles.card, border: '2px solid #93c5fd', backgroundColor: '#f8fafc'}}>
-              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '2px solid #e2e8f0', paddingBottom: '0.5rem'}}>
-                <h3 style={{...styles.cardTitle, margin: 0, border: 'none', color: '#1e40af'}}>
-                  💳 Bukti Pembayaran DP (Uang Muka)
+            <div style={{ ...styles.card, border: '1.5px solid #84cc16', backgroundColor: '#fafff5' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1.5px solid #d9f99d', paddingBottom: '0.6rem' }}>
+                <h3 style={{ ...styles.cardTitle, margin: 0, border: 'none', color: '#15803d' }}>
+                  💳 Bukti Pembayaran Uang Muka (DP)
                 </h3>
                 <span style={{
-                  padding: '0.25rem 0.6rem',
-                  borderRadius: '999px',
-                  fontSize: '0.75rem',
-                  fontWeight: 'bold',
-                  backgroundColor: detail.status === 'DP_DIBAYAR' ? '#fef3c7' : '#dcfce7',
-                  color: detail.status === 'DP_DIBAYAR' ? '#b45309' : '#15803d'
+                  padding: '0.25rem 0.65rem',
+                  borderRadius: '6px',
+                  fontSize: '0.72rem',
+                  fontFamily: "'Urbanist', sans-serif",
+                  fontWeight: '900',
+                  backgroundColor: detail.status === 'DP_DIBAYAR' ? '#fef3c7' : '#ecfccb',
+                  color: detail.status === 'DP_DIBAYAR' ? '#b45309' : '#15803d',
+                  border: detail.status === 'DP_DIBAYAR' ? '1px solid #fde68a' : '1px solid #84cc16'
                 }}>
                   {detail.status === 'DP_DIBAYAR' ? '⏳ Menunggu Verifikasi Sales' : '✅ DP Terverifikasi'}
                 </span>
@@ -374,7 +398,7 @@ const TransaksiDetail = () => {
                   </tr>
                   <tr>
                     <td style={styles.tdLabel}>Nomor Rekening</td>
-                    <td>: <code style={{backgroundColor: '#e2e8f0', padding: '0.1rem 0.4rem', borderRadius: '4px'}}>{detail.dp_account_number || '-'}</code></td>
+                    <td>: <code style={{ backgroundColor: '#ecfccb', color: '#15803d', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>{detail.dp_account_number || '-'}</code></td>
                   </tr>
                   <tr>
                     <td style={styles.tdLabel}>Atas Nama</td>
@@ -382,7 +406,7 @@ const TransaksiDetail = () => {
                   </tr>
                   <tr>
                     <td style={styles.tdLabel}>Nominal Transfer</td>
-                    <td>: <strong style={{color: '#059669', fontSize: '1.05rem'}}>{formatRupiah(detail.dp_amount || (totalAkhir ? Math.round(totalAkhir * 0.1) : 0))}</strong></td>
+                    <td>: <strong style={{ color: '#15803d', fontSize: '1.05rem', fontFamily: "'Sora', sans-serif" }}>{formatRupiah(detail.dp_amount || (totalAkhir ? Math.round(totalAkhir * 0.1) : 0))}</strong></td>
                   </tr>
                   <tr>
                     <td style={styles.tdLabel}>Waktu Transfer</td>
@@ -391,13 +415,12 @@ const TransaksiDetail = () => {
                 </tbody>
               </table>
 
-              {/* Preview Slip Transfer */}
               {detail.dp_proof_url && (
-                <div style={{marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0', textAlign: 'center'}}>
-                  <p style={{fontSize: '0.85rem', fontWeight: 'bold', color: '#475569', marginBottom: '0.5rem'}}>
-                    Foto / File Slip Bukti Transfer:
+                <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #d9f99d', textAlign: 'center' }}>
+                  <p style={{ fontSize: '0.84rem', fontWeight: '800', color: '#334155', marginBottom: '0.5rem' }}>
+                    Foto / Slip Bukti Transfer:
                   </p>
-                  <a href={detail.dp_proof_url} target="_blank" rel="noopener noreferrer" style={{display: 'inline-block'}}>
+                  <a href={detail.dp_proof_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block' }}>
                     <img 
                       src={detail.dp_proof_url} 
                       alt="Slip Bukti Pembayaran DP" 
@@ -405,33 +428,31 @@ const TransaksiDetail = () => {
                         maxWidth: '100%', 
                         maxHeight: '220px', 
                         borderRadius: '8px', 
-                        border: '2px solid #cbd5e1', 
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.08)',
+                        border: '1.5px solid #cbd5e1', 
+                        boxShadow: '0 4px 10px rgba(0,0,0,0.08)',
                         cursor: 'zoom-in'
                       }}
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                      }}
+                      onError={(e) => { e.target.style.display = 'none'; }}
                     />
                   </a>
-                  <div style={{marginTop: '0.5rem'}}>
+                  <div style={{ marginTop: '0.5rem' }}>
                     <a 
                       href={detail.dp_proof_url} 
                       target="_blank" 
                       rel="noopener noreferrer" 
                       style={{
                         fontSize: '0.82rem', 
-                        color: '#2563eb', 
-                        fontWeight: 'bold',
+                        color: '#15803d', 
+                        fontWeight: '800',
                         textDecoration: 'none',
                         display: 'inline-block',
-                        padding: '0.35rem 0.75rem',
-                        backgroundColor: '#eff6ff',
+                        padding: '0.4rem 0.85rem',
+                        backgroundColor: '#ecfccb',
                         borderRadius: '6px',
-                        border: '1px solid #bfdbfe'
+                        border: '1px solid #d9f99d'
                       }}
                     >
-                      🔍 Buka Slip Ukuran Penuh / PDF di Tab Baru ↗
+                      🔍 Buka Slip Ukuran Penuh di Tab Baru ↗
                     </a>
                   </div>
                 </div>
@@ -442,15 +463,15 @@ const TransaksiDetail = () => {
 
         {/* KOLOM KANAN: Aksi Berdasarkan Role & Status */}
         <div style={styles.rightCol}>
-          <div style={{...styles.card, borderTop: '4px solid #2563eb'}}>
-            <h3 style={styles.cardTitle}>Panel Aksi & Status</h3>
+          <div style={{ ...styles.card, borderTop: '4px solid #74c02c' }}>
+            <h3 style={styles.cardTitle}>Panel Aksi & Status Workflow</h3>
 
-            {/* 1. SALES: INPUT HARGA PENAWARAN (Saat Status PENDING) */}
+            {/* 1. SALES: INPUT HARGA PENAWARAN */}
             {(user?.role === 'Sales' || user?.role === 'Admin') && detail.status === 'PENDING' && (
               <div>
-                <div style={{backgroundColor: '#eff6ff', padding: '1rem', borderRadius: '8px', marginBottom: '1.25rem', border: '1px solid #bfdbfe'}}>
-                  <h4 style={{margin: '0 0 0.4rem', color: '#1e40af'}}>📝 Form Penawaran Sales</h4>
-                  <p style={{margin: 0, fontSize: '0.85rem', color: '#3b82f6'}}>Masukkan rincian harga penawaran untuk diajukan ke Manager.</p>
+                <div style={{ backgroundColor: '#ecfccb', padding: '1rem', borderRadius: '8px', marginBottom: '1.25rem', border: '1px solid #d9f99d' }}>
+                  <h4 style={{ margin: '0 0 0.35rem', color: '#15803d' }}>📝 Form Penawaran Resmi Sales</h4>
+                  <p style={{ margin: 0, fontSize: '0.84rem', color: '#166534' }}>Tentukan harga penawaran OTR dan ajukan untuk disetujui Manager.</p>
                 </div>
                 <form onSubmit={handleKirimPenawaran}>
                   <div style={styles.inputGroup}>
@@ -458,14 +479,14 @@ const TransaksiDetail = () => {
                     <input 
                       type="number" 
                       style={styles.input} 
-                      placeholder="Contoh: 500000000"
+                      placeholder="Contoh: 1250000000"
                       value={hargaPenawaran}
                       onChange={(e) => setHargaPenawaran(e.target.value)}
                       required 
                     />
                   </div>
                   <div style={styles.inputGroup}>
-                    <label style={styles.label}>Ongkos Kirim (Rp)</label>
+                    <label style={styles.label}>Ongkos Kirim Armada (Rp)</label>
                     <input 
                       type="number" 
                       style={styles.input} 
@@ -475,157 +496,157 @@ const TransaksiDetail = () => {
                     />
                   </div>
                   <div style={styles.inputGroup}>
-                    <label style={styles.label}>Diskon (Rp)</label>
+                    <label style={styles.label}>Potongan Diskon (Rp)</label>
                     <input 
                       type="number" 
                       style={styles.input} 
-                      placeholder="Contoh: 5000000"
+                      placeholder="Contoh: 10000000"
                       value={diskon}
                       onChange={(e) => setDiskon(e.target.value)} 
                     />
                   </div>
-                  <button type="submit" style={{...styles.btnAjukan, backgroundColor: '#2563eb'}} disabled={submitting}>
-                    {submitting ? 'Mengirim...' : '🚀 Ajukan ke Manager'}
+                  <button type="submit" style={styles.btnPrimarySubmit} disabled={submitting}>
+                    {submitting ? 'Mengirim...' : '🚀 Ajukan Penawaran ke Manager'}
                   </button>
                 </form>
               </div>
             )}
 
-            {/* 2. MANAGER: REVIEW PENAWARAN (Saat Status MENUNGGU_APPROVAL) */}
+            {/* 2. MANAGER: REVIEW PENAWARAN */}
             {(user?.role === 'Manager' || user?.role === 'Admin') && detail.status === 'MENUNGGU_APPROVAL' && (
               <div>
-                <div style={{backgroundColor: '#fef3c7', padding: '1rem', borderRadius: '8px', marginBottom: '1.25rem', border: '1px solid #fde68a'}}>
-                  <h4 style={{margin: '0 0 0.4rem', color: '#92400e'}}>⏳ Menunggu Persetujuan Manager</h4>
-                  <p style={{margin: 0, fontSize: '0.85rem', color: '#78350f'}}>Periksa rincian harga yang diajukan oleh Sales di sebelah kiri.</p>
+                <div style={{ backgroundColor: '#fef3c7', padding: '1rem', borderRadius: '8px', marginBottom: '1.25rem', border: '1px solid #fde68a' }}>
+                  <h4 style={{ margin: '0 0 0.35rem', color: '#92400e' }}>⏳ Menunggu Persetujuan Manager</h4>
+                  <p style={{ margin: 0, fontSize: '0.84rem', color: '#78350f' }}>Periksa rincian kalkulasi harga yang diajukan Sales di sebelah kiri.</p>
                 </div>
-                <div style={{display: 'flex', gap: '0.75rem'}}>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
                   <button 
                     onClick={() => handleReviewManager('approve')} 
-                    style={{...styles.btnAjukan, backgroundColor: '#10b981', flex: 1}}
+                    style={{ ...styles.btnPrimarySubmit, backgroundColor: '#0d141e', color: '#74c02c', flex: 1 }}
                     disabled={submitting}
                   >
-                    ✅ Setujui Penawaran
+                    <CheckCircle2 size={16} />
+                    <span>Setujui Penawaran</span>
                   </button>
                   <button 
                     onClick={() => handleReviewManager('reject')} 
-                    style={{...styles.btnAjukan, backgroundColor: '#ef4444', flex: 1}}
+                    style={{ ...styles.btnPrimarySubmit, backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', flex: 1 }}
                     disabled={submitting}
                   >
-                    ❌ Tolak
+                    <XCircle size={16} />
+                    <span>Tolak</span>
                   </button>
                 </div>
               </div>
             )}
 
-            {/* SALES MELIHAT STATUS MENUNGGU APPROVAL */}
             {user?.role === 'Sales' && detail.status === 'MENUNGGU_APPROVAL' && (
               <div style={styles.alertCustomer}>
-                <h4 style={{margin: '0 0 0.5rem'}}>⏳ Penawaran Sedang Ditinjau</h4>
-                <p style={{fontSize: '0.88rem', margin: 0}}>Penawaran harga telah diteruskan ke Manager dan sedang menunggu persetujuan.</p>
+                <h4 style={{ margin: '0 0 0.35rem' }}>⏳ Penawaran Sedang Ditinjau</h4>
+                <p style={{ fontSize: '0.86rem', margin: 0 }}>Penawaran harga telah diteruskan ke Manager dan sedang menunggu persetujuan.</p>
               </div>
             )}
 
-            {/* 3. CUSTOMER / GUEST: BAYAR DP (Saat Status APPROVED) */}
+            {/* 3. STATUS APPROVED */}
             {detail.status === 'APPROVED' && (
               <div>
-                <div style={{backgroundColor: '#d1fae5', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #a7f3d0'}}>
-                  <h4 style={{margin: '0 0 0.4rem', color: '#065f46'}}>✅ Penawaran Disetujui!</h4>
-                  <p style={{margin: 0, fontSize: '0.88rem', color: '#047857'}}>Menunggu pembeli melakukan konfirmasi dan pengiriman bukti pembayaran DP.</p>
+                <div style={{ backgroundColor: '#ecfccb', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #d9f99d' }}>
+                  <h4 style={{ margin: '0 0 0.35rem', color: '#15803d' }}>✅ Penawaran Disetujui!</h4>
+                  <p style={{ margin: 0, fontSize: '0.86rem', color: '#166534' }}>Menunggu pembeli melakukan konfirmasi dan pengiriman bukti transfer DP.</p>
                 </div>
                 {user?.role === 'Customer' && (
-                  <button onClick={handleBayarDP} style={{...styles.btnAjukan, backgroundColor: '#2563eb'}}>
+                  <button onClick={handleBayarDP} style={styles.btnPrimarySubmit}>
                     💳 Konfirmasi / Bayar DP (10%)
                   </button>
                 )}
               </div>
             )}
 
-            {/* 4. SALES: VERIFIKASI PEMBAYARAN DP (Saat Status DP_DIBAYAR) */}
+            {/* 4. SALES: VERIFIKASI DP */}
             {(user?.role === 'Sales' || user?.role === 'Admin') && detail.status === 'DP_DIBAYAR' && (
               <div>
-                <div style={{backgroundColor: '#e0e7ff', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #c7d2fe'}}>
-                  <h4 style={{margin: '0 0 0.4rem', color: '#3730a3'}}>💳 Bukti Bayar DP Masuk!</h4>
-                  <p style={{margin: 0, fontSize: '0.88rem', color: '#4338ca', lineHeight: '1.4'}}>
-                    Pembeli telah mengunggah bukti transfer DP. Silakan cek rincian & slip transfer di sebelah kiri, lalu klik verifikasi.
+                <div style={{ backgroundColor: '#e0e7ff', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #c7d2fe' }}>
+                  <h4 style={{ margin: '0 0 0.35rem', color: '#3730a3' }}>💳 Bukti Bayar DP Masuk!</h4>
+                  <p style={{ margin: 0, fontSize: '0.86rem', color: '#4338ca', lineHeight: '1.4' }}>
+                    Pembeli telah mengirim slip transfer. Cek data mutasi bank, lalu klik verifikasi.
                   </p>
                 </div>
-                <button onClick={handleVerifikasiSales} style={{...styles.btnAjukan, backgroundColor: '#4f46e5'}} disabled={submitting}>
+                <button onClick={handleVerifikasiSales} style={styles.btnPrimarySubmit} disabled={submitting}>
                   {submitting ? 'Memproses...' : '✅ Verifikasi Pembayaran DP Masuk'}
                 </button>
               </div>
             )}
 
-            {/* MANAGER MELIHAT STATUS DP_DIBAYAR */}
             {user?.role === 'Manager' && detail.status === 'DP_DIBAYAR' && (
               <div style={styles.alertCustomer}>
-                <h4 style={{margin: '0 0 0.5rem'}}>⏳ Menunggu Verifikasi Sales</h4>
-                <p style={{fontSize: '0.88rem', margin: 0}}>Pembeli telah mengirimkan bukti bayar DP. Tim Sales sedang melakukan verifikasi mutasi bank.</p>
+                <h4 style={{ margin: '0 0 0.35rem' }}>⏳ Menunggu Verifikasi Sales</h4>
+                <p style={{ fontSize: '0.86rem', margin: 0 }}>Pembeli telah mengirimkan bukti transfer DP. Tim Sales sedang memvalidasi dana.</p>
               </div>
             )}
 
-            {/* 5. MANAGER: APPROVE DP & TERUSKAN KE OPERASIONAL (Saat Status VERIFIKASI_DP_SALES) */}
+            {/* 5. MANAGER: APPROVE DP KE OPERASIONAL */}
             {(user?.role === 'Manager' || user?.role === 'Admin') && detail.status === 'VERIFIKASI_DP_SALES' && (
               <div>
-                <div style={{backgroundColor: '#ede9fe', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #ddd6fe'}}>
-                  <h4 style={{margin: '0 0 0.4rem', color: '#5b21b6'}}>📋 DP Telah Diverifikasi Sales</h4>
-                  <p style={{margin: 0, fontSize: '0.88rem', color: '#6d28d9', lineHeight: '1.4'}}>
+                <div style={{ backgroundColor: '#ecfccb', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #d9f99d' }}>
+                  <h4 style={{ margin: '0 0 0.35rem', color: '#15803d' }}>📋 DP Telah Diverifikasi Sales</h4>
+                  <p style={{ margin: 0, fontSize: '0.86rem', color: '#166534', lineHeight: '1.4' }}>
                     Sales telah memvalidasi dana DP. Klik tombol di bawah untuk menyetujui pelepasan unit ke Tim Operasional (PDI).
                   </p>
                 </div>
-                <button onClick={handleApproveManagerDP} style={{...styles.btnAjukan, backgroundColor: '#7c3aed'}} disabled={submitting}>
+                <button onClick={handleApproveManagerDP} style={styles.btnPrimarySubmit} disabled={submitting}>
                   {submitting ? 'Memproses...' : '🚀 Setujui DP & Teruskan ke Operasional'}
                 </button>
               </div>
             )}
 
-            {/* SALES MELIHAT STATUS VERIFIKASI_DP_SALES */}
             {user?.role === 'Sales' && detail.status === 'VERIFIKASI_DP_SALES' && (
-              <div style={{...styles.alertCustomer, backgroundColor: '#ede9fe', color: '#5b21b6'}}>
-                <h4 style={{margin: '0 0 0.5rem'}}>✅ DP Telah Anda Verifikasi</h4>
-                <p style={{fontSize: '0.88rem', margin: 0}}>Dokumen sedang menunggu approval dari Manager untuk memulai inspeksi PDI.</p>
+              <div style={{ ...styles.alertCustomer, backgroundColor: '#ecfccb', color: '#15803d', border: '1px solid #d9f99d' }}>
+                <h4 style={{ margin: '0 0 0.35rem' }}>✅ DP Telah Anda Verifikasi</h4>
+                <p style={{ fontSize: '0.86rem', margin: 0 }}>Dokumen sedang menunggu approval dari Manager untuk memulai inspeksi PDI.</p>
               </div>
             )}
 
-            {/* 6. OPERASIONAL: INSPEKSI PDI (Saat Status PROSES_OPERASIONAL) */}
+            {/* 6. OPERASIONAL: INSPEKSI PDI */}
             {(user?.role === 'Operasional' || user?.role === 'Admin') && detail.status === 'PROSES_OPERASIONAL' && (
               <div>
-                <div style={{backgroundColor: '#cffafe', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #a5f3fc'}}>
-                  <h4 style={{margin: '0 0 0.4rem', color: '#155e75'}}>🔧 Checklist Pre-Delivery Inspection (PDI)</h4>
-                  <p style={{margin: 0, fontSize: '0.85rem', color: '#0e7490'}}>Centang semua komponen yang telah lolos inspeksi fisik.</p>
+                <div style={{ backgroundColor: '#cffafe', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #a5f3fc' }}>
+                  <h4 style={{ margin: '0 0 0.35rem', color: '#155e75' }}>🔧 Checklist Pre-Delivery Inspection (PDI)</h4>
+                  <p style={{ margin: 0, fontSize: '0.84rem', color: '#0e7490' }}>Pastikan seluruh 6 komponen vital lolos pengujian fisik.</p>
                 </div>
                 <form onSubmit={handleSelesaiPDI}>
-                  <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem'}}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
                     {[
                       ['engine', 'Pemeriksaan Mesin / Engine'],
-                      ['hydraulic', 'Sistem Hidrolik & Selang'],
-                      ['bucket', 'Kondisi Bucket & Silinder'],
-                      ['body', 'Struktur Bodi & Kabin'],
-                      ['undercarriage', 'Undercarriage & Track'],
-                      ['accessories', 'Aksesoris & Lampu Kerja']
+                      ['hydraulic', 'Sistem Hidrolik & Tekanan Pompa'],
+                      ['bucket', 'Kondisi Bucket & Silinder Boom'],
+                      ['body', 'Struktur Bodi, Kabin & Panel Kontrol'],
+                      ['undercarriage', 'Undercarriage & Roller Track'],
+                      ['accessories', 'Aksesoris, Lampu Kerja & Safety K3']
                     ].map(([key, label]) => (
-                      <label key={key} style={{display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer'}}>
+                      <label key={key} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.88rem', cursor: 'pointer' }}>
                         <input 
                           type="checkbox" 
                           checked={pdiCheck[key]} 
-                          onChange={(e) => setPdiCheck({...pdiCheck, [key]: e.target.checked})}
+                          onChange={(e) => setPdiCheck({ ...pdiCheck, [key]: e.target.checked })}
+                          style={{ accentColor: '#74c02c' }}
                         />
-                        {label}
+                        <span>{label}</span>
                       </label>
                     ))}
                   </div>
-                  <button type="submit" style={{...styles.btnAjukan, backgroundColor: '#0891b2'}} disabled={submitting}>
+                  <button type="submit" style={styles.btnPrimarySubmit} disabled={submitting}>
                     {submitting ? 'Menyimpan...' : '✅ Selesaikan PDI → Siap Kirim'}
                   </button>
                 </form>
               </div>
             )}
 
-            {/* 7. OPERASIONAL: TERBITKAN SURAT JALAN (Saat Status SIAP_KIRIM) */}
+            {/* 7. OPERASIONAL: SURAT JALAN */}
             {(user?.role === 'Operasional' || user?.role === 'Admin') && detail.status === 'SIAP_KIRIM' && (
               <div>
-                <div style={{backgroundColor: '#dcfce7', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #bbf7d0'}}>
-                  <h4 style={{margin: '0 0 0.4rem', color: '#166534'}}>🚚 Penerbitan Surat Jalan & Pengiriman</h4>
-                  <p style={{margin: 0, fontSize: '0.85rem', color: '#15803d'}}>Isi data logistik untuk mengirimkan unit ke lokasi customer.</p>
+                <div style={{ backgroundColor: '#ecfccb', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #d9f99d' }}>
+                  <h4 style={{ margin: '0 0 0.35rem', color: '#15803d' }}>🚚 Penerbitan Surat Jalan & Pengiriman</h4>
+                  <p style={{ margin: 0, fontSize: '0.84rem', color: '#166534' }}>Isi data ekspedisi logistik untuk mengirimkan unit ke lokasi customer.</p>
                 </div>
                 <form onSubmit={handleSubmitDelivery}>
                   <div style={styles.inputGroup}>
@@ -634,7 +655,7 @@ const TransaksiDetail = () => {
                       style={styles.input} 
                       placeholder="Contoh: Pak Joko (Trans Logistik)"
                       value={deliveryForm.driverName}
-                      onChange={(e) => setDeliveryForm({...deliveryForm, driverName: e.target.value})}
+                      onChange={(e) => setDeliveryForm({ ...deliveryForm, driverName: e.target.value })}
                       required 
                     />
                   </div>
@@ -644,49 +665,51 @@ const TransaksiDetail = () => {
                       style={styles.input} 
                       placeholder="Contoh: B 9876 XYZ"
                       value={deliveryForm.vehicleNumber}
-                      onChange={(e) => setDeliveryForm({...deliveryForm, vehicleNumber: e.target.value})}
+                      onChange={(e) => setDeliveryForm({ ...deliveryForm, vehicleNumber: e.target.value })}
                       required 
                     />
                   </div>
                   <div style={styles.inputGroup}>
                     <label style={styles.label}>Alamat / Lokasi Tujuan *</label>
                     <textarea 
-                      style={{...styles.input, height: '70px'}} 
-                      placeholder="Alamat lengkap proyek..."
+                      style={{ ...styles.input, height: '70px' }} 
+                      placeholder="Alamat lengkap lokasi site..."
                       value={deliveryForm.destination}
-                      onChange={(e) => setDeliveryForm({...deliveryForm, destination: e.target.value})}
+                      onChange={(e) => setDeliveryForm({ ...deliveryForm, destination: e.target.value })}
                       required 
                     />
                   </div>
-                  <button type="submit" style={{...styles.btnAjukan, backgroundColor: '#16a34a'}} disabled={submitting}>
+                  <button type="submit" style={styles.btnPrimarySubmit} disabled={submitting}>
                     {submitting ? 'Menerbitkan...' : '🚚 Terbitkan Surat Jalan & Kirim'}
                   </button>
                 </form>
               </div>
             )}
 
-            {/* 8. PENGIRIMAN & KONFIRMASI TERIMA UNIT */}
+            {/* 8. PENGIRIMAN */}
             {detail.status === 'PENGIRIMAN' && (
               <div>
-                <div style={{backgroundColor: '#fef9c3', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #fde047'}}>
-                  <h4 style={{margin: '0 0 0.4rem', color: '#713f12'}}>🚚 Unit Dalam Perjalanan</h4>
-                  <p style={{margin: 0, fontSize: '0.88rem', color: '#854d0e'}}>Unit alat berat sedang dikirim ke lokasi proyek.</p>
+                <div style={{ backgroundColor: '#fef9c3', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #fef08a' }}>
+                  <h4 style={{ margin: '0 0 0.35rem', color: '#713f12' }}>🚚 Unit Dalam Perjalanan</h4>
+                  <p style={{ margin: 0, fontSize: '0.86rem', color: '#854d0e' }}>Armada excavator sedang dalam perjalanan menuju lokasi proyek.</p>
                 </div>
-                <button onClick={handleTerimaUnit} style={{...styles.btnAjukan, backgroundColor: '#059669'}}>
+                <button onClick={handleTerimaUnit} style={styles.btnPrimarySubmit}>
                   📦 Konfirmasi Unit Tiba di Lokasi
                 </button>
               </div>
             )}
 
-            {/* 9. TRANSAKSI SELESAI */}
+            {/* 9. SELESAI */}
             {detail.status === 'SELESAI' && (
-              <div style={{backgroundColor: '#f0fdf4', color: '#166534', padding: '1.25rem', borderRadius: '8px', border: '1px solid #bbf7d0', textAlign: 'center'}}>
-                <h4 style={{margin: '0 0 0.5rem 0', fontSize: '1.1rem'}}>🎉 Transaksi Selesai</h4>
-                <p style={{fontSize: '0.9rem', marginBottom: '1rem', color: '#15803d'}}>
-                  Unit telah diterima di lokasi proyek dan BAST resmi telah diterbitkan.
+              <div style={{ backgroundColor: '#fafff5', color: '#15803d', padding: '1.5rem', borderRadius: '10px', border: '1.5px solid #d9f99d', textAlign: 'center' }}>
+                <ShieldCheck size={36} style={{ color: '#74c02c', margin: '0 auto 0.5rem' }} />
+                <h4 style={{ margin: '0 0 0.35rem 0', fontSize: '1.15rem', fontFamily: "'Sora', sans-serif", fontWeight: '900' }}>Transaksi Selesai</h4>
+                <p style={{ fontSize: '0.86rem', marginBottom: '1.25rem', color: '#166534' }}>
+                  Unit telah diterima di lokasi proyek dan Berita Acara Serah Terima (BAST) resmi telah diterbitkan.
                 </p>
-                <button onClick={handleDownloadBAST} style={{...styles.btnAjukan, backgroundColor: '#16a34a'}}>
-                  📄 Download Dokumen BAST (PDF)
+                <button onClick={handleDownloadBAST} style={styles.btnPrimarySubmit}>
+                  <Download size={16} />
+                  <span>Download Dokumen BAST (PDF)</span>
                 </button>
               </div>
             )}
@@ -698,25 +721,120 @@ const TransaksiDetail = () => {
   );
 };
 
-// Styling UI
 const styles = {
-  container: { padding: '2rem', maxWidth: '1200px', margin: '0 auto' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' },
-  backBtn: { background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '0.9rem' },
-  title: { margin: '0 0 0.5rem 0', fontSize: '1.75rem', color: '#1f2937' },
-  badgeBesar: { padding: '0.5rem 1rem', borderRadius: '8px', backgroundColor: '#fef3c7', color: '#d97706', fontWeight: 'bold', fontSize: '1rem' },
-  grid: { display: 'grid', gridTemplateColumns: '6fr 4fr', gap: '2rem', alignItems: 'start' },
+  container: { 
+    display: 'flex', 
+    flexDirection: 'column', 
+    gap: '1.5rem', 
+    fontFamily: "'Plus Jakarta Sans', sans-serif" 
+  },
+  header: { 
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    flexWrap: 'wrap', 
+    gap: '1rem',
+    backgroundColor: '#ffffff',
+    padding: '1.4rem 1.75rem',
+    borderRadius: '16px',
+    border: '1.5px solid #e2e8f0',
+    boxShadow: '0 4px 14px -2px rgba(13, 20, 30, 0.04)',
+  },
+  backBtn: { 
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    background: 'none', 
+    border: 'none', 
+    color: '#15803d', 
+    cursor: 'pointer', 
+    marginBottom: '0.35rem', 
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '800', 
+    fontSize: '0.84rem' 
+  },
+  title: { 
+    margin: 0, 
+    fontSize: '1.4rem', 
+    fontFamily: "'Sora', sans-serif",
+    fontWeight: '900',
+    color: '#0d141e',
+    letterSpacing: '-0.03em',
+  },
+  badgeBesar: { 
+    padding: '0.45rem 1rem', 
+    borderRadius: '8px', 
+    backgroundColor: '#ecfccb', 
+    color: '#15803d', 
+    border: '1px solid #84cc16',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900', 
+    fontSize: '0.88rem',
+    letterSpacing: '0.5px',
+  },
+  grid: { 
+    display: 'grid', 
+    gridTemplateColumns: '1.2fr 1fr', 
+    gap: '1.5rem', 
+    alignItems: 'start' 
+  },
   leftCol: { display: 'flex', flexDirection: 'column', gap: '1.5rem' },
-  rightCol: { position: 'sticky', top: '2rem' }, 
-  card: { backgroundColor: 'white', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' },
-  cardTitle: { margin: '0 0 1.25rem 0', color: '#374151', borderBottom: '2px solid #f3f4f6', paddingBottom: '0.5rem', fontSize: '1.1rem' },
-  infoTable: { width: '100%', borderCollapse: 'collapse' },
-  tdLabel: { padding: '0.65rem 0', color: '#6b7280', width: '180px', fontSize: '0.9rem' },
-  alertCustomer: { backgroundColor: '#eff6ff', color: '#1e40af', padding: '1rem', borderRadius: '6px', lineHeight: '1.5' },
+  rightCol: { position: 'sticky', top: '1.5rem' }, 
+  card: { 
+    backgroundColor: 'white', 
+    padding: '1.5rem', 
+    borderRadius: '16px', 
+    boxShadow: '0 2px 8px rgba(13, 20, 30, 0.03)',
+    border: '1.5px solid #e2e8f0',
+  },
+  cardTitle: { 
+    margin: '0 0 1rem 0', 
+    color: '#0d141e', 
+    borderBottom: '1.5px solid #f1f5f9', 
+    paddingBottom: '0.65rem', 
+    fontSize: '1.05rem',
+    fontFamily: "'Sora', sans-serif",
+    fontWeight: '800',
+  },
+  infoTable: { width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' },
+  tdLabel: { padding: '0.6rem 0', color: '#64748b', width: '170px', fontWeight: '700' },
+  alertCustomer: { 
+    backgroundColor: '#ecfccb', 
+    color: '#15803d', 
+    border: '1px solid #d9f99d',
+    padding: '1rem', 
+    borderRadius: '8px', 
+    lineHeight: '1.5' 
+  },
   inputGroup: { marginBottom: '1rem' },
-  label: { display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', fontWeight: 'bold', color: '#374151' },
-  input: { width: '100%', padding: '0.7rem', border: '1px solid #d1d5db', borderRadius: '6px', boxSizing: 'border-box', fontSize: '0.9rem' },
-  btnAjukan: { width: '100%', padding: '0.85rem', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.95rem' }
+  label: { display: 'block', marginBottom: '0.35rem', fontSize: '0.84rem', fontWeight: '700', color: '#334155' },
+  input: { 
+    width: '100%', 
+    padding: '0.7rem 0.85rem', 
+    border: '1.5px solid #cbd5e1', 
+    borderRadius: '8px', 
+    boxSizing: 'border-box', 
+    fontSize: '0.88rem',
+    outline: 'none',
+    backgroundColor: '#ffffff',
+  },
+  btnPrimarySubmit: { 
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.45rem',
+    width: '100%', 
+    padding: '0.85rem', 
+    backgroundColor: '#0d141e',
+    color: '#74c02c', 
+    border: 'none', 
+    borderRadius: '8px', 
+    cursor: 'pointer', 
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900', 
+    fontSize: '0.92rem',
+    boxShadow: '0 4px 14px rgba(13, 20, 30, 0.25)',
+  }
 };
 
 export default TransaksiDetail;

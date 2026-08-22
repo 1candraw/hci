@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { guestService } from '../../services/guest.service';
+import { FileText, X, CheckCircle2, ShieldCheck, MapPin, Building, Phone, Mail, User } from 'lucide-react';
 
 const GuestRFQModal = ({ isOpen, onClose, alatBeratId, namaAlat, onSuccess }) => {
   const [form, setForm] = useState({
@@ -43,26 +44,28 @@ const GuestRFQModal = ({ isOpen, onClose, alatBeratId, namaAlat, onSuccess }) =>
         {/* Header */}
         <div style={s.header}>
           <div>
-            <span style={s.headerTag}>FORMULIR PENAWARAN HARGA (RFQ)</span>
+            <span style={s.headerTag}>HEAVY CARE ID · FORMULIR RFQ RESMI</span>
             <h2 style={s.headerTitle}>{namaAlat || 'Unit Excavator'}</h2>
           </div>
-          <button onClick={onClose} style={s.closeBtn} aria-label="Tutup">✕</button>
+          <button onClick={onClose} style={s.closeBtn} aria-label="Tutup">
+            <X size={18} />
+          </button>
         </div>
 
         {/* Info Banner */}
         <div style={s.infoBanner}>
-          <span style={s.infoIcon}>📋</span>
+          <ShieldCheck size={20} style={{ color: '#74c02c', flexShrink: 0, marginTop: '2px' }} />
           <div>
-            <strong>Pengajuan Cepat Tanpa Perlu Mendaftar Akun.</strong>
+            <strong>Pengajuan Penawaran Cepat & Transparan.</strong>
             <p style={{ margin: 0, fontSize: '0.8rem', color: '#475569' }}>
-              Tim Sales kami akan menghitung penawaran harga resmi dan menerbitkan Nomor Pelacakan untuk Anda.
+              Tim Sales & Technical Support akan menghitung penawaran harga resmi (OTR & opsi leasing) serta menerbitkan Nomor Pelacakan untuk Anda.
             </p>
           </div>
         </div>
 
         {error && <div style={s.errorBox}>⚠️ {error}</div>}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} style={s.form}>
           <div style={s.grid2}>
             <div style={s.fieldGroup}>
               <label style={s.label}>Nama PIC / Pemohon <span style={s.req}>*</span></label>
@@ -76,7 +79,7 @@ const GuestRFQModal = ({ isOpen, onClose, alatBeratId, namaAlat, onSuccess }) =>
               />
             </div>
             <div style={s.fieldGroup}>
-              <label style={s.label}>Nama Perusahaan / Kontraktor (PT/CV) <span style={s.req}>*</span></label>
+              <label style={s.label}>Nama Perusahaan (PT / CV / Kontraktor) <span style={s.req}>*</span></label>
               <input
                 style={s.input}
                 name="guest_company"
@@ -109,41 +112,45 @@ const GuestRFQModal = ({ isOpen, onClose, alatBeratId, namaAlat, onSuccess }) =>
                 type="email"
                 value={form.guest_email}
                 onChange={handleChange}
-                placeholder="Contoh: budi@majujaya.com"
+                placeholder="Contoh: procurement@majujaya.com"
                 required
               />
             </div>
           </div>
 
           <div style={s.fieldGroup}>
-            <label style={s.label}>Lokasi Proyek / Alamat Tujuan Pengiriman</label>
-            <textarea
-              style={{ ...s.input, height: '80px', resize: 'vertical' }}
+            <label style={s.label}>Lokasi Proyek / Pengiriman Unit <span style={s.req}>*</span></label>
+            <input
+              style={s.input}
               name="guest_location"
               value={form.guest_location}
               onChange={handleChange}
-              placeholder="Contoh: Lokasi pertambangan di Kutai Barat, Kalimantan Timur..."
+              placeholder="Contoh: Site Tambang Pasir, Kec. Muara Enim, Sumatera Selatan"
+              required
             />
           </div>
 
           <div style={s.fieldGroup}>
-            <label style={s.label}>Opsi Skema Pembayaran</label>
-            <select style={s.select} name="metode_pembayaran" value={form.metode_pembayaran} onChange={handleChange}>
-              <option value="cash">💵 Pembayaran Tunai (Cash Bertahap)</option>
-              <option value="leasing">🏢 Fasilitas Pembiayaan Leasing / Kredit</option>
+            <label style={s.label}>Rencana Metode Pembayaran</label>
+            <select
+              style={s.select}
+              name="metode_pembayaran"
+              value={form.metode_pembayaran}
+              onChange={handleChange}
+            >
+              <option value="cash">Cash / Pembayaran Langsung</option>
+              <option value="kredit">Kredit / Skema Leasing Alat Berat</option>
+              <option value="termin">Termin / Bertahap Sesuai Progress Proyek</option>
             </select>
           </div>
 
           <div style={s.footer}>
-            <button type="button" onClick={onClose} style={s.btnCancel} disabled={loading}>
+            <button type="button" onClick={onClose} style={s.btnCancel}>
               Batal
             </button>
-            <button type="submit" style={s.btnSubmit} disabled={loading}>
-              {loading ? (
-                <span>⏳ Memproses RFQ...</span>
-              ) : (
-                <span>🚀 Kirim Pengajuan RFQ Resmi</span>
-              )}
+            <button type="submit" disabled={loading} style={s.btnSubmit}>
+              <FileText size={16} />
+              <span>{loading ? 'Mengirim Pengajuan...' : 'Kirim Penawaran (RFQ)'}</span>
             </button>
           </div>
         </form>
@@ -155,76 +162,77 @@ const GuestRFQModal = ({ isOpen, onClose, alatBeratId, namaAlat, onSuccess }) =>
 const s = {
   overlay: {
     position: 'fixed',
-    inset: 0,
-    background: 'rgba(15, 23, 42, 0.75)',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(13, 20, 30, 0.78)',
     backdropFilter: 'blur(6px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 9999,
-    padding: '1rem',
+    padding: '1.5rem',
   },
   modal: {
-    background: '#ffffff',
+    backgroundColor: '#ffffff',
     borderRadius: '16px',
     width: '100%',
-    maxWidth: '640px',
-    maxHeight: '92vh',
-    overflowY: 'auto',
-    boxShadow: '0 25px 60px -15px rgba(15, 23, 42, 0.4)',
-    border: '2px solid #e2e8f0',
+    maxWidth: '680px',
+    boxShadow: '0 25px 60px -15px rgba(13, 20, 30, 0.45)',
+    border: '1.5px solid #e2e8f0',
     padding: '2rem',
+    animation: 'slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
   },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: '1.25rem',
-    borderBottom: '2px solid #f1f5f9',
-    paddingBottom: '1rem',
   },
   headerTag: {
     display: 'inline-block',
-    fontSize: '0.72rem',
-    fontWeight: '800',
-    color: '#b45309',
-    backgroundColor: '#fef3c7',
-    padding: '0.15rem 0.5rem',
+    fontSize: '0.7rem',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900',
+    color: '#15803d',
+    backgroundColor: '#ecfccb',
+    padding: '0.12rem 0.5rem',
     borderRadius: '4px',
-    letterSpacing: '1px',
-    marginBottom: '0.3rem',
+    letterSpacing: '0.8px',
+    marginBottom: '0.35rem',
   },
   headerTitle: {
-    margin: 0,
     fontSize: '1.35rem',
-    color: '#0f172a',
+    fontFamily: "'Sora', sans-serif",
     fontWeight: '900',
+    color: '#0d141e',
+    margin: 0,
   },
   closeBtn: {
-    background: '#f1f5f9',
-    border: 'none',
-    borderRadius: '50%',
-    width: '36px',
-    height: '36px',
-    fontSize: '1rem',
+    background: '#f8fafc',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    width: '34px',
+    height: '34px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     cursor: 'pointer',
-    color: '#475569',
-    flexShrink: 0,
-    fontWeight: '700',
+    color: '#64748b',
   },
   infoBanner: {
     display: 'flex',
     alignItems: 'flex-start',
     gap: '0.75rem',
-    background: '#f8fafc',
-    border: '1.5px solid #e2e8f0',
+    background: '#fafdf5',
+    border: '1.5px solid #d9f99d',
     borderRadius: '10px',
     padding: '0.85rem 1rem',
-    fontSize: '0.88rem',
-    color: '#0f172a',
+    fontSize: '0.86rem',
+    color: '#0d141e',
     marginBottom: '1.25rem',
   },
-  infoIcon: { fontSize: '1.2rem', flexShrink: 0 },
   errorBox: {
     background: '#fee2e2',
     color: '#991b1b',
@@ -234,49 +242,51 @@ const s = {
     fontSize: '0.88rem',
     border: '1px solid #fca5a5',
   },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
   grid2: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
     gap: '1rem',
-    marginBottom: '1rem',
   },
   fieldGroup: {
     marginBottom: '1rem',
   },
   label: {
     display: 'block',
-    marginBottom: '0.4rem',
-    fontSize: '0.85rem',
+    marginBottom: '0.35rem',
+    fontSize: '0.82rem',
     fontWeight: '700',
     color: '#334155',
   },
   req: { color: '#dc2626' },
   input: {
     width: '100%',
-    padding: '0.75rem 0.9rem',
+    padding: '0.7rem 0.85rem',
     border: '1.5px solid #cbd5e1',
     borderRadius: '8px',
-    fontSize: '0.9rem',
-    boxSizing: 'border-box',
+    fontSize: '0.88rem',
     outline: 'none',
     fontFamily: 'inherit',
     backgroundColor: '#ffffff',
   },
   select: {
     width: '100%',
-    padding: '0.75rem 0.9rem',
+    padding: '0.7rem 0.85rem',
     border: '1.5px solid #cbd5e1',
     borderRadius: '8px',
-    fontSize: '0.9rem',
-    boxSizing: 'border-box',
+    fontSize: '0.88rem',
     outline: 'none',
     backgroundColor: '#ffffff',
+    cursor: 'pointer',
   },
   footer: {
     display: 'flex',
     justifyContent: 'flex-end',
     gap: '0.75rem',
-    marginTop: '1.5rem',
+    marginTop: '1.25rem',
     paddingTop: '1.25rem',
     borderTop: '1px solid #f1f5f9',
   },
@@ -288,18 +298,22 @@ const s = {
     borderRadius: '8px',
     cursor: 'pointer',
     fontWeight: '700',
-    fontSize: '0.9rem',
+    fontSize: '0.88rem',
   },
   btnSubmit: {
-    padding: '0.75rem 1.8rem',
-    background: '#0f172a',
-    color: '#fbbf24',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.45rem',
+    padding: '0.75rem 1.6rem',
+    background: '#0d141e',
+    color: '#74c02c',
     border: 'none',
     borderRadius: '8px',
     cursor: 'pointer',
-    fontWeight: '800',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900',
     fontSize: '0.92rem',
-    boxShadow: '0 4px 14px rgba(15, 23, 42, 0.3)',
+    boxShadow: '0 4px 14px rgba(13, 20, 30, 0.3)',
   },
 };
 

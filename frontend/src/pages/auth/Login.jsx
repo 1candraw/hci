@@ -13,6 +13,8 @@ import {
   AlertCircle,
   Truck,
   CheckCircle2,
+  Sparkles,
+  Layers
 } from 'lucide-react';
 
 const Login = () => {
@@ -61,19 +63,13 @@ const Login = () => {
 
       <div style={s.centerContainer}>
         <div style={s.card}>
-          {/* Top Gold Hazard Accent Line */}
+          {/* Top Green Accent Line */}
           <div style={s.cardTopAccent} />
 
           {/* Logo & Portal Header */}
           <div style={s.header}>
             <div style={s.logoBadge}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 19L8 5H14L11 19H4Z" fill="#F59E0B" />
-                <path d="M13 5L17 19H20L16 5H13Z" fill="#0F172A" />
-                <circle cx="6" cy="19" r="2" fill="#0F172A" />
-                <circle cx="11" cy="19" r="2" fill="#F59E0B" />
-                <circle cx="18" cy="19" r="2" fill="#0F172A" />
-              </svg>
+              <span style={s.logoLetter}>H</span>
             </div>
             <h1 style={s.brandTitle}>
               HEAVY<span style={s.brandAccent}>CARE</span><span style={s.brandSub}>.ID</span>
@@ -140,7 +136,7 @@ const Login = () => {
               ) : (
                 <>
                   <LogInIcon size={17} strokeWidth={2.2} />
-                  <span>Masuk ke Dashboard</span>
+                  <span>Masuk ke Portal Internal</span>
                 </>
               )}
             </button>
@@ -157,7 +153,7 @@ const Login = () => {
                 onClick={() => handleQuickFill('sales@gmail.com', 'Sales')}
                 style={s.demoBtn}
               >
-                <div style={{ ...s.demoRoleBadge, backgroundColor: '#fef3c7', color: '#b45309' }}>Sales</div>
+                <div style={{ ...s.demoRoleBadge, backgroundColor: '#ecfccb', color: '#15803d' }}>Sales</div>
                 <div style={s.demoEmail}>sales@gmail.com</div>
               </button>
 
@@ -166,7 +162,7 @@ const Login = () => {
                 onClick={() => handleQuickFill('manager@gmail.com', 'Manager')}
                 style={s.demoBtn}
               >
-                <div style={{ ...s.demoRoleBadge, backgroundColor: '#ede9fe', color: '#6d28d9' }}>Manager</div>
+                <div style={{ ...s.demoRoleBadge, backgroundColor: '#0d141e', color: '#74c02c' }}>Manager</div>
                 <div style={s.demoEmail}>manager@gmail.com</div>
               </button>
 
@@ -175,7 +171,7 @@ const Login = () => {
                 onClick={() => handleQuickFill('operasional@transcon.co.id', 'Operasional')}
                 style={s.demoBtn}
               >
-                <div style={{ ...s.demoRoleBadge, backgroundColor: '#cffafe', color: '#0891b2' }}>Operasional</div>
+                <div style={{ ...s.demoRoleBadge, backgroundColor: '#e0e7ff', color: '#3730a3' }}>Operasional</div>
                 <div style={s.demoEmail}>operasional@...</div>
               </button>
             </div>
@@ -183,7 +179,7 @@ const Login = () => {
 
           {/* Footer Security Badge */}
           <div style={s.footerSecurity}>
-            <ShieldCheck size={13} style={{ color: '#10b981' }} />
+            <ShieldCheck size={13} style={{ color: '#74c02c' }} />
             <span>256-Bit SSL Encrypted · Akses Berbasis Peran Terotentikasi</span>
           </div>
         </div>
@@ -196,7 +192,7 @@ const s = {
   page: {
     minHeight: '100vh',
     backgroundColor: '#f8fafc',
-    backgroundImage: 'radial-gradient(ellipse at 50% 0%, rgba(245,158,11,0.08) 0%, rgba(248,250,252,1) 60%)',
+    backgroundImage: 'radial-gradient(ellipse at 50% 0%, rgba(116, 192, 44, 0.12) 0%, rgba(248, 250, 252, 1) 65%)',
     display: 'flex',
     flexDirection: 'column',
     fontFamily: "'Plus Jakarta Sans', sans-serif",
@@ -215,21 +211,23 @@ const s = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.45rem',
-    color: '#475569',
+    color: '#334155',
     textDecoration: 'none',
     fontSize: '0.86rem',
-    fontWeight: '700',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '800',
     transition: 'color 0.15s',
   },
   trackLink: {
     fontSize: '0.82rem',
-    fontWeight: '700',
-    color: '#92400e',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '800',
+    color: '#15803d',
     textDecoration: 'none',
-    backgroundColor: '#fef3c7',
-    padding: '0.35rem 0.75rem',
-    borderRadius: '6px',
-    border: '1px solid #fde68a',
+    backgroundColor: '#ecfccb',
+    padding: '0.4rem 0.85rem',
+    borderRadius: '7px',
+    border: '1px solid #d9f99d',
   },
   centerContainer: {
     flex: 1,
@@ -243,8 +241,8 @@ const s = {
     maxWidth: '440px',
     backgroundColor: '#ffffff',
     borderRadius: '16px',
-    boxShadow: '0 10px 30px -5px rgba(15, 23, 42, 0.08), 0 4px 12px rgba(15, 23, 42, 0.04)',
-    border: '1px solid #e2e8f0',
+    boxShadow: '0 15px 35px -5px rgba(13, 20, 30, 0.08), 0 4px 12px rgba(13, 20, 30, 0.04)',
+    border: '1.5px solid #e2e8f0',
     padding: '2.5rem 2.25rem',
     position: 'relative',
     overflow: 'hidden',
@@ -256,7 +254,7 @@ const s = {
     left: 0,
     right: 0,
     height: '4px',
-    backgroundColor: '#f59e0b',
+    backgroundColor: '#74c02c',
   },
   header: {
     textAlign: 'center',
@@ -266,27 +264,34 @@ const s = {
     width: '46px',
     height: '46px',
     borderRadius: '10px',
-    backgroundColor: '#f8fafc',
-    border: '1.5px solid #e2e8f0',
+    backgroundColor: '#0d141e',
+    border: '2px solid #74c02c',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: '0.75rem',
-    boxShadow: '0 2px 8px rgba(15, 23, 42, 0.05)',
+    boxShadow: '0 0 15px rgba(116, 192, 44, 0.3)',
+  },
+  logoLetter: {
+    color: '#74c02c',
+    fontFamily: "'Sora', sans-serif",
+    fontWeight: '900',
+    fontSize: '1.35rem',
+    lineHeight: 1,
   },
   brandTitle: {
     fontSize: '1.35rem',
     fontWeight: '900',
-    color: '#0f172a',
+    color: '#0d141e',
     margin: '0 0 0.2rem',
-    letterSpacing: '-0.3px',
-    fontFamily: "'Outfit', sans-serif",
+    letterSpacing: '-0.03em',
+    fontFamily: "'Sora', sans-serif",
   },
   brandAccent: {
-    color: '#d97706',
+    color: '#74c02c',
   },
   brandSub: {
-    color: '#f59e0b',
+    color: '#15803d',
     fontSize: '0.95rem',
   },
   brandTagline: {
@@ -295,6 +300,7 @@ const s = {
     color: '#64748b',
     letterSpacing: '1.5px',
     margin: 0,
+    fontFamily: "'Urbanist', sans-serif",
   },
   errorBox: {
     display: 'flex',
@@ -346,7 +352,7 @@ const s = {
     borderRadius: '8px',
     fontSize: '0.9rem',
     outline: 'none',
-    color: '#0f172a',
+    color: '#0d141e',
     backgroundColor: '#ffffff',
     boxSizing: 'border-box',
     transition: 'border-color 0.15s, box-shadow 0.15s',
@@ -366,18 +372,19 @@ const s = {
   submitBtn: {
     marginTop: '0.5rem',
     padding: '0.85rem',
-    backgroundColor: '#0f172a',
-    color: '#fbbf24',
+    backgroundColor: '#0d141e',
+    color: '#74c02c',
     border: 'none',
     borderRadius: '8px',
-    fontWeight: '800',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900',
     fontSize: '0.92rem',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '0.5rem',
-    boxShadow: '0 4px 14px rgba(15, 23, 42, 0.25)',
+    boxShadow: '0 4px 14px rgba(13, 20, 30, 0.25)',
     transition: 'all 0.15s',
   },
   demoSection: {
@@ -392,6 +399,7 @@ const s = {
     fontWeight: '800',
     color: '#94a3b8',
     letterSpacing: '1px',
+    fontFamily: "'Urbanist', sans-serif",
   },
   demoGrid: {
     display: 'grid',
@@ -411,6 +419,7 @@ const s = {
   },
   demoRoleBadge: {
     fontSize: '0.65rem',
+    fontFamily: "'Urbanist', sans-serif",
     fontWeight: '800',
     padding: '0.1rem 0.4rem',
     borderRadius: '4px',

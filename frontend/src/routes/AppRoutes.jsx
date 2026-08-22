@@ -10,6 +10,7 @@ import Transaksi from '../pages/transactions/Transaksi';
 import AuditLog from '../pages/dashboard/AuditLog';
 import MasterAlatBerat from '../pages/alatBerat/MasterAlatBerat';
 import TransaksiDetail from '../pages/transactions/TransaksiDetail';
+import ProfileSettings from '../pages/profile/ProfileSettings';
 
 // ★ Halaman Publik (Guest Flow)
 import LandingPage from '../pages/public/LandingPage';
@@ -36,6 +37,8 @@ const AppRoutes = () => {
           <Route path="/katalog"   element={<Katalog />} />
           <Route path="/transaksi" element={<Transaksi />} />
           <Route path="/transaksi/:id" element={<TransaksiDetail />} />
+          <Route path="/profile" element={<ProfileSettings />} />
+          <Route path="/pengaturan-profil" element={<ProfileSettings />} />
 
           {/* Master Data: Sales & Manager */}
           <Route element={<ProtectedRoute allowedRoles={['Sales', 'Manager']} />}>

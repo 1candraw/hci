@@ -1,4 +1,5 @@
 const alatBeratRepo = require('../repositories/alatBerat.repository');
+const auditLogService = require('../services/auditlog.service');
 
 // 1. Mendapatkan daftar alat berat
 const getAlatBerat = async (req, res) => {
@@ -41,6 +42,15 @@ const addAlatBerat = async (req, res) => {
 
     const newId = await alatBeratRepo.create(dataInput);
 
+    // Catat ke Audit Log secara otomatis & siarkan realtime
+    await auditLogService.logActivity(
+      userId,
+      'INSERT',
+      'alat_berat',
+      newId,
+      `Menambahkan unit alat berat baru: ${dataInput.brand || 'Excavator'} ${dataInput.model || ''} (${dataInput.kapasitas_ton || 5} Ton)`
+    );
+
     res.status(201).json({
       success: true,
       message: userRole === 'manager' 
@@ -65,6 +75,7 @@ const updateAlatBerat = async (req, res) => {
       dataInput.image_url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     }
 
+    const userId = req.user.id;
     const userRole = req.user.role ? req.user.role.toLowerCase() : ''; 
 
     // Logika Maker-Checker untuk Edit
@@ -83,6 +94,15 @@ const updateAlatBerat = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Data tidak ditemukan.' });
     }
 
+    // Catat ke Audit Log secara otomatis & siarkan realtime
+    await auditLogService.logActivity(
+      userId,
+      'UPDATE',
+      'alat_berat',
+      id,
+      `Memperbarui data alat berat ID #${id}: ${dataInput.brand || ''} ${dataInput.model || ''}`
+    );
+
     res.status(200).json({ 
       success: true, 
       message: userRole === 'manager' 
@@ -100,6 +120,7 @@ const updateAlatBerat = async (req, res) => {
 const deleteAlatBerat = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user.id;
     const userRole = req.user.role ? req.user.role.toLowerCase() : '';
 
     if (userRole === 'manager') {
@@ -107,12 +128,28 @@ const deleteAlatBerat = async (req, res) => {
       const affectedRows = await alatBeratRepo.remove(id);
       if (affectedRows === 0) return res.status(404).json({ success: false, message: 'Data tidak ditemukan.' });
       
+      await auditLogService.logActivity(
+        userId,
+        'DELETE',
+        'alat_berat',
+        id,
+        `Manager menghapus data alat berat ID #${id} secara permanen`
+      );
+
       return res.status(200).json({ success: true, message: 'Data terhapus permanen.' });
     } else {
       // Jalur Biasa: Sales hanya mengajukan penghapusan (Soft Delete)
       const affectedRows = await alatBeratRepo.updateStatus(id, 'pending_delete', null);
       if (affectedRows === 0) return res.status(404).json({ success: false, message: 'Data tidak ditemukan.' });
       
+      await auditLogService.logActivity(
+        userId,
+        'UPDATE',
+        'alat_berat',
+        id,
+        `Sales mengajukan penghapusan data alat berat ID #${id} ke Manager`
+      );
+
       return res.status(200).json({ success: true, message: 'Pengajuan hapus telah dikirim ke Manager.' });
     }
 
@@ -143,10 +180,28 @@ const approveAlatBerat = async (req, res) => {
     if (item.status_approval === 'pending_delete') {
       // Jika yang diapprove adalah pengajuan hapus, maka hapus permanen dari DB
       await alatBeratRepo.remove(id);
+
+      await auditLogService.logActivity(
+        managerId,
+        'DELETE',
+        'alat_berat',
+        id,
+        `Manager menyetujui pengajuan hapus alat berat ${item.brand || ''} ${item.model || ''} (ID #${id})`
+      );
+
       return res.status(200).json({ success: true, message: 'Penghapusan disetujui. Data telah dihapus permanen.' });
     } else {
       // Jika yang diapprove adalah pengajuan tambah/edit, ubah status jadi approved
       await alatBeratRepo.updateStatus(id, 'approved', managerId);
+
+      await auditLogService.logActivity(
+        managerId,
+        'UPDATE',
+        'alat_berat',
+        id,
+        `Manager menyetujui dan memverifikasi katalog alat berat ${item.brand || ''} ${item.model || ''} (ID #${id})`
+      );
+
       return res.status(200).json({ success: true, message: 'Data alat berat berhasil disetujui dan masuk ke Katalog.' });
     }
 
@@ -162,4 +217,4 @@ module.exports = {
   updateAlatBerat,
   deleteAlatBerat,
   approveAlatBerat
-};     
+};

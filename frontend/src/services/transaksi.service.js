@@ -2,7 +2,6 @@ import api from '../api/axios';
 
 const getAll = async () => {
   try {
-    // Asumsi endpoint backend kamu adalah /transaksi atau /quotations
     const response = await api.get('/transaksi'); 
     return response.data;
   } catch (error) {
@@ -27,31 +26,25 @@ const reviewPenawaran = async (id, action) => {
   return response.data;
 };
 
-// Fungsi untuk mengambil token Midtrans
-const payDP = async (id) => {
-  const response = await api.post(`/quotations/${id}/pay-dp`);
-  return response.data;
-};
-
 // Fungsi dinamis untuk mengubah berbagai status
 const updateStatus = async (id, status) => {
   const response = await api.put(`/quotations/${id}/status`, { status });
   return response.data;
 };
 
-// +++ TAMBAHKAN FUNGSI BARU INI +++
+// Fungsi submit PDI
 const submitPDI = async (id, data) => {
   const response = await api.post(`/quotations/${id}/pdi`, data);
   return response.data;
 };
 
-// Tambahkan ini di atas export
+// Fungsi submit delivery order
 const submitDeliveryOrder = async (id, data) => {
   const response = await api.post(`/quotations/${id}/delivery`, data);
   return response.data;
 };
 
-// +++ TAMBAHKAN FUNGSI INI +++
+// Fungsi konfirmasi terima unit
 const receiveUnit = async (id) => {
   const response = await api.put(`/quotations/${id}/receive`);
   return response.data;
@@ -62,7 +55,6 @@ export const transaksiService = {
   getById,
   submitPenawaran,
   reviewPenawaran,
-  payDP,
   updateStatus,
   submitPDI,
   submitDeliveryOrder,

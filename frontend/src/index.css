@@ -1,12 +1,15 @@
 :root {
-  /* Industrial Heavy Machinery Color Palette (Cat / Komatsu Style) */
-  --primary-gold: #f59e0b;
-  --primary-gold-dark: #d97706;
-  --primary-gold-light: #fef3c7;
-  --primary-gold-hover: #eab308;
+  /* ZOOMLION Official Industrial Color Palette */
+  --zoomlion-green: #74c02c;
+  --zoomlion-green-light: #ecfccb;
+  --zoomlion-green-hover: #84cc16;
+  --zoomlion-green-dark: #4d7c0f;
+  --zoomlion-emerald: #15803d;
+  --zoomlion-emerald-dark: #14532d;
   
-  --industrial-dark: #0f172a;
-  --industrial-slate: #1e293b;
+  --industrial-dark: #0d141e;
+  --industrial-slate: #111827;
+  --industrial-navy: #1e293b;
   --industrial-gray: #334155;
   --industrial-muted: #64748b;
   --industrial-light: #f8fafc;
@@ -17,10 +20,10 @@
   --font-heading: 'Urbanist', 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   
-  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 10px 25px -4px rgba(15, 23, 42, 0.1), 0 4px 10px -2px rgba(15, 23, 42, 0.05);
-  --shadow-gold: 0 8px 20px -4px rgba(245, 158, 11, 0.35);
+  --shadow-sm: 0 1px 3px rgba(13, 20, 30, 0.06), 0 1px 2px rgba(13, 20, 30, 0.04);
+  --shadow-md: 0 4px 12px -2px rgba(13, 20, 30, 0.08), 0 2px 6px -1px rgba(13, 20, 30, 0.04);
+  --shadow-lg: 0 12px 28px -4px rgba(13, 20, 30, 0.12), 0 4px 12px -2px rgba(13, 20, 30, 0.06);
+  --shadow-green: 0 8px 24px -4px rgba(116, 192, 44, 0.35);
 
   font-family: var(--font-body);
   color: var(--industrial-dark);
@@ -40,7 +43,8 @@ html, body {
   padding: 0;
   min-height: 100vh;
   background-color: #f8fafc;
-  color: #0f172a;
+  color: #0d141e;
+  scroll-behavior: smooth;
 }
 
 #root {
@@ -91,26 +95,40 @@ button, input, select, textarea {
 
 @keyframes pulseGlow {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(1.02); }
+  50% { opacity: 0.85; transform: scale(1.03); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translate(-50%, 20px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-spin {
   animation: spin 1s linear infinite;
 }
 
-/* Eye-Catching Utility Classes */
-.gradient-text-gold {
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+/* ZOOMLION Style Utility Classes */
+.gradient-text-green {
+  background: linear-gradient(135deg, #a3e635 0%, #74c02c 50%, #4d7c0f 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.hazard-accent {
+.zoomlion-accent-bar {
+  background: linear-gradient(90deg, #74c02c 0%, #a3e635 100%);
+}
+
+.zoomlion-hazard-bar {
   background: repeating-linear-gradient(
     -45deg,
-    #f59e0b,
-    #f59e0b 8px,
-    #0f172a 8px,
-    #0f172a 16px
+    #74c02c,
+    #74c02c 8px,
+    #0d141e 8px,
+    #0d141e 16px
   );
 }

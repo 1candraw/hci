@@ -1,9 +1,13 @@
 const jwtConfig = require('../config/jwt');
 
 const authenticate = (req, res, next) => {
-  // Token biasanya dikirim di header dengan format: "Bearer <token_acak>"
+  // Token bisa dikirim di header: "Bearer <token>" atau query param ?token=<token> (untuk SSE EventSource)
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  let token = authHeader && authHeader.split(' ')[1];
+
+  if (!token && req.query && req.query.token) {
+    token = req.query.token;
+  }
 
   if (!token) {
     return res.status(403).json({ 

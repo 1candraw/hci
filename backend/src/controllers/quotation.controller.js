@@ -1,4 +1,3 @@
-const midtransClient = require('midtrans-client');
 const quotationRepo = require('../repositories/quotation.repository');
 
 const createQuotation = async (req, res) => {
@@ -130,61 +129,11 @@ const reviewPenawaran = async (req, res) => {
   }
 };
 
-//Fungsi untuk membuat token pembayaran Midtrans (DP)
-const createPaymentToken = async (req, res) => {
-  try {
-    const id = req.params.id;
-    
-    // 1. Ambil data pesanan dari database
-    const detail = await quotationRepo.getById(id);
-    if (!detail) {
-      return res.status(404).json({ message: 'Data pesanan tidak ditemukan' });
-    }
-
-    // 2. Hitung jumlah DP (Uang Muka) -> Misalnya kita set 10% dari Total Final
-    const totalAkhir = Number(detail.harga_penawaran) + Number(detail.ongkos_kirim) - Number(detail.diskon);
-    const dpAmount = Math.round(totalAkhir * 0.1); // DP 10% (dibulatkan agar tidak ada desimal)
-
-    // 3. Konfigurasi koneksi ke Midtrans
-    let snap = new midtransClient.Snap({
-      isProduction: false, // Wajib false karena kita masih pakai mode Sandbox
-      serverKey: process.env.MIDTRANS_SERVER_KEY
-    });
-
-    // 4. Siapkan parameter pesanan (struk digital)
-    let parameter = {
-      "transaction_details": {
-        // Order ID harus unik, jadi kita gabung nomor pesanan + timestamp detik ini
-        "order_id": `DP-${detail.nomor_dokumen}-${Date.now()}`,
-        "gross_amount": dpAmount // Tagihan yang harus dibayar
-      },
-      "customer_details": {
-        "first_name": detail.perusahaan,
-        "email": detail.email_perusahaan || "customer@heavycare.id",
-        "phone": detail.telepon_perusahaan || "0800000000"
-      }
-    };
-
-    // 5. Tembak ke Midtrans untuk minta Token
-    const transaction = await snap.createTransaction(parameter);
-    
-    // 6. Kembalikan tokennya ke Frontend React
-    res.status(200).json({ 
-      token: transaction.token, 
-      dp_amount: dpAmount 
-    });
-
-  } catch (error) {
-    console.error('Error createPaymentToken:', error);
-    res.status(500).json({ message: 'Gagal membuat token pembayaran', error: error.message });
-  }
-};
-
-// +++ TAMBAHKAN FUNGSI INI +++
+// Fungsi update status pesanan
 const updateStatusPesanan = async (req, res) => {
   try {
     const id = req.params.id;
-    const { status } = req.body; // Status baru yang akan dikirim dari React
+    const { status } = req.body;
 
     const affectedRows = await quotationRepo.updateStatus(id, status);
     if (affectedRows === 0) {
@@ -198,11 +147,11 @@ const updateStatusPesanan = async (req, res) => {
   }
 };
 
-// +++ TAMBAHKAN FUNGSI INI +++
+// Submit checklist PDI oleh Operasional
 const submitChecklistPDI = async (req, res) => {
   try {
-    const id = req.params.id; // ID Quotation
-    const operatorId = req.user.id; // Mengambil ID dari user yang sedang login (Operasional)
+    const id = req.params.id;
+    const operatorId = req.user.id;
     const checklistData = req.body;
 
     // 1. Simpan data PDI ke tabel unit_checklists
@@ -218,7 +167,7 @@ const submitChecklistPDI = async (req, res) => {
   }
 };
 
-// +++ TAMBAHKAN FUNGSI INI DI CONTROLLER +++
+// Create Delivery Order
 const createDeliveryOrder = async (req, res) => {
   try {
     const id = req.params.id;
@@ -237,7 +186,7 @@ const createDeliveryOrder = async (req, res) => {
   }
 };
 
-// +++ TAMBAHKAN FUNGSI INI DI BAWAH +++
+// Konfirmasi penerimaan unit
 const receiveUnit = async (req, res) => {
   try {
     const id = req.params.id;
@@ -248,7 +197,6 @@ const receiveUnit = async (req, res) => {
     res.status(500).json({ message: 'Terjadi kesalahan server', error: error.message });
   }
 };
-// Pastikan receiveUnit diekspor
 
 // ★ GUEST RFQ: Endpoint publik tanpa token JWT
 const createGuestQuotation = async (req, res) => {
@@ -387,7 +335,6 @@ module.exports = {
   getById,           
   submitPenawaran,    
   reviewPenawaran,    
-  createPaymentToken,
   updateStatusPesanan,
   submitChecklistPDI,
   createDeliveryOrder,

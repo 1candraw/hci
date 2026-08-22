@@ -11,32 +11,28 @@ import {
   Sparkles,
   Layers,
   HelpCircle,
+  Activity,
+  UserCog
 } from 'lucide-react';
 
 const Sidebar = () => {
   const { user } = useAuth();
   const location = useLocation();
 
-  const isCurrent = (path) => location.pathname === path;
+  const isCurrent = (path) => location.pathname === path || (path === '/profile' && location.pathname === '/pengaturan-profil');
 
   return (
     <aside style={styles.sidebar}>
       {/* Brand Header */}
       <div style={styles.brandHeader}>
         <div style={styles.brandIconBox}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 19L8 5H14L11 19H4Z" fill="#F59E0B" />
-            <path d="M13 5L17 19H20L16 5H13Z" fill="#0F172A" />
-            <circle cx="6" cy="19" r="2" fill="#0F172A" />
-            <circle cx="11" cy="19" r="2" fill="#F59E0B" />
-            <circle cx="18" cy="19" r="2" fill="#0F172A" />
-          </svg>
+          <span style={styles.brandLetter}>H</span>
         </div>
         <div>
           <div style={styles.brandTitle}>
-            HEAVY<span style={styles.brandTitleAccent}>CARE</span>
+            HEAVY<span style={styles.brandTitleAccent}>CARE</span><span style={{ color: '#74c02c' }}>.ID</span>
           </div>
-          <div style={styles.brandTag}>ENTERPRISE ERP</div>
+          <div style={styles.brandTag}>INTERNAL ENTERPRISE</div>
         </div>
       </div>
 
@@ -75,6 +71,13 @@ const Sidebar = () => {
               {isCurrent('/saw') && <ChevronRight size={14} style={styles.chevron} />}
             </Link>
           </li>
+          <li>
+            <Link to="/profile" style={isCurrent('/profile') ? styles.activeLink : styles.link}>
+              <UserCog size={18} strokeWidth={isCurrent('/profile') ? 2.2 : 1.75} style={isCurrent('/profile') ? styles.activeIcon : styles.icon} />
+              <span style={styles.linkText}>Pengaturan Profil</span>
+              {isCurrent('/profile') && <ChevronRight size={14} style={styles.chevron} />}
+            </Link>
+          </li>
         </ul>
 
         {/* INVENTORY & MANAGEMENT */}
@@ -104,7 +107,7 @@ const Sidebar = () => {
             <ul style={styles.menuList}>
               <li>
                 <Link to="/audit-log" style={isCurrent('/audit-log') ? styles.activeLink : styles.link}>
-                  <ShieldAlert size={18} strokeWidth={isCurrent('/audit-log') ? 2.2 : 1.75} style={isCurrent('/audit-log') ? styles.activeIcon : styles.icon} />
+                  <Activity size={18} strokeWidth={isCurrent('/audit-log') ? 2.2 : 1.75} style={isCurrent('/audit-log') ? styles.activeIcon : styles.icon} />
                   <span style={styles.linkText}>Audit Log Aktivitas</span>
                   {isCurrent('/audit-log') && <ChevronRight size={14} style={styles.chevron} />}
                 </Link>
@@ -120,7 +123,7 @@ const Sidebar = () => {
           <div style={styles.statusDot} />
           <div>
             <div style={styles.statusTitle}>Sistem Terhubung</div>
-            <div style={styles.statusSubtitle}>MySQL · Live v2.4</div>
+            <div style={styles.statusSubtitle}>MySQL · Live Realtime</div>
           </div>
         </div>
       </div>
@@ -130,18 +133,18 @@ const Sidebar = () => {
 
 const styles = {
   sidebar: {
-    width: '250px',
+    width: '256px',
     backgroundColor: '#ffffff',
-    borderRight: '1px solid #eef2f6',
+    borderRight: '1px solid #e2e8f0',
     display: 'flex',
     flexDirection: 'column',
     height: '100vh',
     flexShrink: 0,
-    boxShadow: '2px 0 10px rgba(15, 23, 42, 0.02)',
+    boxShadow: '2px 0 12px rgba(13, 20, 30, 0.03)',
   },
   brandHeader: {
-    height: '64px',
-    padding: '0 1.25rem',
+    height: '68px',
+    padding: '0 1.35rem',
     display: 'flex',
     alignItems: 'center',
     gap: '0.75rem',
@@ -150,39 +153,50 @@ const styles = {
   brandIconBox: {
     width: '36px',
     height: '36px',
-    borderRadius: '8px',
-    backgroundColor: '#f8fafc',
-    border: '1px solid #e2e8f0',
+    borderRadius: '9px',
+    backgroundColor: '#0d141e',
+    border: '2px solid #74c02c',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    boxShadow: '0 0 10px rgba(116, 192, 44, 0.25)',
+  },
+  brandLetter: {
+    color: '#74c02c',
+    fontFamily: "'Sora', sans-serif",
+    fontWeight: '900',
+    fontSize: '1.15rem',
+    lineHeight: 1,
   },
   brandTitle: {
-    fontSize: '1.05rem',
+    fontSize: '1.08rem',
+    fontFamily: "'Sora', sans-serif",
     fontWeight: '900',
-    color: '#0f172a',
-    letterSpacing: '-0.3px',
+    color: '#0d141e',
+    letterSpacing: '-0.03em',
     lineHeight: 1.1,
   },
   brandTitleAccent: {
-    color: '#d97706',
+    color: '#74c02c',
   },
   brandTag: {
     fontSize: '0.6rem',
+    fontFamily: "'Urbanist', sans-serif",
     fontWeight: '800',
-    color: '#94a3b8',
+    color: '#64748b',
     letterSpacing: '1.5px',
     marginTop: '0.1rem',
   },
   menuScrollArea: {
     flex: 1,
     overflowY: 'auto',
-    padding: '1rem 0.85rem',
+    padding: '1.15rem 0.85rem',
   },
   sectionHeading: {
     padding: '0.85rem 0.75rem 0.35rem',
-    fontSize: '0.65rem',
-    fontWeight: '800',
+    fontSize: '0.66rem',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900',
     color: '#94a3b8',
     letterSpacing: '1.2px',
     textTransform: 'uppercase',
@@ -201,23 +215,25 @@ const styles = {
     padding: '0.65rem 0.85rem',
     color: '#475569',
     textDecoration: 'none',
-    borderRadius: '8px',
+    borderRadius: '9px',
     fontSize: '0.86rem',
-    fontWeight: '600',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '700',
     transition: 'all 0.15s ease',
   },
   activeLink: {
     display: 'flex',
     alignItems: 'center',
     padding: '0.65rem 0.85rem',
-    color: '#92400e',
+    color: '#15803d',
     textDecoration: 'none',
-    backgroundColor: '#fef3c7',
-    border: '1px solid #fde68a',
-    borderRadius: '8px',
+    backgroundColor: '#ecfccb',
+    border: '1.5px solid #d9f99d',
+    borderRadius: '9px',
     fontSize: '0.86rem',
-    fontWeight: '700',
-    boxShadow: '0 1px 3px rgba(245, 158, 11, 0.1)',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900',
+    boxShadow: '0 2px 8px rgba(116, 192, 44, 0.15)',
   },
   icon: {
     color: '#64748b',
@@ -226,7 +242,7 @@ const styles = {
     transition: 'color 0.15s',
   },
   activeIcon: {
-    color: '#d97706',
+    color: '#15803d',
     marginRight: '0.75rem',
     flexShrink: 0,
   },
@@ -237,7 +253,7 @@ const styles = {
     textOverflow: 'ellipsis',
   },
   chevron: {
-    color: '#d97706',
+    color: '#15803d',
     marginLeft: 'auto',
   },
   sidebarFooter: {
@@ -254,18 +270,19 @@ const styles = {
     width: '8px',
     height: '8px',
     borderRadius: '50%',
-    backgroundColor: '#10b981',
-    boxShadow: '0 0 0 3px rgba(16, 185, 129, 0.2)',
+    backgroundColor: '#74c02c',
+    boxShadow: '0 0 0 3px rgba(116, 192, 44, 0.25)',
   },
   statusTitle: {
     fontSize: '0.78rem',
-    fontWeight: '700',
-    color: '#1e293b',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '800',
+    color: '#0d141e',
     lineHeight: 1.2,
   },
   statusSubtitle: {
     fontSize: '0.68rem',
-    color: '#94a3b8',
+    color: '#64748b',
     lineHeight: 1.2,
   },
 };

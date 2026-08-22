@@ -12,7 +12,7 @@ const DashboardLayout = () => {
       <div style={styles.mainArea}>
         <Navbar />
         
-        {/* Outlet adalah area tempat konten halaman (Dashboard, Katalog, dll) akan dirender */}
+        {/* Konten Utama */}
         <main style={styles.content}>
           <Outlet />
         </main>
@@ -22,9 +22,26 @@ const DashboardLayout = () => {
 };
 
 const styles = {
-  container: { display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', backgroundColor: '#f3f4f6', fontFamily: 'sans-serif' },
-  mainArea: { display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' },
-  content: { flex: 1, padding: '2rem', overflowY: 'auto' }
+  container: { 
+    display: 'flex', 
+    height: '100vh', 
+    width: '100vw', 
+    overflow: 'hidden', 
+    backgroundColor: '#f8fafc', 
+    fontFamily: "'Plus Jakarta Sans', sans-serif" 
+  },
+  mainArea: { 
+    display: 'flex', 
+    flexDirection: 'column', 
+    flex: 1, 
+    overflow: 'hidden' 
+  },
+  content: { 
+    flex: 1, 
+    padding: '1.75rem 2rem', 
+    overflowY: 'auto',
+    backgroundColor: '#f8fafc',
+  }
 };
 
 export default DashboardLayout;

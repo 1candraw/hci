@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-// Import useNavigate dari react-router-dom untuk fungsi redirect
 import { useNavigate } from 'react-router-dom'; 
 import { quotationService } from '../../services/quotation.service';
+import { FileText, X, ShieldCheck } from 'lucide-react';
 
 const FormPemesananModal = ({ 
   isOpen, 
@@ -16,7 +16,6 @@ const FormPemesananModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [pesan, setPesan] = useState({ type: '', text: '' });
   
-  // Inisialisasi fungsi navigasi
   const navigate = useNavigate();
 
   if (!isOpen) return null;
@@ -37,16 +36,14 @@ const FormPemesananModal = ({
 
       const result = await quotationService.create(payload);
       
-      setPesan({ type: 'success', text: result.message || 'Pesanan berhasil dikirim!' });
+      setPesan({ type: 'success', text: result.message || 'Permintaan penawaran berhasil dikirim ke antrean Sales!' });
       
       setTimeout(() => {
         setCatatan('');
         onClose();
         setPesan({ type: '', text: '' });
-        
-        // Arahkan user ke halaman transaksi setelah 2 detik
         navigate('/transaksi'); 
-      }, 2000);
+      }, 1500);
 
     } catch (error) {
       setPesan({ type: 'error', text: error.toString() });
@@ -56,22 +53,29 @@ const FormPemesananModal = ({
   };
 
   return (
-    <div style={styles.overlay}>
+    <div style={styles.overlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={styles.modal}>
         <div style={styles.header}>
-          <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#1f2937' }}>Ajukan Penawaran</h2>
-          <button onClick={onClose} style={styles.closeBtn}>&times;</button>
+          <div>
+            <span style={styles.headerTag}>HEAVY CARE ID · PEMBUATAN DOKUMEN RFQ</span>
+            <h3 style={styles.headerTitle}>Ajukan Penawaran Harga</h3>
+          </div>
+          <button onClick={onClose} style={styles.closeBtn}><X size={17} /></button>
         </div>
 
-        <p style={{ fontSize: '0.9rem', color: '#4b5563', marginBottom: '1rem' }}>
-          Anda akan memesan: <span style={{ fontWeight: 'bold', color: '#2563eb' }}>{namaAlat}</span>
-        </p>
+        <div style={styles.unitSummary}>
+          <ShieldCheck size={18} style={{ color: '#74c02c', flexShrink: 0 }} />
+          <div style={{ fontSize: '0.86rem', color: '#0d141e' }}>
+            Unit Terpilih: <strong>{namaAlat}</strong>
+          </div>
+        </div>
 
         {pesan.text && (
           <div style={{
             ...styles.alert,
-            backgroundColor: pesan.type === 'success' ? '#d1fae5' : '#fee2e2',
-            color: pesan.type === 'success' ? '#047857' : '#b91c1c'
+            backgroundColor: pesan.type === 'success' ? '#ecfccb' : '#fee2e2',
+            color: pesan.type === 'success' ? '#15803d' : '#991b1b',
+            border: pesan.type === 'success' ? '1px solid #d9f99d' : '1px solid #fca5a5'
           }}>
             {pesan.text}
           </div>
@@ -79,22 +83,23 @@ const FormPemesananModal = ({
 
         <form onSubmit={handleSubmit}>
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Metode Pembayaran</label>
+            <label style={styles.label}>Rencana Metode Pembayaran</label>
             <select 
-              style={styles.input}
+              style={styles.select}
               value={metodePembayaran}
               onChange={(e) => setMetodePembayaran(e.target.value)}
             >
-              <option value="cash">Cash / Tunai Keras</option>
-              <option value="leasing">Leasing / Kredit</option>
+              <option value="cash">Cash / Pembayaran Langsung</option>
+              <option value="leasing">Leasing / Skema Pembiayaan Alat Berat</option>
+              <option value="termin">Termin Proyek Bertahap</option>
             </select>
           </div>
 
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Catatan Proyek (Lokasi & Kebutuhan)</label>
+            <label style={styles.label}>Lokasi Site & Catatan Kebutuhan Proyek *</label>
             <textarea 
-              style={{ ...styles.input, height: '100px', resize: 'vertical' }}
-              placeholder="Contoh: Tolong penawaran harga terbaik beserta biaya kirim ke proyek tambang di daerah Samarinda."
+              style={styles.textarea}
+              placeholder="Contoh: Pengiriman unit ke lokasi tambang pasir Kec. Muara Enim, butuh jadwal PDI minggu depan."
               value={catatan}
               onChange={(e) => setCatatan(e.target.value)}
               required
@@ -115,7 +120,8 @@ const FormPemesananModal = ({
               style={styles.btnSubmit}
               disabled={isLoading}
             >
-              {isLoading ? 'Memproses...' : 'Kirim Permintaan'}
+              <FileText size={15} />
+              <span>{isLoading ? 'Memproses...' : 'Kirim Permintaan'}</span>
             </button>
           </div>
         </form>
@@ -124,61 +130,150 @@ const FormPemesananModal = ({
   );
 };
 
-// --- STYLING MODAL ---
 const styles = {
   overlay: {
-    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    display: 'flex', justifyContent: 'center', alignItems: 'center',
+    position: 'fixed', 
+    top: 0, 
+    left: 0, 
+    right: 0, 
+    bottom: 0,
+    backgroundColor: 'rgba(13, 20, 30, 0.78)',
+    backdropFilter: 'blur(5px)',
+    display: 'flex', 
+    justifyContent: 'center', 
+    alignItems: 'center',
     zIndex: 9999,
-    padding: '1rem'
+    padding: '1.5rem'
   },
   modal: {
     backgroundColor: 'white',
-    borderRadius: '8px',
-    padding: '1.5rem',
+    borderRadius: '16px',
+    padding: '1.75rem',
     width: '100%',
-    maxWidth: '450px',
-    boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+    maxWidth: '480px',
+    boxShadow: '0 25px 60px rgba(13, 20, 30, 0.35)',
+    border: '1.5px solid #e2e8f0',
   },
   header: {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    alignItems: 'flex-start',
     marginBottom: '1rem',
-    borderBottom: '1px solid #e5e7eb',
-    paddingBottom: '0.5rem'
+    borderBottom: '1px solid #f1f5f9',
+    paddingBottom: '0.75rem'
+  },
+  headerTag: {
+    display: 'inline-block',
+    fontSize: '0.66rem',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900',
+    color: '#15803d',
+    backgroundColor: '#ecfccb',
+    padding: '0.1rem 0.45rem',
+    borderRadius: '4px',
+    marginBottom: '0.25rem',
+    letterSpacing: '0.5px',
+  },
+  headerTitle: {
+    margin: 0,
+    fontSize: '1.2rem',
+    fontFamily: "'Sora', sans-serif",
+    fontWeight: '900',
+    color: '#0d141e',
   },
   closeBtn: {
-    background: 'none', border: 'none',
-    fontSize: '1.5rem', color: '#6b7280', cursor: 'pointer'
+    background: '#f8fafc', 
+    border: '1px solid #e2e8f0',
+    borderRadius: '7px',
+    width: '30px',
+    height: '30px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#64748b', 
+    cursor: 'pointer'
+  },
+  unitSummary: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.65rem',
+    backgroundColor: '#f8fafc',
+    border: '1px solid #e2e8f0',
+    padding: '0.65rem 0.85rem',
+    borderRadius: '8px',
+    marginBottom: '1.25rem',
   },
   alert: {
-    padding: '0.75rem', borderRadius: '4px', marginBottom: '1rem', fontSize: '0.9rem'
+    padding: '0.75rem 0.85rem', 
+    borderRadius: '8px', 
+    marginBottom: '1rem', 
+    fontSize: '0.86rem',
+    fontWeight: '700',
   },
   inputGroup: {
     marginBottom: '1rem'
   },
   label: {
-    display: 'block', marginBottom: '0.5rem',
-    fontSize: '0.9rem', fontWeight: 'bold', color: '#374151'
+    display: 'block', 
+    marginBottom: '0.35rem',
+    fontSize: '0.82rem', 
+    fontWeight: '700', 
+    color: '#334155'
   },
-  input: {
-    width: '100%', padding: '0.75rem',
-    border: '1px solid #d1d5db', borderRadius: '6px',
-    fontSize: '0.95rem', boxSizing: 'border-box'
+  select: {
+    width: '100%', 
+    padding: '0.65rem 0.8rem',
+    border: '1.5px solid #cbd5e1', 
+    borderRadius: '8px',
+    fontSize: '0.88rem', 
+    outline: 'none',
+    boxSizing: 'border-box',
+    backgroundColor: '#ffffff',
+  },
+  textarea: {
+    width: '100%', 
+    padding: '0.65rem 0.8rem',
+    border: '1.5px solid #cbd5e1', 
+    borderRadius: '8px',
+    fontSize: '0.88rem', 
+    boxSizing: 'border-box',
+    height: '95px', 
+    resize: 'vertical',
+    outline: 'none',
+    fontFamily: 'inherit',
   },
   footer: {
-    display: 'flex', justifyContent: 'flex-end', gap: '0.5rem',
-    marginTop: '1.5rem'
+    display: 'flex', 
+    justifyContent: 'flex-end', 
+    gap: '0.75rem',
+    marginTop: '1.25rem',
+    paddingTop: '1rem',
+    borderTop: '1px solid #f1f5f9',
   },
   btnCancel: {
-    padding: '0.6rem 1.2rem', backgroundColor: '#f3f4f6',
-    color: '#4b5563', border: 'none', borderRadius: '6px',
-    cursor: 'pointer', fontWeight: 'bold'
+    padding: '0.65rem 1.25rem', 
+    backgroundColor: '#f1f5f9',
+    color: '#475569', 
+    border: 'none', 
+    borderRadius: '7px',
+    cursor: 'pointer', 
+    fontWeight: '700',
+    fontSize: '0.86rem',
   },
   btnSubmit: {
-    padding: '0.6rem 1.2rem', backgroundColor: '#2563eb',
-    color: 'white', border: 'none', borderRadius: '6px',
-    cursor: 'pointer', fontWeight: 'bold'
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    padding: '0.65rem 1.4rem', 
+    backgroundColor: '#0d141e',
+    color: '#74c02c', 
+    border: 'none', 
+    borderRadius: '7px',
+    cursor: 'pointer', 
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900',
+    fontSize: '0.88rem',
+    boxShadow: '0 4px 12px rgba(13, 20, 30, 0.25)'
   }
 };
 
