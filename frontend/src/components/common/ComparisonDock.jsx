@@ -1,10 +1,10 @@
 import { Scale, X, ArrowRight, Trash2, Truck, Sparkles } from 'lucide-react';
 
-const ComparisonDock = ({ 
-  compareList = [], 
-  onRemove, 
-  onClear, 
-  onOpenCompare 
+const ComparisonDock = ({
+  compareList = [],
+  onRemove,
+  onClear,
+  onOpenCompare
 }) => {
   if (!compareList || compareList.length === 0) return null;
 
@@ -38,8 +38,8 @@ const ComparisonDock = ({
               </span>
             </div>
             <p style={s.dockSub}>
-              {isReady 
-                ? '2 Unit siap dibandingkan secara komprehensif' 
+              {isReady
+                ? '2 Unit siap dibandingkan secara komprehensif'
                 : 'Pilih 1 unit lagi dari katalog untuk membandingkan'}
             </p>
           </div>
@@ -60,8 +60,8 @@ const ComparisonDock = ({
               <span style={s.slotBrand}>{unit1.brand || 'Excavator'}</span>
               <span style={s.slotName}>{getUnitName(unit1)}</span>
             </div>
-            <button 
-              onClick={() => onRemove(unit1.id)} 
+            <button
+              onClick={() => onRemove(unit1.id)}
               style={s.slotRemoveBtn}
               title="Hapus unit 1"
             >
@@ -83,8 +83,8 @@ const ComparisonDock = ({
                 <span style={s.slotBrand}>{unit2.brand || 'Excavator'}</span>
                 <span style={s.slotName}>{getUnitName(unit2)}</span>
               </div>
-              <button 
-                onClick={() => onRemove(unit2.id)} 
+              <button
+                onClick={() => onRemove(unit2.id)}
                 style={s.slotRemoveBtn}
                 title="Hapus unit 2"
               >
@@ -101,8 +101,8 @@ const ComparisonDock = ({
 
         {/* Right Actions */}
         <div style={s.dockActions}>
-          <button 
-            onClick={onClear} 
+          <button
+            onClick={onClear}
             style={s.btnClear}
             title="Kosongkan perbandingan"
           >
@@ -110,7 +110,7 @@ const ComparisonDock = ({
             <span>Reset</span>
           </button>
 
-          <button 
+          <button
             onClick={onOpenCompare}
             disabled={!isReady}
             style={{

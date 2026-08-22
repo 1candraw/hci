@@ -1,38 +1,38 @@
-import { 
-  Truck, 
-  Zap, 
-  Layers, 
-  Maximize2, 
-  Scale, 
-  FileText, 
-  CheckCircle2, 
-  ShieldCheck, 
-  X, 
+import {
+  Truck,
+  Zap,
+  Layers,
+  Maximize2,
+  Scale,
+  FileText,
+  CheckCircle2,
+  ShieldCheck,
+  X,
   Sparkles,
   Check,
   Headphones,
   Award
 } from 'lucide-react';
 
-const AlatBeratDetailModal = ({ 
-  isOpen, 
-  onClose, 
-  unit, 
-  onRFQ, 
-  onToggleCompare, 
-  isCompared = false 
+const AlatBeratDetailModal = ({
+  isOpen,
+  onClose,
+  unit,
+  onRFQ,
+  onToggleCompare,
+  isCompared = false
 }) => {
   if (!isOpen || !unit) return null;
 
-  const unitName = unit.name && unit.name.trim() !== 'Excavator' 
-    ? unit.name 
+  const unitName = unit.name && unit.name.trim() !== 'Excavator'
+    ? unit.name
     : `${unit.brand || 'Excavator'} ${unit.model || ''}`;
 
-  const priceText = unit.harga 
+  const priceText = unit.harga
     ? `Rp ${(Number(unit.harga) / 1e6).toLocaleString('id-ID')} Juta`
     : 'Hubungi Sales';
 
-  const fullPriceFormatted = unit.harga 
+  const fullPriceFormatted = unit.harga
     ? `Rp ${Number(unit.harga).toLocaleString('id-ID')}`
     : 'Hubungi Tim Sales';
 
@@ -92,19 +92,19 @@ const AlatBeratDetailModal = ({
 
               {/* Quick Actions in Summary */}
               <div style={s.quickActionWrap}>
-                <button 
+                <button
                   onClick={() => {
                     onClose();
                     onRFQ(unit);
-                  }} 
+                  }}
                   style={s.btnPrimaryRFQ}
                 >
                   <FileText size={16} />
                   <span>Ajukan Penawaran (RFQ)</span>
                 </button>
 
-                <button 
-                  onClick={() => onToggleCompare(unit)} 
+                <button
+                  onClick={() => onToggleCompare(unit)}
                   style={{
                     ...s.btnToggleCompare,
                     backgroundColor: isCompared ? '#ecfccb' : '#ffffff',
@@ -250,8 +250,8 @@ const AlatBeratDetailModal = ({
             Tutup
           </button>
           <div style={s.footerRightActions}>
-            <button 
-              onClick={() => onToggleCompare(unit)} 
+            <button
+              onClick={() => onToggleCompare(unit)}
               style={{
                 ...s.btnCompareFooter,
                 backgroundColor: isCompared ? '#ecfccb' : '#ffffff',
@@ -271,11 +271,11 @@ const AlatBeratDetailModal = ({
                 </>
               )}
             </button>
-            <button 
+            <button
               onClick={() => {
                 onClose();
                 onRFQ(unit);
-              }} 
+              }}
               style={s.btnPrimaryAction}
             >
               <FileText size={16} />

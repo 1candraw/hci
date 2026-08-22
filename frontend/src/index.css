@@ -6,7 +6,7 @@
   --zoomlion-green-dark: #4d7c0f;
   --zoomlion-emerald: #15803d;
   --zoomlion-emerald-dark: #14532d;
-  
+
   --industrial-dark: #0d141e;
   --industrial-slate: #111827;
   --industrial-navy: #1e293b;
@@ -14,12 +14,12 @@
   --industrial-muted: #64748b;
   --industrial-light: #f8fafc;
   --industrial-border: #e2e8f0;
-  
+
   /* Eye-Catching Display & Heading Fonts */
   --font-display: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-heading: 'Urbanist', 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  
+
   --shadow-sm: 0 1px 3px rgba(13, 20, 30, 0.06), 0 1px 2px rgba(13, 20, 30, 0.04);
   --shadow-md: 0 4px 12px -2px rgba(13, 20, 30, 0.08), 0 2px 6px -1px rgba(13, 20, 30, 0.04);
   --shadow-lg: 0 12px 28px -4px rgba(13, 20, 30, 0.12), 0 4px 12px -2px rgba(13, 20, 30, 0.06);
@@ -34,11 +34,14 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
@@ -55,7 +58,12 @@ html, body {
 }
 
 /* Heading Typography */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-display);
   color: var(--industrial-dark);
   font-weight: 800;
@@ -67,7 +75,10 @@ p {
   margin: 0;
 }
 
-button, input, select, textarea {
+button,
+input,
+select,
+textarea {
   font-family: var(--font-body);
 }
 
@@ -76,36 +87,67 @@ button, input, select, textarea {
   width: 8px;
   height: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: #f1f5f9;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
 /* Animations */
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes pulseGlow {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(1.03); }
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.85;
+    transform: scale(1.03);
+  }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translate(-50%, 20px); }
-  to { opacity: 1; transform: translate(-50%, 0); }
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-16px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-spin {
@@ -125,11 +167,9 @@ button, input, select, textarea {
 }
 
 .zoomlion-hazard-bar {
-  background: repeating-linear-gradient(
-    -45deg,
-    #74c02c,
-    #74c02c 8px,
-    #0d141e 8px,
-    #0d141e 16px
-  );
+  background: repeating-linear-gradient(-45deg,
+      #74c02c,
+      #74c02c 8px,
+      #0d141e 8px,
+      #0d141e 16px);
 }

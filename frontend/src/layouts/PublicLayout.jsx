@@ -65,24 +65,24 @@ const PublicLayout = () => {
           {/* Navigation Links */}
           <nav style={s.nav}>
             <Link to="/" style={s.navLink}>Beranda</Link>
-            <a href="/#services-section" style={s.navLink}>Layanan Purna Jual</a>
-            <a href="/#katalog-section" style={s.navLink}>Katalog Produk</a>
-            <a href="/#saw-section" style={s.navLink}>Kalkulator SAW</a>
-            <a href="/#network-section" style={s.navLink}>Jaringan Servis</a>
-            
+            <a href="/#services-section" style={s.navLink}>Layanan</a>
+            <a href="/#katalog-section" style={s.navLink}>Produk</a>
+            <a href="/#saw-section" style={s.navLink}>Rekomendasi</a>
+            <a href="/#network-section" style={s.navLink}>Lokasi</a>
+
             <Link to="/tracking" style={s.navLinkTrack}>
               <Package size={14} strokeWidth={2.2} />
-              <span>Lacak Pesanan</span>
+              <span>Lacak</span>
             </Link>
 
             <a href="/#katalog-section" style={s.btnInquiryNav}>
               <FileText size={14} />
-              <span>Inquiry / RFQ</span>
+              <span>Pesan</span>
             </a>
 
             <button onClick={() => navigate('/login')} style={s.loginBtn} title="Masuk ke Portal Internal">
               <LogIn size={14} strokeWidth={2.2} />
-              <span>Portal Staff</span>
+              <span>Login</span>
             </button>
           </nav>
         </div>

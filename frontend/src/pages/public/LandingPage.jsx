@@ -451,14 +451,14 @@ const LandingPage = () => {
             {filteredCatalog.map((unit) => {
               const isCompared = compareList.some((item) => item.id === unit.id);
               return (
-                <div 
-                  key={unit.id} 
+                <div
+                  key={unit.id}
                   style={{
                     ...s.catalogCard,
                     border: isCompared ? '2px solid #74c02c' : '1.5px solid #e2e8f0',
                     backgroundColor: isCompared ? '#fafdf5' : '#ffffff',
-                    boxShadow: isCompared 
-                      ? '0 10px 28px -4px rgba(116, 192, 44, 0.25)' 
+                    boxShadow: isCompared
+                      ? '0 10px 28px -4px rgba(116, 192, 44, 0.25)'
                       : '0 4px 14px -2px rgba(13, 20, 30, 0.05)',
                   }}
                   onClick={() => handleOpenDetail(unit)}
@@ -556,7 +556,7 @@ const LandingPage = () => {
                           {unit.harga ? `Rp ${(Number(unit.harga) / 1e6).toLocaleString('id-ID')} Juta` : 'Hubungi Sales'}
                         </div>
                       </div>
-                      
+
                       <div style={s.cardBtnGroup}>
                         <button
                           type="button"
@@ -570,7 +570,7 @@ const LandingPage = () => {
                           <Eye size={13} />
                           <span>Detail</span>
                         </button>
-                        
+
                         <button
                           type="button"
                           onClick={(e) => {
@@ -738,8 +738,8 @@ const LandingPage = () => {
                 {ranking.map((item, idx) => {
                   const medal = getMedalInfo(idx);
                   return (
-                    <div 
-                      key={item.id || idx} 
+                    <div
+                      key={item.id || idx}
                       style={{
                         ...s.unitCard,
                         border: idx === 0 ? '2px solid #74c02c' : '1px solid #e2e8f0',

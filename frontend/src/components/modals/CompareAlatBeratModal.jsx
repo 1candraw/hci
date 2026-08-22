@@ -1,13 +1,13 @@
-import { 
-  Truck, 
-  Zap, 
-  Layers, 
-  Maximize2, 
-  Scale, 
-  FileText, 
-  CheckCircle2, 
-  ShieldCheck, 
-  X, 
+import {
+  Truck,
+  Zap,
+  Layers,
+  Maximize2,
+  Scale,
+  FileText,
+  CheckCircle2,
+  ShieldCheck,
+  X,
   Sparkles,
   ArrowRight,
   TrendingUp,
@@ -20,12 +20,12 @@ import {
   ChevronRight
 } from 'lucide-react';
 
-const CompareAlatBeratModal = ({ 
-  isOpen, 
-  onClose, 
-  units = [], 
-  onRFQ, 
-  onRemoveUnit 
+const CompareAlatBeratModal = ({
+  isOpen,
+  onClose,
+  units = [],
+  onRFQ,
+  onRemoveUnit
 }) => {
   if (!isOpen || !units || units.length === 0) return null;
 
@@ -97,8 +97,8 @@ const CompareAlatBeratModal = ({
               <div style={s.unitCardTop}>
                 <span style={s.unitCardSlotBadge}>Unit 1</span>
                 {units.length > 1 && (
-                  <button 
-                    onClick={() => onRemoveUnit(unitA.id)} 
+                  <button
+                    onClick={() => onRemoveUnit(unitA.id)}
                     style={s.btnRemoveCard}
                     title="Hapus unit dari perbandingan"
                   >
@@ -134,7 +134,7 @@ const CompareAlatBeratModal = ({
                   </div>
                 </div>
 
-                <button 
+                <button
                   onClick={() => {
                     onClose();
                     onRFQ(unitA);
@@ -161,8 +161,8 @@ const CompareAlatBeratModal = ({
               }}>
                 <div style={s.unitCardTop}>
                   <span style={{ ...s.unitCardSlotBadge, backgroundColor: '#dbeafe', color: '#1e40af' }}>Unit 2</span>
-                  <button 
-                    onClick={() => onRemoveUnit(unitB.id)} 
+                  <button
+                    onClick={() => onRemoveUnit(unitB.id)}
                     style={s.btnRemoveCard}
                     title="Hapus unit dari perbandingan"
                   >
@@ -201,7 +201,7 @@ const CompareAlatBeratModal = ({
                     </div>
                   </div>
 
-                  <button 
+                  <button
                     onClick={() => {
                       onClose();
                       onRFQ(unitB);
@@ -238,7 +238,7 @@ const CompareAlatBeratModal = ({
                 <Sparkles size={18} style={{ color: '#74c02c' }} />
                 <span style={s.verdictTitle}>RANGKUMAN ANALISIS KOMPARASI TEKNIS</span>
               </div>
-              
+
               <div style={s.verdictGrid}>
                 {/* Unit A Highlights */}
                 <div style={s.verdictCol}>
