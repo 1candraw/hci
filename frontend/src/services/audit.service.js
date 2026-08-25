@@ -57,7 +57,7 @@ const subscribeLogs = (onNewLog, onStatusChange) => {
   };
 };
 
-export const auditService = { 
+export const auditService = {
   getLogs,
   subscribeLogs
 };

@@ -823,7 +823,7 @@ const LandingPage = () => {
                               }}
                             >
                               <FileText size={15} />
-                              <span>Ajukan RFQ</span>
+                              <span>Pesan</span>
                             </button>
                           </div>
                         </div>

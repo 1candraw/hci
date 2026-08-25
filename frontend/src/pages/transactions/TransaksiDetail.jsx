@@ -4,6 +4,7 @@ import autoTable from 'jspdf-autotable';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { transaksiService } from '../../services/transaksi.service';
+import { generateQuotationPDF } from '../../utils/generateQuotationPDF';
 import {
   ArrowLeft,
   FileText,
@@ -367,6 +368,34 @@ const TransaksiDetail = () => {
                 )}
               </tbody>
             </table>
+
+            {detail.harga_penawaran && (
+              <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
+                <button
+                  onClick={() => generateQuotationPDF(detail)}
+                  style={{
+                    width: '100%',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    padding: '0.75rem 1rem',
+                    backgroundColor: '#0d141e',
+                    color: '#74c02c',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontFamily: "'Urbanist', sans-serif",
+                    fontWeight: '900',
+                    fontSize: '0.88rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(13, 20, 30, 0.25)',
+                  }}
+                >
+                  <Download size={15} />
+                  <span>Download Surat Penawaran Resmi (PDF)</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Card BUKTI PEMBAYARAN DP */}

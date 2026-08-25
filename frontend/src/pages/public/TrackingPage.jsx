@@ -1,6 +1,27 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { guestService } from '../../services/guest.service';
+import { generateQuotationPDF } from '../../utils/generateQuotationPDF';
+import jsPDF from 'jspdf';
+import {
+  Search,
+  FileText,
+  Download,
+  CheckCircle2,
+  Clock,
+  CreditCard,
+  Truck,
+  ShieldCheck,
+  Building,
+  User,
+  Phone,
+  MapPin,
+  AlertCircle,
+  ExternalLink,
+  ChevronRight,
+  Sparkles,
+  PackageCheck
+} from 'lucide-react';
 
 const STEPS = [
   { label: 'Pengajuan RFQ', desc: 'Permintaan Diterima' },
@@ -27,12 +48,22 @@ const getStatusBadge = (status) => {
   return map[status] || { label: status, bg: '#f1f5f9', text: '#475569', border: '#cbd5e1' };
 };
 
+const formatRupiah = (angka) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(angka || 0);
+};
+
 const TrackingPage = () => {
   const [searchParams] = useSearchParams();
   const [nomorInput, setNomorInput] = useState(searchParams.get('nomor') || '');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   useEffect(() => {
     const nomor = searchParams.get('nomor');
@@ -47,7 +78,7 @@ const TrackingPage = () => {
     if (e) e.preventDefault();
     const query = (forcedNomor || nomorInput).trim();
     if (!query) {
-      setError('Masukkan nomor pesanan terlebih dahulu.');
+      setError('Masukkan nomor pemesanan atau RFQ terlebih dahulu.');
       return;
     }
     setLoading(true);
@@ -63,8 +94,93 @@ const TrackingPage = () => {
     }
   };
 
+  const handleDownloadQuotationPDF = () => {
+    if (!data) return;
+    setDownloadingPdf(true);
+    try {
+      generateQuotationPDF(data);
+    } catch (err) {
+      console.error('Gagal generate PDF penawaran:', err);
+      alert('Terjadi kesalahan saat mengunduh dokumen penawaran.');
+    } finally {
+      setTimeout(() => setDownloadingPdf(false), 800);
+    }
+  };
+
+  const handleDownloadBAST = () => {
+    if (!data) return;
+    try {
+      const doc = new jsPDF();
+      doc.setFontSize(22);
+      doc.setTextColor(13, 20, 30);
+      doc.setFont('helvetica', 'bold');
+      doc.text('HEAVYCARE.ID', 14, 22);
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Platform Layanan Purna Jual & Distribusi Alat Berat Nasional', 14, 28);
+      doc.setLineWidth(0.5);
+      doc.line(14, 38, 196, 38);
+
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'bold');
+      doc.text('BERITA ACARA SERAH TERIMA (BAST)', 105, 50, { align: 'center' });
+
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Pada hari ini, telah dilakukan serah terima unit alat berat dengan rincian sebagai berikut:', 14, 65);
+
+      doc.text(`Nomor Pesanan      : ${data.nomor_pemesanan || 'QO-' + data.id}`, 14, 75);
+      doc.text(`Nama Customer      : ${data.perusahaan || data.guest_company || data.guest_name || '-'}`, 14, 82);
+      doc.text(`Unit Alat Berat         : ${data.nama_alat} (${data.brand_alat || 'Excavator'} ${data.model_alat || ''})`, 14, 89);
+      doc.text(`Metode Bayar         : ${(data.metode_pembayaran || 'CASH').toUpperCase()}`, 14, 96);
+
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Status                       : DITERIMA DENGAN BAIK & LOLOS PDI`, 14, 103);
+
+      doc.setFont('helvetica', 'normal');
+      const pernyataan =
+        'Pihak pembeli menyatakan bahwa unit alat berat telah diterima di lokasi proyek dan telah diperiksa secara fisik dalam kondisi baik, serta kelengkapan aksesoris telah sesuai dengan Pre-Delivery Inspection (PDI) yang disepakati.';
+      const splitPernyataan = doc.splitTextToSize(pernyataan, 180);
+      doc.text(splitPernyataan, 14, 115);
+
+      doc.text('Pihak HeavyCare ID,', 30, 150);
+      doc.text('(..........................................)', 25, 175);
+      doc.setFont('helvetica', 'bold');
+      doc.text(data.nama_sales || 'Tim Logistik & PDI', 32, 182);
+
+      doc.setFont('helvetica', 'normal');
+      doc.text('Pihak Pembeli,', 130, 150);
+      doc.text('(..........................................)', 125, 175);
+      doc.setFont('helvetica', 'bold');
+      doc.text(data.perusahaan || data.guest_company || data.guest_name || 'Customer', 130, 182);
+
+      doc.save(`BAST_${data.nomor_pemesanan || data.id}.pdf`);
+    } catch (err) {
+      console.error('Gagal generate BAST:', err);
+      alert('Gagal mengunduh dokumen BAST.');
+    }
+  };
+
+  const isApprovedOrBeyond = [
+    'APPROVED',
+    'DP_DIBAYAR',
+    'VERIFIKASI_DP_SALES',
+    'PROSES_OPERASIONAL',
+    'SIAP_KIRIM',
+    'PENGIRIMAN',
+    'SELESAI',
+  ].includes(data?.status);
+
   const badge = data ? getStatusBadge(data.status) : null;
-  const activeStep = data ? (data.step_index ?? 0) : 0;
+  const activeStep = data ? data.step_index ?? 0 : 0;
+
+  const totalAkhir = data?.harga_penawaran
+    ? Number(data.harga_penawaran) + Number(data.ongkos_kirim || 0) - Number(data.diskon || 0)
+    : null;
+
+  const kewajibanDP = totalAkhir ? Math.round(totalAkhir * 0.1) : null;
 
   return (
     <div style={s.page}>
@@ -74,16 +190,16 @@ const TrackingPage = () => {
           <span style={s.heroPill}>PELACAKAN MANDIRI (SELF-SERVICE TRACKING)</span>
           <h1 style={s.heroTitle}>Lacak Status Pesanan & Pengiriman Unit</h1>
           <p style={s.heroSub}>
-            Masukkan nomor pemesanan resmi Anda (contoh: <code>HC-202608-XXXX</code> atau <code>PO-202607-XXXX</code>) untuk memantau status secara realtime.
+            Pantau status penawaran harga, persetujuan manajemen, verifikasi DP, hingga pengiriman unit alat berat secara realtime.
           </p>
 
           {/* Search Form */}
           <form onSubmit={handleSearch} style={s.searchForm}>
             <div style={s.searchWrap}>
-              <span style={s.searchIcon}>🔍</span>
+              <Search size={20} style={{ color: '#64748b', marginLeft: '0.25rem' }} />
               <input
                 type="text"
-                placeholder="Masukkan Nomor Pesanan (HC-... / PO-...)"
+                placeholder="Masukkan Nomor Pesanan (HC-2026... / PO-2026...)"
                 value={nomorInput}
                 onChange={(e) => setNomorInput(e.target.value.toUpperCase())}
                 style={s.searchInput}
@@ -96,7 +212,8 @@ const TrackingPage = () => {
 
           {error && (
             <div style={s.errorBox}>
-              <span>⚠️ {error}</span>
+              <AlertCircle size={18} style={{ flexShrink: 0 }} />
+              <span>{error}</span>
             </div>
           )}
         </div>
@@ -109,16 +226,20 @@ const TrackingPage = () => {
               <div style={s.statusCardLeft}>
                 <span style={s.orderLabel}>NOMOR TRANSAKSI</span>
                 <h2 style={s.orderNumber}>{data.nomor_pemesanan || 'QO-' + data.id}</h2>
-                <p style={s.orderUnit}>Unit: <strong>{data.nama_alat}</strong> ({data.brand_alat || 'Excavator'})</p>
+                <p style={s.orderUnit}>
+                  Unit: <strong>{data.nama_alat}</strong> {data.brand_alat ? `(${data.brand_alat} ${data.model_alat || ''})` : ''}
+                </p>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <span style={s.statusSubLabel}>STATUS TERKINI</span>
-                <div style={{
-                  ...s.statusBadge,
-                  backgroundColor: badge.bg,
-                  color: badge.text,
-                  border: `1.5px solid ${badge.border}`
-                }}>
+                <div
+                  style={{
+                    ...s.statusBadge,
+                    backgroundColor: badge.bg,
+                    color: badge.text,
+                    border: `1.5px solid ${badge.border}`,
+                  }}
+                >
                   {badge.label}
                 </div>
               </div>
@@ -134,26 +255,32 @@ const TrackingPage = () => {
                   return (
                     <div key={idx} style={s.stepItem}>
                       {idx > 0 && (
-                        <div style={{
-                          ...s.connector,
-                          backgroundColor: idx <= activeStep ? '#10b981' : '#e2e8f0',
-                        }} />
+                        <div
+                          style={{
+                            ...s.connector,
+                            backgroundColor: idx <= activeStep ? '#10b981' : '#e2e8f0',
+                          }}
+                        />
                       )}
-                      <div style={{
-                        ...s.stepCircle,
-                        backgroundColor: isDone ? '#10b981' : (isCurrent ? '#f59e0b' : '#ffffff'),
-                        color: isDone || isCurrent ? '#ffffff' : '#64748b',
-                        borderColor: isDone ? '#059669' : (isCurrent ? '#d97706' : '#cbd5e1'),
-                        boxShadow: isCurrent ? '0 0 0 4px rgba(245, 158, 11, 0.25)' : 'none',
-                      }}>
+                      <div
+                        style={{
+                          ...s.stepCircle,
+                          backgroundColor: isDone ? '#10b981' : isCurrent ? '#f59e0b' : '#ffffff',
+                          color: isDone || isCurrent ? '#ffffff' : '#64748b',
+                          borderColor: isDone ? '#059669' : isCurrent ? '#d97706' : '#cbd5e1',
+                          boxShadow: isCurrent ? '0 0 0 4px rgba(245, 158, 11, 0.25)' : 'none',
+                        }}
+                      >
                         {isDone ? '✓' : idx + 1}
                       </div>
                       <div style={s.stepTextWrap}>
-                        <span style={{
-                          ...s.stepLabel,
-                          color: isDone ? '#059669' : (isCurrent ? '#b45309' : '#64748b'),
-                          fontWeight: isCurrent || isDone ? '800' : '600',
-                        }}>
+                        <span
+                          style={{
+                            ...s.stepLabel,
+                            color: isDone ? '#059669' : isCurrent ? '#b45309' : '#64748b',
+                            fontWeight: isCurrent || isDone ? '800' : '600',
+                          }}
+                        >
                           {step.label}
                         </span>
                         <span style={s.stepSub}>{step.desc}</span>
@@ -164,99 +291,191 @@ const TrackingPage = () => {
               </div>
             </div>
 
-            {/* 2 Kolom Rincian & Aksi */}
+            {/* ── 2 Kolom Rincian & Aksi ── */}
             <div style={s.cols}>
-              {/* Kolom Kiri: Detail Pesanan */}
-              <div style={s.detailCard}>
-                <h3 style={s.cardTitle}>Informasi Rincian Pesanan</h3>
-                <div style={s.infoList}>
-                  <div style={s.infoRow}>
-                    <span style={s.infoLabel}>Tipe Pengadaan</span>
-                    <span style={s.infoVal}>{data.sumber_pesanan === 'guest' ? '🌐 Guest RFQ' : 'Pelanggan Terdaftar'}</span>
+              {/* KOLOM KIRI: Informasi Pemesan & Penawaran Resmi */}
+              <div style={s.leftStack}>
+                {/* 1. Card Info Pemohon */}
+                <div style={s.detailCard}>
+                  <h3 style={s.cardTitle}>Informasi Rincian Pesanan</h3>
+                  <div style={s.infoList}>
+                    <div style={s.infoRow}>
+                      <span style={s.infoLabel}>Tipe Pengadaan</span>
+                      <span style={s.infoVal}>{data.sumber_pesanan === 'guest' ? '🌐 Guest RFQ (Publik)' : '👤 Member Terdaftar'}</span>
+                    </div>
+                    <div style={s.infoRow}>
+                      <span style={s.infoLabel}>Nama Perusahaan / Proyek</span>
+                      <span style={{ ...s.infoVal, fontWeight: '700' }}>{data.guest_company || data.perusahaan || data.nama_customer || '-'}</span>
+                    </div>
+                    <div style={s.infoRow}>
+                      <span style={s.infoLabel}>Nama PIC / Pemohon</span>
+                      <span style={s.infoVal}>{data.guest_name || data.nama_customer || '-'}</span>
+                    </div>
+                    <div style={s.infoRow}>
+                      <span style={s.infoLabel}>Kontak WhatsApp</span>
+                      <span style={s.infoVal}>{data.guest_phone || data.phone_customer || '-'}</span>
+                    </div>
+                    <div style={s.infoRow}>
+                      <span style={s.infoLabel}>Email Resmi</span>
+                      <span style={s.infoVal}>{data.guest_email || data.email_customer || '-'}</span>
+                    </div>
+                    <div style={s.infoRow}>
+                      <span style={s.infoLabel}>Lokasi Site Proyek</span>
+                      <span style={s.infoVal}>{data.guest_location || data.catatan || '-'}</span>
+                    </div>
+                    <div style={s.infoRow}>
+                      <span style={s.infoLabel}>Rencana Pembayaran</span>
+                      <span style={{ ...s.infoVal, textTransform: 'uppercase' }}>{data.metode_pembayaran || 'CASH'}</span>
+                    </div>
                   </div>
-                  <div style={s.infoRow}>
-                    <span style={s.infoLabel}>Nama Perusahaan / PIC</span>
-                    <span style={s.infoVal}>{data.guest_company || data.nama_customer || '-'}</span>
-                  </div>
-                  <div style={s.infoRow}>
-                    <span style={s.infoLabel}>Kontak WhatsApp</span>
-                    <span style={s.infoVal}>{data.guest_phone || data.phone_customer || '-'}</span>
-                  </div>
-                  <div style={s.infoRow}>
-                    <span style={s.infoLabel}>Lokasi Proyek / Catatan</span>
-                    <span style={s.infoVal}>{data.guest_location || data.catatan || '-'}</span>
-                  </div>
-
-                  <div style={s.divider} />
-
-                  <div style={s.infoRow}>
-                    <span style={s.infoLabel}>Unit Excavator</span>
-                    <span style={{ ...s.infoVal, fontWeight: '800', color: '#0f172a' }}>{data.nama_alat}</span>
-                  </div>
-                  {data.harga_penawaran && (
-                    <>
-                      <div style={s.infoRow}>
-                        <span style={s.infoLabel}>Harga Penawaran Unit</span>
-                        <span style={s.infoVal}>Rp {Number(data.harga_penawaran).toLocaleString('id-ID')}</span>
-                      </div>
-                      <div style={s.infoRow}>
-                        <span style={s.infoLabel}>Ongkos Kirim Armada</span>
-                        <span style={s.infoVal}>Rp {Number(data.ongkos_kirim || 0).toLocaleString('id-ID')}</span>
-                      </div>
-                      {Number(data.diskon || 0) > 0 && (
-                        <div style={s.infoRow}>
-                          <span style={s.infoLabel}>Potongan Diskon</span>
-                          <span style={{ ...s.infoVal, color: '#dc2626' }}>- Rp {Number(data.diskon).toLocaleString('id-ID')}</span>
-                        </div>
-                      )}
-                      <div style={{ ...s.infoRow, paddingTop: '0.5rem', borderTop: '1px solid #e2e8f0' }}>
-                        <span style={{ ...s.infoLabel, fontWeight: '800', color: '#0f172a' }}>Total Nilai Transaksi</span>
-                        <span style={{ ...s.infoVal, fontWeight: '900', color: '#059669', fontSize: '1.1rem' }}>
-                          Rp {Number(data.total_akhir).toLocaleString('id-ID')}
-                        </span>
-                      </div>
-                    </>
-                  )}
                 </div>
+
+                {/* 2. CARD SURAT PENAWARAN HARGA RESMI (Muncul setelah Manager Approve) */}
+                {isApprovedOrBeyond ? (
+                  <div style={s.quotationCard}>
+                    {/* Header Card Penawaran */}
+                    <div style={s.quotationHeader}>
+                      <div>
+                        <div style={s.docBadge}>
+                          <Sparkles size={13} style={{ color: '#15803d' }} />
+                          <span>DOKUMEN PENAWARAN RESMI</span>
+                        </div>
+                        <h3 style={s.quotationTitle}>Surat Penawaran Harga (SPH)</h3>
+                        <p style={s.quotationSub}>
+                          Ref No: <strong>SPH/{data.nomor_pemesanan || data.id}</strong>
+                        </p>
+                      </div>
+                      <div style={s.approvedPill}>
+                        <CheckCircle2 size={16} />
+                        <span>Disetujui Manajemen</span>
+                      </div>
+                    </div>
+
+                    {/* Rincian Harga Penawaran */}
+                    <div style={s.quotationBody}>
+                      <div style={s.tableLike}>
+                        <div style={s.tableRow}>
+                          <div style={s.rowLeft}>
+                            <span style={s.itemTitle}>Unit {data.nama_alat}</span>
+                            <span style={s.itemSub}>Brand: {data.brand_alat || 'Excavator'} {data.model_alat || ''} (Ready Stock PDI)</span>
+                          </div>
+                          <div style={s.rowRight}>
+                            <span style={s.priceVal}>{formatRupiah(data.harga_penawaran)}</span>
+                          </div>
+                        </div>
+
+                        <div style={s.tableRow}>
+                          <div style={s.rowLeft}>
+                            <span style={s.itemTitle}>Ongkos Kirim & Mobilisasi Trailer</span>
+                            <span style={s.itemSub}>Pengiriman langsung ke site proyek + Asuransi Logistik</span>
+                          </div>
+                          <div style={s.rowRight}>
+                            <span style={s.priceVal}>{formatRupiah(data.ongkos_kirim || 0)}</span>
+                          </div>
+                        </div>
+
+                        {Number(data.diskon || 0) > 0 && (
+                          <div style={s.tableRow}>
+                            <div style={s.rowLeft}>
+                              <span style={{ ...s.itemTitle, color: '#dc2626' }}>Potongan Diskon Program</span>
+                              <span style={s.itemSub}>Diskon khusus pengadaan unit</span>
+                            </div>
+                            <div style={s.rowRight}>
+                              <span style={{ ...s.priceVal, color: '#dc2626' }}>- {formatRupiah(data.diskon)}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Grand Total */}
+                        <div style={s.totalRow}>
+                          <div>
+                            <span style={s.totalLabel}>TOTAL NILAI TRANSAKSI (GRAND TOTAL)</span>
+                            <span style={s.dpNotice}>Kewajiban DP 10%: <strong>{formatRupiah(kewajibanDP)}</strong></span>
+                          </div>
+                          <div style={s.totalValWrap}>
+                            <span style={s.totalValue}>{formatRupiah(totalAkhir)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tombol Download PDF Penawaran */}
+                      <div style={s.pdfDownloadWrap}>
+                        <button
+                          onClick={handleDownloadQuotationPDF}
+                          disabled={downloadingPdf}
+                          style={s.downloadQuotationBtn}
+                        >
+                          <Download size={18} />
+                          <span>
+                            {downloadingPdf ? 'Menyiapkan Dokumen PDF...' : 'Unduh Surat Penawaran Resmi (PDF)'}
+                          </span>
+                        </button>
+                        <p style={s.pdfHint}>
+                          📄 Dokumen resmi berkop PT Heavy Care Indonesia lengkap dengan rincian biaya, syarat pembayaran, & pengesahan manajemen.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* State ketika penawaran belum di-approve manager */
+                  <div style={s.quotationPendingCard}>
+                    <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>⏳</div>
+                    <h4 style={s.pendingTitle}>
+                      {data.status === 'MENUNGGU_APPROVAL'
+                        ? 'Penawaran Sedang Ditinjau Manajemen'
+                        : 'Penawaran Harga Sedang Dihitung Sales'}
+                    </h4>
+                    <p style={s.pendingText}>
+                      {data.status === 'MENUNGGU_APPROVAL'
+                        ? 'Tim Sales telah mengajukan rincian harga. Rincian penawaran resmi beserta fitur Unduh PDF akan otomatis muncul di sini setelah Branch Manager menyetujuinya.'
+                        : 'Tim Sales kami sedang memeriksa ketersediaan armada dan menghitung ongkos kirim ke lokasi proyek Anda.'}
+                    </p>
+                  </div>
+                )}
               </div>
 
-              {/* Kolom Kanan: Aksi Sesuai Status */}
+              {/* KOLOM KANAN: Aksi Berdasarkan Status */}
               <div style={s.actionCard}>
                 <h3 style={s.cardTitle}>Status Pemrosesan & Aksi</h3>
 
-                {/* PENDING / MENUNGGU_APPROVAL */}
+                {/* 1. PENDING / MENUNGGU_APPROVAL */}
                 {['PENDING', 'MENUNGGU_APPROVAL'].includes(data.status) && (
                   <div style={s.pendingBox}>
-                    <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>⏳</div>
-                    <h4 style={s.actionBoxTitle}>Penawaran Sedang Disiapkan</h4>
+                    <Clock size={40} style={{ color: '#f59e0b', margin: '0 auto 0.75rem' }} />
+                    <h4 style={s.actionBoxTitle}>
+                      {data.status === 'MENUNGGU_APPROVAL' ? 'Menunggu Approval Manager' : 'Menunggu Penawaran Sales'}
+                    </h4>
                     <p style={s.actionBoxText}>
-                      Tim Sales & Management kami sedang menyiapkan rincian harga terbaik dan ketersediaan armada ke lokasi Anda.
+                      {data.status === 'MENUNGGU_APPROVAL'
+                        ? 'Kalkulasi harga dari Sales telah diserahkan dan sedang dalam tahap review oleh Branch Manager. Silakan refresh halaman ini secara berkala.'
+                        : 'Permintaan RFQ Anda sedang diproses oleh Tim Commercial HeavyCare ID dalam kurun waktu 1x24 jam kerja.'}
                     </p>
                   </div>
                 )}
 
-                {/* APPROVED → Form konfirmasi DP */}
+                {/* 2. APPROVED → Form konfirmasi DP */}
                 {data.status === 'APPROVED' && (
-                  <DPConfirmForm 
-                    nomor={data.nomor_pemesanan || data.id} 
-                    totalAkhir={data.total_akhir} 
-                    onSuccess={() => handleSearch(null, data.nomor_pemesanan)} 
+                  <DPConfirmForm
+                    nomor={data.nomor_pemesanan || data.id}
+                    totalAkhir={totalAkhir}
+                    onSuccess={() => handleSearch(null, data.nomor_pemesanan)}
                   />
                 )}
 
-                {/* DP_DIBAYAR → Menunggu verifikasi Sales */}
+                {/* 3. DP_DIBAYAR → Menunggu verifikasi Sales */}
                 {data.status === 'DP_DIBAYAR' && (
                   <div style={s.infoStateBox}>
                     <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>💳</div>
                     <h4 style={{ ...s.actionBoxTitle, color: '#1e40af' }}>Bukti DP Telah Terkirim</h4>
                     <p style={s.actionBoxText}>
-                      Bukti transfer uang muka (DP) Anda telah tersimpan dan sedang diverifikasi oleh Tim Sales HeavyCare ID.
+                      Bukti transfer uang muka (DP) Anda telah tersimpan dan sedang diverifikasi mutasi pembayarannya oleh Tim Sales & Finance.
                     </p>
                     {data.dp_bank_name && (
                       <div style={s.dpSummary}>
                         <div>Bank: <strong>{data.dp_bank_name}</strong></div>
                         <div>Rek: <strong>{data.dp_account_number}</strong></div>
                         <div>A/n: <strong>{data.dp_account_name}</strong></div>
+                        <div>Nominal: <strong>{formatRupiah(data.dp_amount || kewajibanDP)}</strong></div>
                         {data.dp_proof_url && (
                           <a href={data.dp_proof_url} target="_blank" rel="noopener noreferrer" style={s.viewSlipBtn}>
                             🔍 Lihat File Slip Transfer
@@ -267,55 +486,68 @@ const TrackingPage = () => {
                   </div>
                 )}
 
-                {/* VERIFIKASI_DP_SALES → Menunggu approval Manager */}
+                {/* 4. VERIFIKASI_DP_SALES → Menunggu approval Manager untuk PDI */}
                 {data.status === 'VERIFIKASI_DP_SALES' && (
                   <div style={{ ...s.infoStateBox, backgroundColor: '#ede9fe', borderColor: '#c4b5fd' }}>
-                    <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>✅</div>
+                    <CheckCircle2 size={40} style={{ color: '#7c3aed', margin: '0 auto 0.75rem' }} />
                     <h4 style={{ ...s.actionBoxTitle, color: '#5b21b6' }}>DP Terverifikasi oleh Sales</h4>
                     <p style={s.actionBoxText}>
-                      Pembayaran DP Anda telah dinyatakan valid. Menunggu pelepasan surat perintah kerja (PDI) oleh Manager.
+                      Pembayaran DP Anda telah dinyatakan valid. Menunggu pelepasan surat perintah kerja inspeksi (PDI) oleh Branch Manager.
                     </p>
                   </div>
                 )}
 
-                {/* PROSES_OPERASIONAL → Inspeksi PDI */}
+                {/* 5. PROSES_OPERASIONAL → Inspeksi PDI */}
                 {data.status === 'PROSES_OPERASIONAL' && (
                   <div style={{ ...s.infoStateBox, backgroundColor: '#cffafe', borderColor: '#67e8f9' }}>
                     <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🔧</div>
                     <h4 style={{ ...s.actionBoxTitle, color: '#0e7490' }}>Unit dalam Tahap Inspeksi (PDI)</h4>
                     <p style={s.actionBoxText}>
-                      Tim Mekanik & Operasional kami sedang melakukan checklist uji fungsi mesin, hidrolik, dan aksesoris.
+                      Tim Mekanik & Operasional kami sedang melakukan 6 titik checklist uji fungsi mesin, sistem hidrolik, bucket, undercarriage, dan kelengkapan safety.
                     </p>
                   </div>
                 )}
 
-                {/* SIAP_KIRIM → Unit Siap Dikirim */}
+                {/* 6. SIAP_KIRIM → Unit Siap Dikirim */}
                 {data.status === 'SIAP_KIRIM' && (
                   <div style={{ ...s.infoStateBox, backgroundColor: '#dcfce7', borderColor: '#86efac' }}>
-                    <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>📦</div>
+                    <PackageCheck size={40} style={{ color: '#15803d', margin: '0 auto 0.75rem' }} />
                     <h4 style={{ ...s.actionBoxTitle, color: '#15803d' }}>PDI Lolos — Unit Siap Diberangkatkan</h4>
                     <p style={s.actionBoxText}>
-                      Surat jalan dan armada trailer sedang dipersiapkan untuk pengiriman ke alamat proyek Anda.
+                      Surat jalan resmi dan armada truk trailer ekspedisi sedang dipersiapkan untuk pengiriman ke lokasi site proyek Anda.
                     </p>
                   </div>
                 )}
 
-                {/* PENGIRIMAN → Konfirmasi terima unit */}
+                {/* 7. PENGIRIMAN → Konfirmasi terima unit */}
                 {data.status === 'PENGIRIMAN' && (
-                  <ReceiveUnitBox 
-                    quotationId={data.nomor_pemesanan || data.id} 
-                    onSuccess={() => handleSearch(null, data.nomor_pemesanan)} 
+                  <ReceiveUnitBox
+                    quotationId={data.nomor_pemesanan || data.id}
+                    suratJalanNumber={data.surat_jalan_number}
+                    driverName={data.driver_name}
+                    vehicleNumber={data.vehicle_number}
+                    onSuccess={() => handleSearch(null, data.nomor_pemesanan)}
                   />
                 )}
 
-                {/* SELESAI */}
+                {/* 8. SELESAI */}
                 {data.status === 'SELESAI' && (
                   <div style={s.doneBox}>
-                    <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🏆</div>
-                    <h4 style={{ ...s.actionBoxTitle, color: '#166534', fontSize: '1.2rem' }}>Transaksi Selesai!</h4>
+                    <ShieldCheck size={48} style={{ color: '#15803d', margin: '0 auto 0.75rem' }} />
+                    <h4 style={{ ...s.actionBoxTitle, color: '#166534', fontSize: '1.25rem' }}>Transaksi Selesai!</h4>
                     <p style={s.actionBoxText}>
-                      Unit alat berat telah berhasil tiba di lokasi proyek dan Berita Acara Serah Terima (BAST) telah diterbitkan.
+                      Unit alat berat telah berhasil tiba di lokasi proyek dan Berita Acara Serah Terima (BAST) resmi telah diterbitkan.
                     </p>
+                    <div style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                      <button onClick={handleDownloadBAST} style={s.downloadBastBtn}>
+                        <Download size={16} />
+                        <span>Download Berita Acara Serah Terima (BAST)</span>
+                      </button>
+                      <button onClick={handleDownloadQuotationPDF} style={s.downloadQuotationAltBtn}>
+                        <FileText size={16} />
+                        <span>Download Arsip Surat Penawaran (PDF)</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -329,7 +561,7 @@ const TrackingPage = () => {
             <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>🚜</div>
             <h3 style={s.emptyTitle}>Lacak Pesanan Anda Secara Mandiri</h3>
             <p style={s.emptyText}>
-              Masukkan nomor pemesanan yang Anda peroleh saat submit RFQ di kolom pencarian di atas.
+              Masukkan nomor pemesanan yang Anda peroleh saat submit RFQ di kolom pencarian di atas untuk melihat status penawaran dan pengiriman.
             </p>
           </div>
         )}
@@ -338,7 +570,7 @@ const TrackingPage = () => {
   );
 };
 
-// ── Sub-komponen: Form Konfirmasi DP (Clean Industrial) ──
+// ── Sub-komponen: Form Konfirmasi DP ──
 const DPConfirmForm = ({ nomor, totalAkhir, onSuccess }) => {
   const [form, setForm] = useState({ bank: '', no_rek: '', nama_pemilik: '', slip: null });
   const [loading, setLoading] = useState(false);
@@ -382,7 +614,7 @@ const DPConfirmForm = ({ nomor, totalAkhir, onSuccess }) => {
       formData.append('proof_file', form.slip);
 
       await guestService.submitDPProof(nomor, formData);
-      setMsg({ type: 'success', text: '✅ Bukti pembayaran DP berhasil dikirim! Tim Sales akan segera memverifikasi.' });
+      setMsg({ type: 'success', text: '✅ Bukti pembayaran DP berhasil dikirim! Tim Sales akan segera memverifikasi mutasi.' });
       setTimeout(onSuccess, 1800);
     } catch (err) {
       setMsg({ type: 'error', text: typeof err === 'string' ? err : 'Gagal mengirim bukti pembayaran. Coba lagi.' });
@@ -394,33 +626,35 @@ const DPConfirmForm = ({ nomor, totalAkhir, onSuccess }) => {
   return (
     <div style={s2.dpBox}>
       <h4 style={s2.dpTitle}>💳 Konfirmasi Pembayaran DP (10%)</h4>
-      
+
       {dpAmount && (
         <div style={s2.dpAmountBox}>
-          <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Kewajiban DP (10%)</span>
-          <span style={s2.dpAmountVal}>Rp {dpAmount.toLocaleString('id-ID')}</span>
+          <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Kewajiban Uang Muka DP (10%)</span>
+          <span style={s2.dpAmountVal}>{formatRupiah(dpAmount)}</span>
         </div>
       )}
 
       <div style={s2.rekCard}>
         <div style={{ fontSize: '0.78rem', color: '#b45309', fontWeight: '800', marginBottom: '0.2rem' }}>
-          REKENING TUJUAN TRANSFER:
+          REKENING TUJUAN TRANSFER RESMI:
         </div>
-        <div style={{ fontSize: '0.9rem', color: '#0f172a', fontWeight: '700' }}>
-          Bank Central Asia (BCA) · <strong>1234-5678-90</strong>
+        <div style={{ fontSize: '0.92rem', color: '#0f172a', fontWeight: '800' }}>
+          Bank Central Asia (BCA) · <code>1234-5678-90</code>
         </div>
-        <div style={{ fontSize: '0.8rem', color: '#475569' }}>
-          a/n PT Heavy Care Indonesia
+        <div style={{ fontSize: '0.82rem', color: '#475569' }}>
+          a/n <strong>PT Heavy Care Indonesia</strong>
         </div>
       </div>
 
       {msg.text && (
-        <div style={{
-          ...s2.alertBox,
-          backgroundColor: msg.type === 'success' ? '#dcfce7' : '#fee2e2',
-          borderColor: msg.type === 'success' ? '#86efac' : '#fca5a5',
-          color: msg.type === 'success' ? '#15803d' : '#991b1b'
-        }}>
+        <div
+          style={{
+            ...s2.alertBox,
+            backgroundColor: msg.type === 'success' ? '#dcfce7' : '#fee2e2',
+            borderColor: msg.type === 'success' ? '#86efac' : '#fca5a5',
+            color: msg.type === 'success' ? '#15803d' : '#991b1b',
+          }}
+        >
           {msg.text}
         </div>
       )}
@@ -428,45 +662,45 @@ const DPConfirmForm = ({ nomor, totalAkhir, onSuccess }) => {
       <form onSubmit={handleSubmit}>
         <div style={s2.field}>
           <label style={s2.label}>Nama Bank Pengirim *</label>
-          <input 
-            style={s2.input} 
-            placeholder="Contoh: BCA / Mandiri / BRI / BNI" 
+          <input
+            style={s2.input}
+            placeholder="Contoh: BCA / Mandiri / BRI / BNI"
             value={form.bank}
-            onChange={(e) => setForm({ ...form, bank: e.target.value })} 
-            required 
+            onChange={(e) => setForm({ ...form, bank: e.target.value })}
+            required
           />
         </div>
 
         <div style={s2.field}>
           <label style={s2.label}>Nomor Rekening Pengirim *</label>
-          <input 
-            style={s2.input} 
-            placeholder="Contoh: 1234567890" 
+          <input
+            style={s2.input}
+            placeholder="Contoh: 1234567890"
             value={form.no_rek}
-            onChange={(e) => setForm({ ...form, no_rek: e.target.value })} 
-            required 
+            onChange={(e) => setForm({ ...form, no_rek: e.target.value })}
+            required
           />
         </div>
 
         <div style={s2.field}>
           <label style={s2.label}>Nama Pemilik Rekening (Atas Nama) *</label>
-          <input 
-            style={s2.input} 
-            placeholder="Contoh: PT Konstruksi Jaya / Budi" 
+          <input
+            style={s2.input}
+            placeholder="Contoh: PT Konstruksi Jaya / Budi"
             value={form.nama_pemilik}
-            onChange={(e) => setForm({ ...form, nama_pemilik: e.target.value })} 
-            required 
+            onChange={(e) => setForm({ ...form, nama_pemilik: e.target.value })}
+            required
           />
         </div>
 
         <div style={s2.field}>
           <label style={s2.label}>Upload File Bukti Transfer (Foto / PDF) *</label>
-          <input 
-            type="file" 
+          <input
+            type="file"
             accept="image/jpeg,image/png,image/jpg,image/webp,application/pdf"
-            onChange={handleFileChange} 
-            style={s2.fileInput} 
-            required 
+            onChange={handleFileChange}
+            style={s2.fileInput}
+            required
           />
         </div>
 
@@ -485,7 +719,7 @@ const DPConfirmForm = ({ nomor, totalAkhir, onSuccess }) => {
 };
 
 // ── Sub-komponen: Terima Unit ──
-const ReceiveUnitBox = ({ quotationId, onSuccess }) => {
+const ReceiveUnitBox = ({ quotationId, suratJalanNumber, driverName, vehicleNumber, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ type: '', text: '' });
 
@@ -506,26 +740,36 @@ const ReceiveUnitBox = ({ quotationId, onSuccess }) => {
 
   return (
     <div style={s2.receiveBox}>
-      <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🚚</div>
+      <Truck size={40} style={{ color: '#a16207', margin: '0 auto 0.5rem' }} />
       <h4 style={{ ...s2.dpTitle, color: '#0f172a', textAlign: 'center' }}>Unit Sedang Dalam Perjalanan</h4>
-      <p style={{ fontSize: '0.88rem', color: '#64748b', textAlign: 'center', marginBottom: '1.25rem' }}>
-        Apakah unit excavator telah tiba di lokasi proyek dan sesuai dengan pesanan Anda?
+      <p style={{ fontSize: '0.88rem', color: '#64748b', textAlign: 'center', marginBottom: '1rem' }}>
+        Armada trailer sedang mengangkut excavator menuju lokasi site proyek Anda.
       </p>
 
+      {suratJalanNumber && (
+        <div style={s2.deliveryDetail}>
+          <div>No. Surat Jalan: <strong>{suratJalanNumber}</strong></div>
+          {driverName && <div>Driver / Ekspedisi: <strong>{driverName}</strong></div>}
+          {vehicleNumber && <div>Plat Truk: <strong>{vehicleNumber}</strong></div>}
+        </div>
+      )}
+
       {msg.text && (
-        <div style={{
-          ...s2.alertBox,
-          backgroundColor: msg.type === 'success' ? '#dcfce7' : '#fee2e2',
-          borderColor: msg.type === 'success' ? '#86efac' : '#fca5a5',
-          color: msg.type === 'success' ? '#15803d' : '#991b1b',
-          marginBottom: '1rem'
-        }}>
+        <div
+          style={{
+            ...s2.alertBox,
+            backgroundColor: msg.type === 'success' ? '#dcfce7' : '#fee2e2',
+            borderColor: msg.type === 'success' ? '#86efac' : '#fca5a5',
+            color: msg.type === 'success' ? '#15803d' : '#991b1b',
+            marginBottom: '1rem',
+          }}
+        >
           {msg.text}
         </div>
       )}
 
       <button onClick={handleReceive} style={s2.receiveBtn} disabled={loading}>
-        {loading ? '⏳ Memproses...' : '📦 Konfirmasi Unit Diterima di Lokasi'}
+        {loading ? '⏳ Memproses...' : '📦 Konfirmasi Unit Telah Tiba di Lokasi'}
       </button>
     </div>
   );
@@ -536,9 +780,10 @@ const s = {
     backgroundColor: '#f8fafc',
     minHeight: 'calc(100vh - 120px)',
     padding: '3rem 1.5rem 5rem',
+    fontFamily: "'Plus Jakarta Sans', sans-serif",
   },
   container: {
-    maxWidth: '1100px',
+    maxWidth: '1140px',
     margin: '0 auto',
   },
   hero: {
@@ -547,7 +792,7 @@ const s = {
   },
   heroPill: {
     display: 'inline-block',
-    padding: '0.3rem 0.85rem',
+    padding: '0.35rem 0.95rem',
     backgroundColor: '#ecfccb',
     color: '#15803d',
     borderRadius: '999px',
@@ -562,15 +807,17 @@ const s = {
     fontWeight: '900',
     color: '#0d141e',
     margin: '0 0 0.6rem',
+    fontFamily: "'Sora', sans-serif",
   },
   heroSub: {
     color: '#64748b',
     fontSize: '0.98rem',
-    maxWidth: '650px',
+    maxWidth: '680px',
     margin: '0 auto 2rem',
+    lineHeight: 1.5,
   },
   searchForm: {
-    maxWidth: '620px',
+    maxWidth: '640px',
     margin: '0 auto',
   },
   searchWrap: {
@@ -581,9 +828,8 @@ const s = {
     borderRadius: '12px',
     padding: '0.4rem 0.5rem 0.4rem 1rem',
     boxShadow: '0 4px 14px rgba(13, 20, 30, 0.06)',
-    gap: '0.5rem',
+    gap: '0.75rem',
   },
-  searchIcon: { fontSize: '1.2rem' },
   searchInput: {
     flex: 1,
     border: 'none',
@@ -595,7 +841,7 @@ const s = {
     letterSpacing: '1px',
   },
   searchBtn: {
-    padding: '0.8rem 1.6rem',
+    padding: '0.85rem 1.75rem',
     backgroundColor: '#0d141e',
     color: '#74c02c',
     border: 'none',
@@ -604,9 +850,10 @@ const s = {
     fontSize: '0.95rem',
     cursor: 'pointer',
     boxShadow: '0 2px 8px rgba(13, 20, 30, 0.3)',
+    transition: 'all 0.2s',
   },
   errorBox: {
-    maxWidth: '620px',
+    maxWidth: '640px',
     margin: '1rem auto 0',
     backgroundColor: '#fee2e2',
     border: '1px solid #fca5a5',
@@ -614,6 +861,10 @@ const s = {
     borderRadius: '8px',
     padding: '0.75rem 1rem',
     fontSize: '0.88rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    textAlign: 'left',
   },
   // Results
   resultWrap: {
@@ -623,7 +874,7 @@ const s = {
   },
   statusCard: {
     backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
+    border: '1.5px solid #e2e8f0',
     borderRadius: '16px',
     padding: '1.5rem 2rem',
     display: 'flex',
@@ -670,7 +921,7 @@ const s = {
   // Stepper
   stepperCard: {
     backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
+    border: '1.5px solid #e2e8f0',
     borderRadius: '16px',
     padding: '1.75rem 2rem',
     boxShadow: '0 4px 16px rgba(15, 23, 42, 0.05)',
@@ -679,9 +930,10 @@ const s = {
     fontSize: '1.1rem',
     fontWeight: '800',
     color: '#0f172a',
-    marginBottom: '1.5rem',
+    marginBottom: '1.25rem',
     paddingBottom: '0.5rem',
     borderBottom: '2px solid #f1f5f9',
+    fontFamily: "'Sora', sans-serif",
   },
   stepper: {
     display: 'flex',
@@ -737,13 +989,18 @@ const s = {
   // 2 Cols
   cols: {
     display: 'grid',
-    gridTemplateColumns: '1.1fr 1fr',
+    gridTemplateColumns: '1.15fr 1fr',
     gap: '1.5rem',
     alignItems: 'flex-start',
   },
+  leftStack: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.5rem',
+  },
   detailCard: {
     backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
+    border: '1.5px solid #e2e8f0',
     borderRadius: '16px',
     padding: '1.75rem',
     boxShadow: '0 4px 16px rgba(15, 23, 42, 0.05)',
@@ -770,13 +1027,195 @@ const s = {
     fontWeight: '600',
     textAlign: 'right',
   },
-  divider: {
-    borderBottom: '1px solid #f1f5f9',
-    margin: '0.5rem 0',
+  // Quotation Card (Approved)
+  quotationCard: {
+    backgroundColor: '#ffffff',
+    border: '2px solid #74c02c',
+    borderRadius: '16px',
+    padding: '1.75rem',
+    boxShadow: '0 8px 24px rgba(116, 192, 44, 0.12)',
+    position: 'relative',
+    overflow: 'hidden',
   },
+  quotationHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: '1.25rem',
+    paddingBottom: '1rem',
+    borderBottom: '1.5px solid #e2e8f0',
+    flexWrap: 'wrap',
+    gap: '0.75rem',
+  },
+  docBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    fontSize: '0.72rem',
+    fontWeight: '900',
+    color: '#15803d',
+    backgroundColor: '#ecfccb',
+    padding: '0.2rem 0.6rem',
+    borderRadius: '6px',
+    letterSpacing: '0.5px',
+    marginBottom: '0.4rem',
+  },
+  quotationTitle: {
+    margin: '0 0 0.2rem',
+    fontSize: '1.2rem',
+    fontFamily: "'Sora', sans-serif",
+    fontWeight: '900',
+    color: '#0d141e',
+  },
+  quotationSub: {
+    margin: 0,
+    fontSize: '0.85rem',
+    color: '#64748b',
+  },
+  approvedPill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    padding: '0.4rem 0.85rem',
+    backgroundColor: '#dcfce7',
+    color: '#15803d',
+    borderRadius: '8px',
+    fontSize: '0.82rem',
+    fontWeight: '800',
+    border: '1px solid #86efac',
+  },
+  quotationBody: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.25rem',
+  },
+  tableLike: {
+    display: 'flex',
+    flexDirection: 'column',
+    backgroundColor: '#f8fafc',
+    borderRadius: '12px',
+    border: '1px solid #e2e8f0',
+    overflow: 'hidden',
+  },
+  tableRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '0.85rem 1rem',
+    borderBottom: '1px solid #e2e8f0',
+    gap: '1rem',
+  },
+  rowLeft: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  itemTitle: {
+    fontSize: '0.9rem',
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  itemSub: {
+    fontSize: '0.78rem',
+    color: '#64748b',
+  },
+  rowRight: {
+    textAlign: 'right',
+  },
+  priceVal: {
+    fontSize: '0.92rem',
+    fontWeight: '800',
+    color: '#0f172a',
+    fontFamily: "'Sora', sans-serif",
+  },
+  totalRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '1rem',
+    backgroundColor: '#ecfccb',
+    borderTop: '2px solid #84cc16',
+    flexWrap: 'wrap',
+    gap: '0.5rem',
+  },
+  totalLabel: {
+    display: 'block',
+    fontSize: '0.78rem',
+    fontWeight: '900',
+    color: '#166534',
+    letterSpacing: '0.5px',
+  },
+  dpNotice: {
+    display: 'block',
+    fontSize: '0.82rem',
+    color: '#15803d',
+    marginTop: '0.15rem',
+  },
+  totalValWrap: {
+    textAlign: 'right',
+  },
+  totalValue: {
+    fontSize: '1.3rem',
+    fontWeight: '900',
+    color: '#15803d',
+    fontFamily: "'Sora', sans-serif",
+  },
+  pdfDownloadWrap: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
+  downloadQuotationBtn: {
+    width: '100%',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.6rem',
+    padding: '0.95rem 1.5rem',
+    backgroundColor: '#0d141e',
+    color: '#74c02c',
+    border: 'none',
+    borderRadius: '10px',
+    fontSize: '0.95rem',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900',
+    cursor: 'pointer',
+    boxShadow: '0 4px 14px rgba(13, 20, 30, 0.25)',
+    transition: 'all 0.2s',
+  },
+  pdfHint: {
+    fontSize: '0.78rem',
+    color: '#64748b',
+    margin: 0,
+    textAlign: 'center',
+    lineHeight: 1.4,
+  },
+  // Quotation Pending Card
+  quotationPendingCard: {
+    backgroundColor: '#f8fafc',
+    border: '1.5px dashed #cbd5e1',
+    borderRadius: '16px',
+    padding: '2rem 1.5rem',
+    textAlign: 'center',
+  },
+  pendingTitle: {
+    margin: '0 0 0.4rem',
+    fontSize: '1.05rem',
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  pendingText: {
+    margin: 0,
+    fontSize: '0.86rem',
+    color: '#64748b',
+    lineHeight: 1.6,
+    maxWidth: '480px',
+    marginLeft: 'auto',
+    marginRight: 'auto',
+  },
+  // Action Card
   actionCard: {
     backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
+    border: '1.5px solid #e2e8f0',
     borderRadius: '16px',
     padding: '1.75rem',
     boxShadow: '0 4px 16px rgba(15, 23, 42, 0.05)',
@@ -784,9 +1223,9 @@ const s = {
   pendingBox: {
     textAlign: 'center',
     padding: '2rem 1rem',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fffbeb',
     borderRadius: '12px',
-    border: '1px solid #e2e8f0',
+    border: '1px solid #fef3c7',
   },
   actionBoxTitle: {
     fontSize: '1.1rem',
@@ -835,16 +1274,47 @@ const s = {
   },
   doneBox: {
     textAlign: 'center',
-    padding: '2rem 1rem',
+    padding: '2rem 1.25rem',
     backgroundColor: '#f0fdf4',
     border: '1.5px solid #bbf7d0',
     borderRadius: '12px',
+  },
+  downloadBastBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.5rem',
+    width: '100%',
+    padding: '0.85rem 1.25rem',
+    backgroundColor: '#15803d',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    fontWeight: '800',
+    fontSize: '0.9rem',
+    cursor: 'pointer',
+    boxShadow: '0 2px 8px rgba(21, 128, 61, 0.25)',
+  },
+  downloadQuotationAltBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.5rem',
+    width: '100%',
+    padding: '0.75rem 1.25rem',
+    backgroundColor: '#ffffff',
+    color: '#0d141e',
+    border: '1.5px solid #cbd5e1',
+    borderRadius: '8px',
+    fontWeight: '800',
+    fontSize: '0.88rem',
+    cursor: 'pointer',
   },
   emptyState: {
     textAlign: 'center',
     padding: '5rem 2rem',
     backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
+    border: '1.5px solid #e2e8f0',
     borderRadius: '16px',
   },
   emptyTitle: {
@@ -887,6 +1357,7 @@ const s2 = {
     fontSize: '1.15rem',
     fontWeight: '900',
     color: '#15803d',
+    fontFamily: "'Sora', sans-serif",
   },
   rekCard: {
     backgroundColor: '#ecfccb',
@@ -948,6 +1419,19 @@ const s2 = {
     backgroundColor: '#f8fafc',
     border: '1.5px solid #cbd5e1',
     borderRadius: '12px',
+  },
+  deliveryDetail: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    padding: '0.65rem 0.85rem',
+    fontSize: '0.82rem',
+    color: '#334155',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    marginBottom: '1rem',
+    textAlign: 'left',
   },
   receiveBtn: {
     width: '100%',

@@ -59,12 +59,16 @@ const getById = async (id) => {
       q.nomor_pemesanan,
       q.status, 
       q.created_at AS tanggal,
+      q.created_at,
+      q.updated_at,
       q.metode_pembayaran,
       COALESCE(q.catatan, q.guest_location, '-') AS catatan,
       q.sumber_pesanan,
       q.harga_penawaran, 
       q.ongkos_kirim,    
       q.diskon,
+      q.sales_id,
+      q.manager_id,
       q.guest_name,
       q.guest_company,
       q.guest_phone,
@@ -81,10 +85,22 @@ const getById = async (id) => {
       COALESCE(q.guest_phone, u.phone, '-') AS telepon_perusahaan,
       COALESCE(q.guest_name, u.fullname, 'Guest') AS nama_customer,
       a.name AS nama_unit,
-      a.harga AS harga_unit 
+      a.name AS nama_alat,
+      a.brand AS brand_alat,
+      a.model AS model_alat,
+      a.harga AS harga_unit,
+      a.tenaga_mesin,
+      a.kapasitas_bucket,
+      a.kedalaman_gali,
+      a.berat_operasional,
+      a.kapasitas_ton,
+      sales.fullname AS nama_sales,
+      mgr.fullname AS nama_manager
     FROM quotations q
     LEFT JOIN users u ON q.customer_id = u.id
     LEFT JOIN alat_berat a ON q.alat_berat_id = a.id
+    LEFT JOIN users sales ON q.sales_id = sales.id
+    LEFT JOIN users mgr ON q.manager_id = mgr.id
     WHERE ${isNumeric ? 'q.id = ?' : 'q.nomor_pemesanan = ?'}
   `;
   
@@ -239,6 +255,7 @@ const getByNomor = async (nomor) => {
   const query = `
     SELECT 
       q.id,
+      COALESCE(q.nomor_pemesanan, CONCAT('Q-', LPAD(q.id, 3, '0'))) AS nomor_dokumen,
       q.nomor_pemesanan,
       q.status,
       q.sumber_pesanan,
@@ -246,6 +263,8 @@ const getByNomor = async (nomor) => {
       q.harga_penawaran,
       q.ongkos_kirim,
       q.diskon,
+      q.sales_id,
+      q.manager_id,
       q.catatan,
       q.guest_name,
       q.guest_company,
@@ -260,13 +279,26 @@ const getByNomor = async (nomor) => {
       q.dp_paid_at,
       q.created_at,
       q.updated_at,
-      a.name    AS nama_alat,
-      a.brand   AS brand_alat,
-      a.model   AS model_alat,
-      a.image_url,
-      u.fullname AS nama_customer,
+      COALESCE(q.guest_company, u.fullname, q.guest_name, 'Guest RFQ') AS perusahaan,
+      COALESCE(q.guest_email, u.email, '-') AS email_perusahaan,
+      COALESCE(q.guest_phone, u.phone, '-') AS telepon_perusahaan,
+      COALESCE(q.guest_name, u.fullname, 'Guest') AS nama_customer,
+      u.fullname AS user_fullname,
       u.email   AS email_customer,
       u.phone   AS phone_customer,
+      a.name    AS nama_alat,
+      a.name    AS nama_unit,
+      a.brand   AS brand_alat,
+      a.model   AS model_alat,
+      a.harga   AS harga_unit,
+      a.tenaga_mesin,
+      a.kapasitas_bucket,
+      a.kedalaman_gali,
+      a.berat_operasional,
+      a.kapasitas_ton,
+      a.image_url,
+      sales.fullname AS nama_sales,
+      mgr.fullname   AS nama_manager,
       d.surat_jalan_number,
       d.driver_name,
       d.vehicle_number,
@@ -276,6 +308,8 @@ const getByNomor = async (nomor) => {
     FROM quotations q
     LEFT JOIN alat_berat a  ON q.alat_berat_id = a.id
     LEFT JOIN users u       ON q.customer_id   = u.id
+    LEFT JOIN users sales   ON q.sales_id      = sales.id
+    LEFT JOIN users mgr     ON q.manager_id    = mgr.id
     LEFT JOIN delivery_orders d ON d.quotation_id = q.id
     WHERE ${isNumeric ? 'q.id = ?' : 'q.nomor_pemesanan = ?'}
     LIMIT 1
