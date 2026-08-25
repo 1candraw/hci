@@ -89,9 +89,8 @@ const FormPemesananModal = ({
               value={metodePembayaran}
               onChange={(e) => setMetodePembayaran(e.target.value)}
             >
-              <option value="cash">Cash / Pembayaran Langsung</option>
-              <option value="leasing">Leasing / Skema Pembiayaan Alat Berat</option>
-              <option value="termin">Termin Proyek Bertahap</option>
+              <option value="cash">Cash / Tunai (Pelunasan Penuh Tanpa Angsuran)</option>
+              <option value="credit">Credit / Kredit (Uang Muka + Angsuran 5 Tahun / 60 Bulan)</option>
             </select>
           </div>
 

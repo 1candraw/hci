@@ -36,10 +36,10 @@ const getStatusDistribution = async () => {
   const statusLabels = {
     PENDING: 'RFQ Baru (Pending)',
     MENUNGGU_APPROVAL: 'Menunggu Approval',
-    APPROVED: 'Disetujui (Menunggu DP)',
+    APPROVED: 'Disetujui (Menunggu Pembayaran)',
     REJECTED: 'Ditolak',
-    DP_DIBAYAR: 'DP Masuk',
-    VERIFIKASI_DP_SALES: 'Verifikasi DP Sales',
+    DP_DIBAYAR: 'Pembayaran Masuk',
+    VERIFIKASI_DP_SALES: 'Verifikasi Pembayaran',
     PROSES_OPERASIONAL: 'Inspeksi PDI',
     SIAP_KIRIM: 'Siap Kirim',
     PENGIRIMAN: 'Dalam Pengiriman',

@@ -103,21 +103,6 @@ INSERT INTO `delivery_orders` (`id`, `quotation_id`, `surat_jalan_number`, `driv
 	(3, 7, 'SJ-202608-4263', 'Pak Joko', 'B 1234 ABC', 'Lokasi Proyek Samarinda', NULL, 1, '2026-08-20 15:25:38', '2026-08-20 15:25:38'),
 	(4, 9, 'SJ-202608-3459', 'Pak Aziz', 'Aziz ganteng', 'sjsjsj', NULL, 1, '2026-08-21 14:11:09', '2026-08-21 14:10:55');
 
--- Dumping structure for table hci.invoices
-CREATE TABLE IF NOT EXISTS `invoices` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `transaction_id` int DEFAULT NULL,
-  `invoice_number` varchar(100) DEFAULT NULL,
-  `total` decimal(15,2) DEFAULT NULL,
-  `due_date` date DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `transaction_id` (`transaction_id`),
-  CONSTRAINT `invoices_ibfk_1` FOREIGN KEY (`transaction_id`) REFERENCES `transactions` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Dumping data for table hci.invoices: ~0 rows (approximately)
-
 -- Dumping structure for table hci.kategori_alat
 CREATE TABLE IF NOT EXISTS `kategori_alat` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -131,21 +116,6 @@ CREATE TABLE IF NOT EXISTS `kategori_alat` (
 INSERT INTO `kategori_alat` (`id`, `name`, `description`, `created_at`) VALUES
 	(1, 'Excavator', NULL, '2026-06-09 23:03:58');
 
--- Dumping structure for table hci.payments
-CREATE TABLE IF NOT EXISTS `payments` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `transaction_id` int DEFAULT NULL,
-  `payment_method` varchar(50) DEFAULT NULL,
-  `amount` decimal(15,2) DEFAULT NULL,
-  `payment_proof` text,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `transaction_id` (`transaction_id`),
-  CONSTRAINT `payments_ibfk_1` FOREIGN KEY (`transaction_id`) REFERENCES `transactions` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Dumping data for table hci.payments: ~0 rows (approximately)
-
 -- Dumping structure for table hci.quotations
 CREATE TABLE IF NOT EXISTS `quotations` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -156,7 +126,7 @@ CREATE TABLE IF NOT EXISTS `quotations` (
   `manager_id` int DEFAULT NULL,
   `sumber_pesanan` enum('katalog','saw','guest') DEFAULT 'katalog',
   `saw_result_id` int DEFAULT NULL,
-  `metode_pembayaran` enum('cash','leasing') DEFAULT 'cash',
+  `metode_pembayaran` enum('cash','credit') DEFAULT 'cash',
   `harga_penawaran` decimal(15,2) DEFAULT NULL,
   `ongkos_kirim` decimal(15,2) DEFAULT NULL,
   `diskon` decimal(15,2) DEFAULT NULL,
@@ -1416,42 +1386,6 @@ INSERT INTO `saw_sessions` (`id`, `user_id`, `harga_weight`, `tenaga_mesin_weigh
 	(309, NULL, 4.00, 4.00, 3.00, 3.00, 3.00, NULL, '2026-08-21 23:25:22'),
 	(310, NULL, 4.00, 4.00, 3.00, 3.00, 3.00, NULL, '2026-08-21 23:25:27'),
 	(311, NULL, 4.00, 4.00, 3.00, 3.00, 3.00, NULL, '2026-08-21 23:25:27');
-
--- Dumping structure for table hci.transactions
-CREATE TABLE IF NOT EXISTS `transactions` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `customer_id` int DEFAULT NULL,
-  `sales_id` int DEFAULT NULL,
-  `transaction_code` varchar(100) DEFAULT NULL,
-  `total_amount` decimal(15,2) DEFAULT NULL,
-  `status` enum('pending','paid','process','completed','cancelled') DEFAULT 'pending',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `transaction_code` (`transaction_code`),
-  KEY `customer_id` (`customer_id`),
-  KEY `sales_id` (`sales_id`),
-  CONSTRAINT `transactions_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `users` (`id`),
-  CONSTRAINT `transactions_ibfk_2` FOREIGN KEY (`sales_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Dumping data for table hci.transactions: ~0 rows (approximately)
-
--- Dumping structure for table hci.transaction_items
-CREATE TABLE IF NOT EXISTS `transaction_items` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `transaction_id` int DEFAULT NULL,
-  `alat_berat_id` int DEFAULT NULL,
-  `qty` int DEFAULT NULL,
-  `price` decimal(15,2) DEFAULT NULL,
-  `subtotal` decimal(15,2) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `transaction_id` (`transaction_id`),
-  KEY `alat_berat_id` (`alat_berat_id`),
-  CONSTRAINT `transaction_items_ibfk_1` FOREIGN KEY (`transaction_id`) REFERENCES `transactions` (`id`),
-  CONSTRAINT `transaction_items_ibfk_2` FOREIGN KEY (`alat_berat_id`) REFERENCES `alat_berat` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Dumping data for table hci.transaction_items: ~0 rows (approximately)
 
 -- Dumping structure for table hci.unit_checklists
 CREATE TABLE IF NOT EXISTS `unit_checklists` (

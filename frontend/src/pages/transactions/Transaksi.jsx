@@ -67,9 +67,9 @@ const Transaksi = () => {
       case 'REJECTED': 
         return <span style={{ ...styles.badge, backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5' }}>Ditolak</span>;
       case 'DP_DIBAYAR': 
-        return <span style={{ ...styles.badge, backgroundColor: '#e0e7ff', color: '#4338ca', border: '1px solid #c7d2fe' }}>DP Masuk</span>;
+        return <span style={{ ...styles.badge, backgroundColor: '#e0e7ff', color: '#4338ca', border: '1px solid #c7d2fe' }}>Pembayaran Masuk</span>;
       case 'VERIFIKASI_DP_SALES': 
-        return <span style={{ ...styles.badge, backgroundColor: '#ede9fe', color: '#6d28d9', border: '1px solid #ddd6fe' }}>Verifikasi DP</span>;
+        return <span style={{ ...styles.badge, backgroundColor: '#ede9fe', color: '#6d28d9', border: '1px solid #ddd6fe' }}>Verifikasi Pembayaran</span>;
       case 'PROSES_OPERASIONAL': 
         return <span style={{ ...styles.badge, backgroundColor: '#cffafe', color: '#0891b2', border: '1px solid #a5f3fc' }}>Inspeksi PDI</span>;
       case 'SIAP_KIRIM': 

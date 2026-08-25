@@ -59,7 +59,7 @@ export const guestService = {
   },
 
   /**
-   * Upload bukti pembayaran DP
+   * Upload bukti transfer pembayaran (Cash / Uang Muka Kredit)
    * POST /api/quotations/:identifier/upload-dp
    */
   submitDPProof: async (identifier, formData) => {
@@ -69,7 +69,7 @@ export const guestService = {
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data?.message || 'Gagal mengirim bukti pembayaran DP.';
+      throw error.response?.data?.message || 'Gagal mengirim bukti pembayaran.';
     }
   },
 

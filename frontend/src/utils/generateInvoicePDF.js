@@ -2,7 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 /**
- * Format angka ke Rupiah standar Indonesia
+ * Format angka ke format Rupiah standar Indonesia
  */
 export const formatCurrencyIDR = (amount) => {
   return new Intl.NumberFormat('id-ID', {
@@ -14,12 +14,12 @@ export const formatCurrencyIDR = (amount) => {
 };
 
 /**
- * Utility untuk menghasilkan Dokumen Resmi Surat Penawaran Harga (SPH) PDF
+ * Utility untuk menghasilkan Dokumen Resmi Invoice Pembayaran PDF (Cash & Credit 5 Tahun)
  * @param {Object} data - Objek pesanan/quotation dari backend
  */
-export const generateQuotationPDF = (data) => {
+export const generateInvoicePDF = (data) => {
   if (!data) {
-    alert('Data penawaran tidak valid.');
+    alert('Data transaksi tidak valid untuk menerbitkan invoice.');
     return;
   }
 
@@ -59,8 +59,8 @@ export const generateQuotationPDF = (data) => {
   doc.setTextColor(100, 116, 139);
   const contactLines = [
     'Head Office: Kawasan Industri Terpadu, Gedung HeavyCare Hub Kav. 88, Jakarta',
-    'WhatsApp / Hotline: +62 812-6892-0766  |  Email: sales@heavycare.id',
-    'Website: www.heavycare.id  |  Layanan Purna Jual & Distribusi Nasional',
+    'Finance & Billing: +62 812-6892-0766  |  Email: finance@heavycare.id',
+    'Website: www.heavycare.id  |  Faktur & Tanda Terima Pembayaran Resmi',
   ];
   let headerY = 16;
   contactLines.forEach((line) => {
@@ -74,34 +74,32 @@ export const generateQuotationPDF = (data) => {
   doc.line(marginX, 30, pageWidth - marginX, 30);
 
   // ═══════════════════════════════════════════════════════════════
-  // 2. JUDUL DOKUMEN & METADATA PENAWARAN
+  // 2. JUDUL DOKUMEN & METADATA INVOICE
   // ═══════════════════════════════════════════════════════════════
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
   doc.setTextColor(13, 20, 30);
-  doc.text('SURAT PENAWARAN HARGA ALAT BERAT', pageWidth / 2, 38, { align: 'center' });
+  doc.text('INVOICE RESMI PEMBAYARAN UNIT', pageWidth / 2, 38, { align: 'center' });
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(71, 85, 105);
-  doc.text('OFFICIAL COMMERCIAL QUOTATION & FLEET PROPOSAL', pageWidth / 2, 42.5, { align: 'center' });
+  doc.text('COMMERCIAL TAX INVOICE & OFFICIAL RECEIPT', pageWidth / 2, 42.5, { align: 'center' });
 
-  // Box Metadata (Nomor SPH, Tanggal, Masa Berlaku, Status)
+  // Box Metadata (Nomor Invoice, Tanggal, No SPH, Status Bayar)
   doc.setFillColor(248, 250, 252);
   doc.setDrawColor(226, 232, 240);
   doc.roundedRect(marginX, 46, contentWidth, 24, 2, 2, 'FD');
 
-  const nomorDokumen = data.nomor_pemesanan || (data.id ? `QO-${data.id}` : 'HC-2026-XXXX');
+  const nomorDokumen = data.nomor_pemesanan || (data.id ? `PO-${data.id}` : 'HC-2026-XXXX');
+  const nomorInvoice = `INV/${nomorDokumen}`;
   const nomorSPH = `SPH/${nomorDokumen}`;
-  
-  const createdDate = data.created_at ? new Date(data.created_at) : new Date();
-  const tanggalTerbit = createdDate.toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
 
-  const validUntil = new Date(createdDate.getTime() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString('id-ID', {
+  const isCredit = (data.metode_pembayaran === 'credit' || data.metode_pembayaran === 'kredit' || data.metode_pembayaran === 'leasing');
+  const labelMetode = isCredit ? 'KREDIT (ANGSURAN 5 TAHUN / 60 BULAN)' : 'CASH / TUNAI (PELUNASAN 100%)';
+
+  const payDate = data.dp_paid_at ? new Date(data.dp_paid_at) : (data.created_at ? new Date(data.created_at) : new Date());
+  const tanggalInvoice = payDate.toLocaleDateString('id-ID', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -111,50 +109,47 @@ export const generateQuotationPDF = (data) => {
   doc.setFontSize(8.5);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(100, 116, 139);
-  doc.text('NOMOR SURAT', marginX + 4, 52);
+  doc.text('NOMOR INVOICE', marginX + 4, 52);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(13, 20, 30);
-  doc.text(`: ${nomorSPH}`, marginX + 32, 52);
+  doc.text(`: ${nomorInvoice}`, marginX + 34, 52);
 
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(100, 116, 139);
-  doc.text('TANGGAL TERBIT', marginX + 4, 58);
+  doc.text('TANGGAL INVOICE', marginX + 4, 58);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(13, 20, 30);
-  doc.text(`: ${tanggalTerbit}`, marginX + 32, 58);
+  doc.text(`: ${tanggalInvoice}`, marginX + 34, 58);
 
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(100, 116, 139);
-  doc.text('MASA BERLAKU', marginX + 4, 64);
+  doc.text('NO. REFERENSI SPH', marginX + 4, 64);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(13, 20, 30);
-  doc.text(`: 14 Hari Kalender (s/d ${validUntil})`, marginX + 32, 64);
-
-  const isCredit = (data.metode_pembayaran === 'credit' || data.metode_pembayaran === 'kredit' || data.metode_pembayaran === 'leasing');
-  const labelMetode = isCredit ? 'KREDIT (5 TAHUN / 60 BULAN)' : 'CASH / TUNAI (100%)';
+  doc.text(`: ${nomorSPH}`, marginX + 34, 64);
 
   // Kolom Kanan Box Metadata
-  const colRightX = marginX + 105;
+  const colRightX = marginX + 102;
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(100, 116, 139);
-  doc.text('STATUS DOKUMEN', colRightX, 52);
+  doc.text('STATUS PEMBAYARAN', colRightX, 52);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(21, 128, 61);
-  doc.text(': DISETUJUI MANAJEMEN (VALID)', colRightX + 34, 52);
+  doc.text(`: ${isCredit ? 'UANG MUKA TERBAYAR (VALID)' : 'LUNAS 100% (PAID IN FULL)'}`, colRightX + 36, 52);
 
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(100, 116, 139);
-  doc.text('METODE BAYAR', colRightX, 58);
+  doc.text('SKEMA PEMBAYARAN', colRightX, 58);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(13, 20, 30);
-  doc.text(`: ${labelMetode}`, colRightX + 34, 58);
+  doc.text(`: ${labelMetode}`, colRightX + 36, 58);
 
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(100, 116, 139);
-  doc.text('VERIFIKASI MANAGER', colRightX, 64);
+  doc.text('VERIFIKASI FINANCE', colRightX, 64);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(13, 20, 30);
-  doc.text(`: ${data.nama_manager || 'Branch Manager'} (Verified)`, colRightX + 34, 64);
+  doc.text(`: ${data.nama_sales || 'Sales & Finance'} (Verified)`, colRightX + 36, 64);
 
   // ═══════════════════════════════════════════════════════════════
   // 3. INFORMASI CUSTOMER / PERUSAHAAN PEMESAN
@@ -163,7 +158,7 @@ export const generateQuotationPDF = (data) => {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9.5);
   doc.setTextColor(13, 20, 30);
-  doc.text('KEPADA YTH.', marginX, custBoxY);
+  doc.text('TAGIHAN DITUJUKAN KEPADA (BILLED TO):', marginX, custBoxY);
 
   const namaPerusahaan = data.perusahaan || data.guest_company || data.nama_customer || 'Bapak/Ibu Pimpinan Perusahaan';
   const namaPIC = data.guest_name || data.nama_customer || data.user_fullname || '-';
@@ -180,17 +175,19 @@ export const generateQuotationPDF = (data) => {
   doc.setFontSize(8.5);
   doc.setTextColor(71, 85, 105);
   doc.text(`Attn: ${namaPIC}  |  Telp/WhatsApp: ${telepon}  |  Email: ${email}`, marginX, custBoxY + 10.5);
-  doc.text(`Lokasi Proyek / Pengiriman: ${lokasi}`, marginX, custBoxY + 15);
+  doc.text(`Lokasi Site Proyek / Pengiriman Unit: ${lokasi}`, marginX, custBoxY + 15);
 
   // Kata Pengantar
   doc.setFontSize(8.5);
   doc.setTextColor(51, 65, 85);
-  const introText = `Dengan hormat, menindaklanjuti permintaan pengadaan alat berat Anda, bersama ini kami sampaikan rincian penawaran harga resmi (commercial quotation) untuk unit excavator dengan spesifikasi teknis dan skema pembayaran ${isCredit ? 'Kredit Tenor 5 Tahun (60 Bulan)' : 'Tunai / Cash (Pelunasan 100%)'} sebagai berikut:`;
+  const introText = isCredit
+    ? 'Faktur/Invoice ini diterbitkan sebagai bukti sah penerimaan Pembayaran Awal (Uang Muka 20%) pembiayaan kredit unit alat berat. Rincian kewajiban keuangan dan jadwal angsuran diuraikan sebagai berikut:'
+    : 'Faktur/Invoice ini diterbitkan sebagai bukti sah penerimaan Pembayaran Lunas (Cash 100%) atas pengadaan unit alat berat baru dengan rincian pelunasan keuangan sebagai berikut:';
   const splitIntro = doc.splitTextToSize(introText, contentWidth);
   doc.text(splitIntro, marginX, custBoxY + 21);
 
   // ═══════════════════════════════════════════════════════════════
-  // 4. TABEL RINCIAN UNIT & HARGA PENAWARAN (autoTable)
+  // 4. TABEL RINCIAN UNIT & PEMBAYARAN (autoTable)
   // ═══════════════════════════════════════════════════════════════
   const unitName = data.nama_alat || data.nama_unit || 'Excavator HeavyCare';
   const brand = data.brand_alat || data.brand || 'Excavator';
@@ -202,13 +199,13 @@ export const generateQuotationPDF = (data) => {
   const diskon = Number(data.diskon || 0);
   const grandTotal = Math.max(0, hargaUnit + ongkir - diskon);
 
-  // Perhitungan skema kredit vs cash
-  const uangMuka = isCredit ? Math.round(grandTotal * 0.2) : 0; // Uang Muka 20% untuk kredit
+  const uangMuka = isCredit ? Math.round(grandTotal * 0.2) : 0;
   const sisaPokok = isCredit ? Math.max(0, grandTotal - uangMuka) : 0;
   const tenorBulan = 60; // 5 Tahun
   const cicilanPerBulan = isCredit ? Math.round(sisaPokok / tenorBulan) : 0;
+  const nominalBayarMasuk = Number(data.dp_amount || (isCredit ? uangMuka : grandTotal));
 
-  // Spesifikasi singkat unit jika ada
+  // Spesifikasi singkat unit
   let specDetails = [];
   if (data.tenaga_mesin) specDetails.push(`Engine: ${data.tenaga_mesin} kW/HP`);
   if (data.kapasitas_bucket) specDetails.push(`Bucket: ${data.kapasitas_bucket} m³`);
@@ -219,14 +216,14 @@ export const generateQuotationPDF = (data) => {
   const tableBody = [
     [
       '1',
-      `Unit Alat Berat:\n${fullName}${specString}\nKondisi: Baru / Siap Kerja (Ready Stock PDI Standard)`,
+      `Unit Alat Berat:\n${fullName}${specString}\nKondisi: Baru (Heavy Duty PDI Standard)`,
       '1 Unit',
       formatCurrencyIDR(hargaUnit),
       formatCurrencyIDR(hargaUnit),
     ],
     [
       '',
-      'Ongkos Kirim & Mobilisasi Armada Trailer ke Site Proyek\nTermasuk Asuransi Perjalanan Logistik',
+      'Ongkos Kirim & Mobilisasi Trailer Ekspedisi ke Lokasi Site\nTermasuk Asuransi Logistik Perjalanan',
       '1 Paket',
       formatCurrencyIDR(ongkir),
       formatCurrencyIDR(ongkir),
@@ -236,7 +233,7 @@ export const generateQuotationPDF = (data) => {
   if (diskon > 0) {
     tableBody.push([
       '',
-      'Potongan Program Diskon Khusus Pengadaan (Special Project Discount)',
+      'Potongan Diskon Program Pengadaan Khusus',
       '-',
       `- ${formatCurrencyIDR(diskon)}`,
       `- ${formatCurrencyIDR(diskon)}`,
@@ -247,37 +244,41 @@ export const generateQuotationPDF = (data) => {
   const tableFoot = isCredit
     ? [
         [
-          { content: 'TOTAL NILAI TRANSAKSI (GRAND TOTAL OTR)', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fontSize: 9 } },
-          { content: formatCurrencyIDR(grandTotal), colSpan: 2, styles: { halign: 'right', fontStyle: 'bold', fontSize: 9.5, textColor: [21, 128, 61] } },
+          { content: 'TOTAL NILAI TRANSAKSI (GRAND TOTAL OTR)', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fontSize: 8.5 } },
+          { content: formatCurrencyIDR(grandTotal), colSpan: 2, styles: { halign: 'right', fontStyle: 'bold', fontSize: 9, textColor: [15, 23, 42] } },
         ],
         [
-          { content: 'Pembayaran Awal / Uang Muka (20%)', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fontSize: 8.5, textColor: [21, 128, 61] } },
-          { content: formatCurrencyIDR(uangMuka), colSpan: 2, styles: { halign: 'right', fontStyle: 'bold', fontSize: 8.5, textColor: [21, 128, 61] } },
+          { content: 'PEMBAYARAN AWAL / UANG MUKA (20%) - DITERIMA & LUNAS TAHAP 1', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fontSize: 8.5, textColor: [21, 128, 61] } },
+          { content: formatCurrencyIDR(nominalBayarMasuk), colSpan: 2, styles: { halign: 'right', fontStyle: 'bold', fontSize: 9.5, textColor: [21, 128, 61] } },
         ],
         [
           { content: 'Sisa Pokok Pembiayaan Kredit (80%)', colSpan: 3, styles: { halign: 'right', fontStyle: 'normal', fontSize: 8 } },
           { content: formatCurrencyIDR(sisaPokok), colSpan: 2, styles: { halign: 'right', fontStyle: 'normal', fontSize: 8 } },
         ],
         [
-          { content: 'Estimasi Angsuran Berkala (Tenor 5 Tahun / 60 Bulan)', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fontSize: 8.5, textColor: [180, 83, 9] } },
+          { content: 'Skema Angsuran Bulanan (Tenor 5 Tahun / 60 Bulan)', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fontSize: 8.5, textColor: [180, 83, 9] } },
           { content: `${formatCurrencyIDR(cicilanPerBulan)} / bulan`, colSpan: 2, styles: { halign: 'right', fontStyle: 'bold', fontSize: 9, textColor: [180, 83, 9] } },
         ],
       ]
     : [
         [
-          { content: 'TOTAL NILAI TRANSAKSI (GRAND TOTAL OTR)', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fontSize: 9 } },
-          { content: formatCurrencyIDR(grandTotal), colSpan: 2, styles: { halign: 'right', fontStyle: 'bold', fontSize: 9.5, textColor: [21, 128, 61] } },
+          { content: 'TOTAL NILAI TRANSAKSI (GRAND TOTAL OTR)', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fontSize: 8.5 } },
+          { content: formatCurrencyIDR(grandTotal), colSpan: 2, styles: { halign: 'right', fontStyle: 'bold', fontSize: 9, textColor: [15, 23, 42] } },
         ],
         [
-          { content: 'Skema Pembayaran: Tunai / Cash (Pelunasan Penuh 100%)', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fontSize: 8.5, textColor: [21, 128, 61] } },
-          { content: formatCurrencyIDR(grandTotal), colSpan: 2, styles: { halign: 'right', fontStyle: 'bold', fontSize: 9, textColor: [21, 128, 61] } },
+          { content: 'TOTAL NOMINAL PELUNASAN (CASH 100%) - DITERIMA LUNAS', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fontSize: 8.5, textColor: [21, 128, 61] } },
+          { content: formatCurrencyIDR(nominalBayarMasuk), colSpan: 2, styles: { halign: 'right', fontStyle: 'bold', fontSize: 9.5, textColor: [21, 128, 61] } },
+        ],
+        [
+          { content: 'Sisa Saldo Pembayaran Unit', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fontSize: 8.5, textColor: [21, 128, 61] } },
+          { content: 'Rp 0 (LUNAS PENUH)', colSpan: 2, styles: { halign: 'right', fontStyle: 'bold', fontSize: 8.5, textColor: [21, 128, 61] } },
         ],
       ];
 
   autoTable(doc, {
     startY: custBoxY + 30,
     margin: { left: marginX, right: marginX },
-    head: [['No', 'Deskripsi Unit & Rincian Pengadaan', 'Qty', 'Harga Satuan', 'Subtotal']],
+    head: [['No', 'Deskripsi Unit & Rincian Transaksi', 'Qty', 'Harga Satuan', 'Subtotal']],
     body: tableBody,
     theme: 'grid',
     headStyles: {
@@ -290,7 +291,7 @@ export const generateQuotationPDF = (data) => {
     bodyStyles: {
       fontSize: 8,
       textColor: [30, 41, 59],
-      cellPadding: 3,
+      cellPadding: 2.8,
     },
     columnStyles: {
       0: { cellWidth: 10, halign: 'center' },
@@ -309,87 +310,109 @@ export const generateQuotationPDF = (data) => {
   const finalTableY = doc.lastAutoTable.finalY || 155;
 
   // ═══════════════════════════════════════════════════════════════
-  // 5. KETENTUAN PEMBAYARAN & SYARAT KONTRAK (Terms & Conditions)
+  // 5. RINCIAN MUTASI PEMBAYARAN MASUK
   // ═══════════════════════════════════════════════════════════════
-  const termsY = finalTableY + 5;
+  const payInfoY = finalTableY + 4;
+  doc.setFillColor(240, 253, 244);
+  doc.setDrawColor(187, 247, 208);
+  doc.roundedRect(marginX, payInfoY, contentWidth, 18, 1.5, 1.5, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(21, 128, 61);
+  doc.text('RINCIAN VALIDASI MUTASI DANA DITERIMA (PAYMENT SETTLEMENT LOG):', marginX + 3, payInfoY + 4.5);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(30, 41, 59);
+
+  const bankPengirim = data.dp_bank_name || 'Bank Transfer';
+  const rekPengirim = data.dp_account_number || '-';
+  const anPengirim = data.dp_account_name || namaPIC || '-';
+  const waktuBayar = data.dp_paid_at ? new Date(data.dp_paid_at).toLocaleString('id-ID') : tanggalInvoice;
+
+  doc.text(`• Rekening Pengirim : ${bankPengirim} (${rekPengirim}) a/n ${anPengirim}`, marginX + 3, payInfoY + 9);
+  doc.text(`• Rekening Tujuan   : Bank Central Asia (BCA) 1234-5678-90 a/n PT Heavy Care Indonesia`, marginX + 3, payInfoY + 13);
+  doc.text(`• Nominal & Waktu   : ${formatCurrencyIDR(nominalBayarMasuk)} | Tanggal Mutasi: ${waktuBayar}`, marginX + 3, payInfoY + 16.5);
+
+  // ═══════════════════════════════════════════════════════════════
+  // 6. SYARAT & KETENTUAN INVOICE (Terms of Settlement)
+  // ═══════════════════════════════════════════════════════════════
+  const termsY = payInfoY + 22;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
   doc.setTextColor(13, 20, 30);
-  doc.text('SYARAT & KETENTUAN TRANSAKSI (TERMS & CONDITIONS):', marginX, termsY);
+  doc.text('CATATAN & KETENTUAN FAKTUR RESMI (SETTLEMENT POLICY):', marginX, termsY);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.8);
+  doc.setFontSize(7.5);
   doc.setTextColor(71, 85, 105);
 
-  const terms = isCredit
+  const invoiceTerms = isCredit
     ? [
-        `1. Skema Kredit: Pembiayaan Alat Berat dengan Tenor 5 Tahun (60 Bulan Angsuran Berkala).`,
-        `2. Pembayaran Awal (Uang Muka 20%) sebesar ${formatCurrencyIDR(uangMuka)} disetorkan ke Rekening Resmi: BCA 1234-5678-90 a/n PT Heavy Care Indonesia.`,
-        `3. Sisa pokok pembiayaan sebesar ${formatCurrencyIDR(sisaPokok)} diangsur flat ${formatCurrencyIDR(cicilanPerBulan)} / bulan selama 60 bulan setiap tanggal 10.`,
-        '4. Bukti transfer pembayaran awal wajib diunggah pada portal "Lacak Status Pesanan" untuk verifikasi administrasi pembiayaan.',
-        '5. Pre-Delivery Inspection (PDI) 6 titik uji & pengiriman armada trailer diproses segera setelah pembayaran awal terverifikasi.',
-        '6. Serah terima unit di lokasi proyek ditandai dengan Berita Acara Serah Terima (BAST) resmi dan aktivasi garansi servis HeavyCare 1 Tahun / 2000 Jam Kerja.',
+        `1. Faktur ini merupakan bukti penerimaan sah Uang Muka (20%) sebesar ${formatCurrencyIDR(nominalBayarMasuk)} untuk pengadaan unit alat berat.`,
+        `2. Sisa pokok pembiayaan sebesar ${formatCurrencyIDR(sisaPokok)} diangsur berkala Rp ${formatCurrencyIDR(cicilanPerBulan)} / bulan selama 60 bulan (5 tahun) setiap tanggal 10.`,
+        '3. Unit memasuki tahapan inspeksi PDI 6 titik uji teknis dan penerbitan Surat Perintah Kerja Logistik Trailer.',
+        '4. Serah terima unit di lokasi proyek ditandai dengan Berita Acara Serah Terima (BAST) resmi dan aktivasi garansi HeavyCare 1 Tahun / 2000 Jam Kerja.',
       ]
     : [
-        `1. Skema Pembayaran: Tunai Penuh (Cash 100% Tanpa Angsuran / Bebas Biaya Pembiayaan).`,
-        `2. Pelunasan transaksi sebesar ${formatCurrencyIDR(grandTotal)} disetorkan ke Rekening Resmi: BCA 1234-5678-90 a/n PT Heavy Care Indonesia.`,
-        '3. Bukti transfer pelunasan wajib diunggah pada portal "Lacak Status Pesanan" untuk verifikasi otomatis oleh Tim Sales & Finance.',
-        '4. Pre-Delivery Inspection (PDI) 6 titik uji (Mesin, Hidrolik, Bucket, Bodi, Undercarriage, Aksesoris) dilakukan segera setelah pembayaran terverifikasi.',
-        '5. Surat Jalan & Armada Trailer pengiriman unit diterbitkan maksimal 2-3 hari kerja setelah inspeksi PDI dinyatakan lolos.',
-        '6. Serah terima unit di lokasi proyek ditandai dengan Berita Acara Serah Terima (BAST) resmi dan aktivasi garansi servis HeavyCare 1 Tahun / 2000 Jam Kerja.',
+        `1. Faktur ini merupakan bukti sah Pelunasan Penuh (100% Cash Settlement) sebesar ${formatCurrencyIDR(nominalBayarMasuk)} tanpa beban cicilan/bunga.`,
+        '2. Pihak pembeli telah menyelesaikan seluruh kewajiban pembayaran unit alat berat dan mobilisasi armada ekspedisi.',
+        '3. Unit segera diproses inspeksi teknis PDI dan diberangkatkan dengan surat jalan resmi menuju lokasi proyek.',
+        '4. Serah terima unit di lokasi proyek ditandai dengan Berita Acara Serah Terima (BAST) resmi dan aktivasi garansi HeavyCare 1 Tahun / 2000 Jam Kerja.',
       ];
 
   let currentTermY = termsY + 4;
-  terms.forEach((term) => {
+  invoiceTerms.forEach((term) => {
     const splitTerm = doc.splitTextToSize(term, contentWidth);
     doc.text(splitTerm, marginX, currentTermY);
-    currentTermY += splitTerm.length * 3.5;
+    currentTermY += splitTerm.length * 3.3;
   });
 
   // ═══════════════════════════════════════════════════════════════
-  // 6. LEMBAR PENGESAHAN & TANDA TANGAN DIGITAL
+  // 7. LEMBAR PENGESAHAN & TANDA TANGAN DIGITAL
   // ═══════════════════════════════════════════════════════════════
-  const signY = Math.max(currentTermY + 4, 236);
+  const signY = Math.max(currentTermY + 3, 238);
 
-  // Box Disiapkan Oleh (Sales)
+  // Box Finance & Accounting
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(100, 116, 139);
-  doc.text('Dibuat & Diajukan Oleh:', marginX + 10, signY);
+  doc.text('Diverifikasi & Divalidasi Oleh:', marginX + 10, signY);
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
   doc.setTextColor(13, 20, 30);
-  doc.text('TIM SALES COMMERCIAL', marginX + 10, signY + 4);
+  doc.text('FINANCE & BILLING DEPT', marginX + 10, signY + 4);
 
-  // Digital Signature badge Sales
+  // Digital Signature badge Finance
   doc.setFillColor(240, 253, 244);
   doc.setDrawColor(187, 247, 208);
   doc.roundedRect(marginX + 10, signY + 7, 50, 14, 1.5, 1.5, 'FD');
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
   doc.setTextColor(21, 128, 61);
-  doc.text('✓ DIGITALLY SUBMITTED', marginX + 14, signY + 12);
+  doc.text('✓ PAYMENT VERIFIED', marginX + 14, signY + 12);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(6.5);
   doc.setTextColor(71, 85, 105);
-  doc.text(data.nama_sales || 'Sales Engineer HeavyCare', marginX + 14, signY + 17);
+  doc.text('Finance & Treasury Officer', marginX + 14, signY + 17);
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
   doc.setTextColor(13, 20, 30);
-  doc.text(`( ${data.nama_sales || 'Sales Commercial Specialist'} )`, marginX + 10, signY + 27);
+  doc.text(`( ${data.nama_sales || 'Finance Treasury Team'} )`, marginX + 10, signY + 27);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(100, 116, 139);
   doc.text('PT Heavy Care Indonesia', marginX + 10, signY + 31);
 
-  // Box Disetujui Oleh (Manager)
+  // Box Disahkan Oleh (Manager)
   const mgrSignX = pageWidth - marginX - 65;
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(100, 116, 139);
-  doc.text('Disetujui & Disahkan Oleh:', mgrSignX, signY);
+  doc.text('Disetujui & Diterbitkan Oleh:', mgrSignX, signY);
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
@@ -403,11 +426,11 @@ export const generateQuotationPDF = (data) => {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
   doc.setTextColor(5, 150, 105);
-  doc.text('✓ APPROVED & AUTHORIZED', mgrSignX + 4, signY + 12);
+  doc.text('✓ AUTHORIZED INVOICE', mgrSignX + 4, signY + 12);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(6.5);
   doc.setTextColor(71, 85, 105);
-  doc.text(data.nama_manager || 'Dimas (Manager Sales)', mgrSignX + 4, signY + 17);
+  doc.text(data.nama_manager || 'Branch Commercial Manager', mgrSignX + 4, signY + 17);
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
@@ -419,15 +442,15 @@ export const generateQuotationPDF = (data) => {
   doc.text('PT Heavy Care Indonesia', mgrSignX, signY + 31);
 
   // ═══════════════════════════════════════════════════════════════
-  // 7. FOOTER PAGE
+  // 8. FOOTER PAGE
   // ═══════════════════════════════════════════════════════════════
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
   doc.setTextColor(148, 163, 184);
-  const footerNote = `Surat Penawaran Resmi ini dihasilkan secara otomatis oleh Sistem HeavyCare.id pada ${new Date().toLocaleString('id-ID')} | Ref ID: ${nomorDokumen}`;
+  const footerNote = `Dokumen Invoice & Bukti Pembayaran Resmi ini dihasilkan secara otomatis oleh Sistem HeavyCare.id pada ${new Date().toLocaleString('id-ID')} | Ref ID: ${nomorDokumen}`;
   doc.text(footerNote, pageWidth / 2, 287, { align: 'center' });
 
   // Save Document
-  const sanitizedFilename = `Surat_Penawaran_${nomorDokumen.replace(/[^a-zA-Z0-9-_]/g, '_')}.pdf`;
+  const sanitizedFilename = `Invoice_Resmi_${nomorDokumen.replace(/[^a-zA-Z0-9-_]/g, '_')}.pdf`;
   doc.save(sanitizedFilename);
 };

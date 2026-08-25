@@ -296,28 +296,30 @@ const uploadDPProof = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Pesanan tidak ditemukan' });
     }
 
-    // Hitung DP otomatis jika amount tidak dikirim (10% dari total akhir)
+    // Hitung nominal otomatis jika amount tidak dikirim (20% untuk kredit, 100% untuk cash)
     const totalAkhir = quotation.harga_penawaran 
       ? Number(quotation.harga_penawaran) + Number(quotation.ongkos_kirim || 0) - Number(quotation.diskon || 0)
       : 0;
-    const dpAmount = amount ? Number(amount) : Math.round(totalAkhir * 0.1);
+    const isCredit = (quotation.metode_pembayaran === 'credit' || quotation.metode_pembayaran === 'kredit' || quotation.metode_pembayaran === 'leasing');
+    const defaultAmount = isCredit ? Math.round(totalAkhir * 0.2) : totalAkhir;
+    const targetAmount = amount ? Number(amount) : defaultAmount;
 
     const dpData = {
       bank_name: bank_name || req.body.bank,
       account_number: account_number || req.body.no_rek,
       account_name: account_name || req.body.nama_pemilik || quotation.guest_name || quotation.nama_customer || '-',
       proof_url: proof_url,
-      amount: dpAmount,
+      amount: targetAmount,
     };
 
     const affected = await quotationRepo.saveDPPayment(identifier, dpData);
     if (affected === 0) {
-      return res.status(404).json({ success: false, message: 'Gagal memperbarui data pembayaran DP' });
+      return res.status(404).json({ success: false, message: 'Gagal memperbarui data pembayaran' });
     }
 
     res.status(200).json({
       success: true,
-      message: 'Bukti pembayaran DP berhasil dikirim! Tim Sales kami akan memverifikasi pembayaran Anda.',
+      message: 'Bukti pembayaran berhasil dikirim! Tim Sales kami akan memverifikasi pembayaran Anda.',
       data: {
         ...dpData,
         status: 'DP_DIBAYAR'

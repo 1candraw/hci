@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { guestService } from '../../services/guest.service';
 import { generateQuotationPDF } from '../../utils/generateQuotationPDF';
+import { generateBASTPDF } from '../../utils/generateBASTPDF';
+import { generateInvoicePDF } from '../../utils/generateInvoicePDF';
 import jsPDF from 'jspdf';
 import {
   Search,
@@ -26,7 +28,7 @@ import {
 const STEPS = [
   { label: 'Pengajuan RFQ', desc: 'Permintaan Diterima' },
   { label: 'Penawaran Sales', desc: 'Ditinjau & Disetujui' },
-  { label: 'Pembayaran DP', desc: 'Verifikasi Mutasi' },
+  { label: 'Konfirmasi Bayar', desc: 'Verifikasi Mutasi' },
   { label: 'Inspeksi PDI', desc: 'Pengecekan Fisik Unit' },
   { label: 'Pengiriman', desc: 'Armada & Surat Jalan' },
   { label: 'Selesai & BAST', desc: 'Unit Tiba di Lokasi' },
@@ -36,10 +38,10 @@ const getStatusBadge = (status) => {
   const map = {
     PENDING: { label: 'Menunggu Penawaran Sales', bg: '#fef3c7', text: '#b45309', border: '#f59e0b' },
     MENUNGGU_APPROVAL: { label: 'Menunggu Approval Manager', bg: '#e0e7ff', text: '#3730a3', border: '#818cf8' },
-    APPROVED: { label: 'Penawaran Disetujui — Menunggu DP', bg: '#dcfce7', text: '#15803d', border: '#4ade80' },
+    APPROVED: { label: 'Penawaran Disetujui — Menunggu Pembayaran', bg: '#dcfce7', text: '#15803d', border: '#4ade80' },
     REJECTED: { label: 'Penawaran Ditolak', bg: '#fee2e2', text: '#991b1b', border: '#f87171' },
-    DP_DIBAYAR: { label: 'Bukti DP Dikirim — Verifikasi Sales', bg: '#e0e7ff', text: '#4338ca', border: '#818cf8' },
-    VERIFIKASI_DP_SALES: { label: 'DP Terverifikasi — Approval Manager', bg: '#ede9fe', text: '#6d28d9', border: '#c4b5fd' },
+    DP_DIBAYAR: { label: 'Bukti Bayar Dikirim — Verifikasi Sales', bg: '#e0e7ff', text: '#4338ca', border: '#818cf8' },
+    VERIFIKASI_DP_SALES: { label: 'Pembayaran Terverifikasi — Approval Manager', bg: '#ede9fe', text: '#6d28d9', border: '#c4b5fd' },
     PROSES_OPERASIONAL: { label: 'Proses PDI (Inspeksi Unit)', bg: '#cffafe', text: '#0e7490', border: '#67e8f9' },
     SIAP_KIRIM: { label: 'PDI Lolos — Unit Siap Dikirim', bg: '#dcfce7', text: '#15803d', border: '#86efac' },
     PENGIRIMAN: { label: 'Unit Dalam Perjalanan', bg: '#fef9c3', text: '#a16207', border: '#facc15' },
@@ -64,6 +66,7 @@ const TrackingPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [downloadingInvoice, setDownloadingInvoice] = useState(false);
 
   useEffect(() => {
     const nomor = searchParams.get('nomor');
@@ -107,56 +110,23 @@ const TrackingPage = () => {
     }
   };
 
+  const handleDownloadInvoicePDF = () => {
+    if (!data) return;
+    setDownloadingInvoice(true);
+    try {
+      generateInvoicePDF(data);
+    } catch (err) {
+      console.error('Gagal generate PDF invoice:', err);
+      alert('Terjadi kesalahan saat mengunduh dokumen invoice.');
+    } finally {
+      setTimeout(() => setDownloadingInvoice(false), 800);
+    }
+  };
+
   const handleDownloadBAST = () => {
     if (!data) return;
     try {
-      const doc = new jsPDF();
-      doc.setFontSize(22);
-      doc.setTextColor(13, 20, 30);
-      doc.setFont('helvetica', 'bold');
-      doc.text('HEAVYCARE.ID', 14, 22);
-      doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Platform Layanan Purna Jual & Distribusi Alat Berat Nasional', 14, 28);
-      doc.setLineWidth(0.5);
-      doc.line(14, 38, 196, 38);
-
-      doc.setFontSize(14);
-      doc.setTextColor(0, 0, 0);
-      doc.setFont('helvetica', 'bold');
-      doc.text('BERITA ACARA SERAH TERIMA (BAST)', 105, 50, { align: 'center' });
-
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Pada hari ini, telah dilakukan serah terima unit alat berat dengan rincian sebagai berikut:', 14, 65);
-
-      doc.text(`Nomor Pesanan      : ${data.nomor_pemesanan || 'QO-' + data.id}`, 14, 75);
-      doc.text(`Nama Customer      : ${data.perusahaan || data.guest_company || data.guest_name || '-'}`, 14, 82);
-      doc.text(`Unit Alat Berat         : ${data.nama_alat} (${data.brand_alat || 'Excavator'} ${data.model_alat || ''})`, 14, 89);
-      doc.text(`Metode Bayar         : ${(data.metode_pembayaran || 'CASH').toUpperCase()}`, 14, 96);
-
-      doc.setFont('helvetica', 'bold');
-      doc.text(`Status                       : DITERIMA DENGAN BAIK & LOLOS PDI`, 14, 103);
-
-      doc.setFont('helvetica', 'normal');
-      const pernyataan =
-        'Pihak pembeli menyatakan bahwa unit alat berat telah diterima di lokasi proyek dan telah diperiksa secara fisik dalam kondisi baik, serta kelengkapan aksesoris telah sesuai dengan Pre-Delivery Inspection (PDI) yang disepakati.';
-      const splitPernyataan = doc.splitTextToSize(pernyataan, 180);
-      doc.text(splitPernyataan, 14, 115);
-
-      doc.text('Pihak HeavyCare ID,', 30, 150);
-      doc.text('(..........................................)', 25, 175);
-      doc.setFont('helvetica', 'bold');
-      doc.text(data.nama_sales || 'Tim Logistik & PDI', 32, 182);
-
-      doc.setFont('helvetica', 'normal');
-      doc.text('Pihak Pembeli,', 130, 150);
-      doc.text('(..........................................)', 125, 175);
-      doc.setFont('helvetica', 'bold');
-      doc.text(data.perusahaan || data.guest_company || data.guest_name || 'Customer', 130, 182);
-
-      doc.save(`BAST_${data.nomor_pemesanan || data.id}.pdf`);
+      generateBASTPDF(data);
     } catch (err) {
       console.error('Gagal generate BAST:', err);
       alert('Gagal mengunduh dokumen BAST.');
@@ -166,6 +136,14 @@ const TrackingPage = () => {
   const isApprovedOrBeyond = [
     'APPROVED',
     'DP_DIBAYAR',
+    'VERIFIKASI_DP_SALES',
+    'PROSES_OPERASIONAL',
+    'SIAP_KIRIM',
+    'PENGIRIMAN',
+    'SELESAI',
+  ].includes(data?.status);
+
+  const isPaymentVerifiedOrBeyond = [
     'VERIFIKASI_DP_SALES',
     'PROSES_OPERASIONAL',
     'SIAP_KIRIM',
@@ -386,16 +364,39 @@ const TrackingPage = () => {
                           </div>
                         )}
 
-                        {/* Grand Total */}
-                        <div style={s.totalRow}>
-                          <div>
-                            <span style={s.totalLabel}>TOTAL NILAI TRANSAKSI (GRAND TOTAL)</span>
-                            <span style={s.dpNotice}>Kewajiban DP 10%: <strong>{formatRupiah(kewajibanDP)}</strong></span>
-                          </div>
-                          <div style={s.totalValWrap}>
-                            <span style={s.totalValue}>{formatRupiah(totalAkhir)}</span>
-                          </div>
-                        </div>
+                        {/* Grand Total & Payment Scheme */}
+                        {(() => {
+                          const isCredit = (data.metode_pembayaran === 'credit' || data.metode_pembayaran === 'kredit' || data.metode_pembayaran === 'leasing');
+                          const uangMuka = isCredit ? Math.round(totalAkhir * 0.2) : 0;
+                          const cicilanBulanan = isCredit ? Math.round((totalAkhir * 0.8) / 60) : 0;
+
+                          return (
+                            <div style={s.totalRow}>
+                              <div>
+                                <span style={s.totalLabel}>TOTAL NILAI TRANSAKSI (GRAND TOTAL)</span>
+                                {isCredit ? (
+                                  <div style={{ marginTop: '0.35rem' }}>
+                                    <span style={{ ...s.dpNotice, display: 'block', color: '#15803d' }}>
+                                      Pembayaran Awal (Uang Muka 20%): <strong>{formatRupiah(uangMuka)}</strong>
+                                    </span>
+                                    <span style={{ fontSize: '0.78rem', color: '#b45309', fontWeight: '800' }}>
+                                      Estimasi Angsuran (60 Bulan / 5 Tahun): <strong>{formatRupiah(cicilanBulanan)} / bln</strong>
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <div style={{ marginTop: '0.35rem' }}>
+                                    <span style={{ ...s.dpNotice, color: '#15803d' }}>
+                                      Skema: <strong>CASH / TUNAI (PELUNASAN PENUH 100%)</strong>
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                              <div style={s.totalValWrap}>
+                                <span style={s.totalValue}>{formatRupiah(totalAkhir)}</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Tombol Download PDF Penawaran */}
@@ -432,6 +433,96 @@ const TrackingPage = () => {
                     </p>
                   </div>
                 )}
+
+                {/* 3. CARD INVOICE RESMI PEMBAYARAN (Muncul setelah Sales Verifikasi Pembayaran) */}
+                {isPaymentVerifiedOrBeyond && (
+                  <div style={{ ...s.quotationCard, border: '1.5px solid #84cc16', backgroundColor: '#ffffff', marginTop: '1.5rem' }}>
+                    {/* Header Card Invoice */}
+                    <div style={{ ...s.quotationHeader, borderBottom: '1.5px solid #ecfccb', paddingBottom: '0.85rem' }}>
+                      <div>
+                        <div style={{ ...s.docBadge, backgroundColor: '#ecfccb', color: '#15803d' }}>
+                          <Sparkles size={13} style={{ color: '#15803d' }} />
+                          <span>FAKTUR & INVOICE RESMI</span>
+                        </div>
+                        <h3 style={s.quotationTitle}>Invoice Pembayaran Sah</h3>
+                        <p style={s.quotationSub}>
+                          No. Invoice: <strong>INV/{data.nomor_pemesanan || data.id}</strong> · Ref SPH: <strong>SPH/{data.nomor_pemesanan || data.id}</strong>
+                        </p>
+                      </div>
+                      <div style={{ ...s.approvedPill, backgroundColor: '#ecfccb', color: '#15803d', border: '1px solid #84cc16' }}>
+                        <CheckCircle2 size={16} />
+                        <span>{(data.metode_pembayaran === 'credit' || data.metode_pembayaran === 'kredit' || data.metode_pembayaran === 'leasing') ? 'Uang Muka Terverifikasi' : 'Lunas 100% (Verified)'}</span>
+                      </div>
+                    </div>
+
+                    {/* Body Card Invoice */}
+                    <div style={s.quotationBody}>
+                      <div style={{
+                        backgroundColor: '#f8fafc',
+                        borderRadius: '12px',
+                        padding: '1rem 1.25rem',
+                        border: '1px solid #e2e8f0',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '0.75rem',
+                        marginBottom: '1rem'
+                      }}>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            {(data.metode_pembayaran === 'credit' || data.metode_pembayaran === 'kredit' || data.metode_pembayaran === 'leasing') ? 'Pembayaran Awal Diterima (Uang Muka 20%)' : 'Nominal Pelunasan Diterima (Cash 100%)'}
+                          </span>
+                          <div style={{ fontSize: '1.25rem', fontWeight: '900', color: '#15803d', fontFamily: "'Sora', sans-serif" }}>
+                            {formatRupiah(data.dp_amount || ((data.metode_pembayaran === 'credit' || data.metode_pembayaran === 'kredit' || data.metode_pembayaran === 'leasing') ? Math.round(totalAkhir * 0.2) : totalAkhir))}
+                          </div>
+                          <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                            Bank: <strong>{data.dp_bank_name || 'Transfer Bank'}</strong> ({data.dp_account_number || '-'}) a/n <strong>{data.dp_account_name || data.guest_name || '-'}</strong>
+                          </span>
+                        </div>
+
+                        {(data.metode_pembayaran === 'credit' || data.metode_pembayaran === 'kredit' || data.metode_pembayaran === 'leasing') ? (
+                          <div style={{ textAlign: 'right' }}>
+                            <span style={{ fontSize: '0.75rem', color: '#b45309', fontWeight: '800', textTransform: 'uppercase' }}>
+                              Skema Angsuran (60 Bulan)
+                            </span>
+                            <div style={{ fontSize: '1.05rem', fontWeight: '800', color: '#b45309', fontFamily: "'Sora', sans-serif" }}>
+                              {formatRupiah(Math.round((totalAkhir * 0.8) / 60))} / bulan
+                            </div>
+                            <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Tenor 5 Tahun (Sisa Pokok 80%)</span>
+                          </div>
+                        ) : (
+                          <div style={{ textAlign: 'right' }}>
+                            <span style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: '800', textTransform: 'uppercase' }}>
+                              Status Kewajiban
+                            </span>
+                            <div style={{ fontSize: '1.05rem', fontWeight: '800', color: '#15803d', fontFamily: "'Sora', sans-serif" }}>
+                              LUNAS PENUH (RP 0)
+                            </div>
+                            <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Tanpa Beban Cicilan</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Tombol Download PDF Invoice */}
+                      <div style={s.pdfDownloadWrap}>
+                        <button
+                          onClick={handleDownloadInvoicePDF}
+                          disabled={downloadingInvoice}
+                          style={{ ...s.downloadQuotationBtn, backgroundColor: '#15803d', color: '#ffffff', boxShadow: '0 4px 14px rgba(21, 128, 61, 0.25)' }}
+                        >
+                          <Download size={18} />
+                          <span>
+                            {downloadingInvoice ? 'Menyiapkan Dokumen Invoice...' : 'Unduh Invoice Resmi Pembayaran (PDF)'}
+                          </span>
+                        </button>
+                        <p style={s.pdfHint}>
+                          📄 Faktur & bukti tanda terima sah berkop PT Heavy Care Indonesia lengkap dengan rincian skema ({ (data.metode_pembayaran === 'credit' || data.metode_pembayaran === 'kredit' || data.metode_pembayaran === 'leasing') ? 'Kredit 5 Tahun' : 'Cash 100%' }) & stempel verifikasi keuangan.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* KOLOM KANAN: Aksi Berdasarkan Status */}
@@ -453,11 +544,12 @@ const TrackingPage = () => {
                   </div>
                 )}
 
-                {/* 2. APPROVED → Form konfirmasi DP */}
+                {/* 2. APPROVED → Form konfirmasi pembayaran */}
                 {data.status === 'APPROVED' && (
-                  <DPConfirmForm
+                  <PaymentConfirmForm
                     nomor={data.nomor_pemesanan || data.id}
                     totalAkhir={totalAkhir}
+                    metodePembayaran={data.metode_pembayaran}
                     onSuccess={() => handleSearch(null, data.nomor_pemesanan)}
                   />
                 )}
@@ -466,16 +558,16 @@ const TrackingPage = () => {
                 {data.status === 'DP_DIBAYAR' && (
                   <div style={s.infoStateBox}>
                     <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>💳</div>
-                    <h4 style={{ ...s.actionBoxTitle, color: '#1e40af' }}>Bukti DP Telah Terkirim</h4>
+                    <h4 style={{ ...s.actionBoxTitle, color: '#1e40af' }}>Bukti Pembayaran Telah Terkirim</h4>
                     <p style={s.actionBoxText}>
-                      Bukti transfer uang muka (DP) Anda telah tersimpan dan sedang diverifikasi mutasi pembayarannya oleh Tim Sales & Finance.
+                      Bukti transfer pembayaran Anda telah tersimpan dan sedang diverifikasi mutasi pembayarannya oleh Tim Sales & Finance.
                     </p>
                     {data.dp_bank_name && (
                       <div style={s.dpSummary}>
                         <div>Bank: <strong>{data.dp_bank_name}</strong></div>
                         <div>Rek: <strong>{data.dp_account_number}</strong></div>
                         <div>A/n: <strong>{data.dp_account_name}</strong></div>
-                        <div>Nominal: <strong>{formatRupiah(data.dp_amount || kewajibanDP)}</strong></div>
+                        <div>Nominal: <strong>{formatRupiah(data.dp_amount || ((data.metode_pembayaran === 'credit' || data.metode_pembayaran === 'kredit' || data.metode_pembayaran === 'leasing') ? Math.round(totalAkhir * 0.2) : totalAkhir))}</strong></div>
                         {data.dp_proof_url && (
                           <a href={data.dp_proof_url} target="_blank" rel="noopener noreferrer" style={s.viewSlipBtn}>
                             🔍 Lihat File Slip Transfer
@@ -490,9 +582,9 @@ const TrackingPage = () => {
                 {data.status === 'VERIFIKASI_DP_SALES' && (
                   <div style={{ ...s.infoStateBox, backgroundColor: '#ede9fe', borderColor: '#c4b5fd' }}>
                     <CheckCircle2 size={40} style={{ color: '#7c3aed', margin: '0 auto 0.75rem' }} />
-                    <h4 style={{ ...s.actionBoxTitle, color: '#5b21b6' }}>DP Terverifikasi oleh Sales</h4>
+                    <h4 style={{ ...s.actionBoxTitle, color: '#5b21b6' }}>Pembayaran Terverifikasi oleh Sales</h4>
                     <p style={s.actionBoxText}>
-                      Pembayaran DP Anda telah dinyatakan valid. Menunggu pelepasan surat perintah kerja inspeksi (PDI) oleh Branch Manager.
+                      Pembayaran Anda telah dinyatakan valid. Menunggu pelepasan surat perintah kerja inspeksi (PDI) oleh Branch Manager.
                     </p>
                   </div>
                 )}
@@ -570,14 +662,18 @@ const TrackingPage = () => {
   );
 };
 
-// ── Sub-komponen: Form Konfirmasi DP ──
-const DPConfirmForm = ({ nomor, totalAkhir, onSuccess }) => {
+// ── Sub-komponen: Form Konfirmasi Pembayaran ──
+const PaymentConfirmForm = ({ nomor, totalAkhir, metodePembayaran, onSuccess }) => {
   const [form, setForm] = useState({ bank: '', no_rek: '', nama_pemilik: '', slip: null });
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ type: '', text: '' });
   const [previewUrl, setPreviewUrl] = useState('');
 
-  const dpAmount = totalAkhir ? Math.round(totalAkhir * 0.1) : null;
+  const isCredit = (metodePembayaran === 'credit' || metodePembayaran === 'kredit' || metodePembayaran === 'leasing');
+  const targetAmount = totalAkhir
+    ? (isCredit ? Math.round(totalAkhir * 0.2) : totalAkhir)
+    : null;
+  const cicilan = isCredit && totalAkhir ? Math.round((totalAkhir * 0.8) / 60) : 0;
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -610,11 +706,11 @@ const DPConfirmForm = ({ nomor, totalAkhir, onSuccess }) => {
       formData.append('bank_name', form.bank);
       formData.append('account_number', form.no_rek);
       formData.append('account_name', form.nama_pemilik);
-      if (dpAmount) formData.append('amount', dpAmount);
+      if (targetAmount) formData.append('amount', targetAmount);
       formData.append('proof_file', form.slip);
 
       await guestService.submitDPProof(nomor, formData);
-      setMsg({ type: 'success', text: '✅ Bukti pembayaran DP berhasil dikirim! Tim Sales akan segera memverifikasi mutasi.' });
+      setMsg({ type: 'success', text: '✅ Bukti pembayaran berhasil dikirim! Tim Sales akan segera memverifikasi mutasi.' });
       setTimeout(onSuccess, 1800);
     } catch (err) {
       setMsg({ type: 'error', text: typeof err === 'string' ? err : 'Gagal mengirim bukti pembayaran. Coba lagi.' });
@@ -625,12 +721,21 @@ const DPConfirmForm = ({ nomor, totalAkhir, onSuccess }) => {
 
   return (
     <div style={s2.dpBox}>
-      <h4 style={s2.dpTitle}>💳 Konfirmasi Pembayaran DP (10%)</h4>
+      <h4 style={s2.dpTitle}>
+        {isCredit ? '💳 Konfirmasi Pembayaran Awal (Uang Muka 20%)' : '💳 Konfirmasi Pembayaran Pelunasan (Cash 100%)'}
+      </h4>
 
-      {dpAmount && (
+      {targetAmount && (
         <div style={s2.dpAmountBox}>
-          <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Kewajiban Uang Muka DP (10%)</span>
-          <span style={s2.dpAmountVal}>{formatRupiah(dpAmount)}</span>
+          <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
+            {isCredit ? 'Kewajiban Pembayaran Awal (Uang Muka 20%)' : 'Total Tagihan Pelunasan Tunai (100%)'}
+          </span>
+          <span style={s2.dpAmountVal}>{formatRupiah(targetAmount)}</span>
+          {isCredit && (
+            <span style={{ display: 'block', fontSize: '0.78rem', color: '#b45309', fontWeight: '700', marginTop: '0.25rem' }}>
+              Sisa pokok pembiayaan diangsur 5 tahun (60 bulan) @ {formatRupiah(cicilan)} / bulan
+            </span>
+          )}
         </div>
       )}
 
@@ -711,7 +816,7 @@ const DPConfirmForm = ({ nomor, totalAkhir, onSuccess }) => {
         )}
 
         <button type="submit" style={s2.submitBtn} disabled={loading}>
-          {loading ? '⏳ Mengunggah Bukti...' : '🚀 Kirim Bukti Pembayaran DP'}
+          {loading ? '⏳ Mengunggah Bukti...' : (isCredit ? '🚀 Kirim Bukti Pembayaran Awal' : '🚀 Kirim Bukti Pembayaran Lunas')}
         </button>
       </form>
     </div>

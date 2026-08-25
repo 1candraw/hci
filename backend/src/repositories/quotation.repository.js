@@ -95,12 +95,33 @@ const getById = async (id) => {
       a.berat_operasional,
       a.kapasitas_ton,
       sales.fullname AS nama_sales,
-      mgr.fullname AS nama_manager
+      mgr.fullname AS nama_manager,
+      d.surat_jalan_number,
+      d.driver_name,
+      d.vehicle_number,
+      d.destination,
+      d.received_by_customer,
+      d.received_at,
+      d.notes AS delivery_notes,
+      uc.engine_check,
+      uc.hydraulic_check,
+      uc.bucket_check,
+      uc.body_check,
+      uc.undercarriage_check,
+      uc.accessories_check,
+      uc.notes AS pdi_notes,
+      uc.created_at AS pdi_created_at
     FROM quotations q
     LEFT JOIN users u ON q.customer_id = u.id
     LEFT JOIN alat_berat a ON q.alat_berat_id = a.id
     LEFT JOIN users sales ON q.sales_id = sales.id
     LEFT JOIN users mgr ON q.manager_id = mgr.id
+    LEFT JOIN (
+      SELECT * FROM delivery_orders WHERE id IN (SELECT MAX(id) FROM delivery_orders GROUP BY quotation_id)
+    ) d ON d.quotation_id = q.id
+    LEFT JOIN (
+      SELECT * FROM unit_checklists WHERE id IN (SELECT MAX(id) FROM unit_checklists GROUP BY quotation_id)
+    ) uc ON uc.quotation_id = q.id
     WHERE ${isNumeric ? 'q.id = ?' : 'q.nomor_pemesanan = ?'}
   `;
   
@@ -304,13 +325,27 @@ const getByNomor = async (nomor) => {
       d.vehicle_number,
       d.destination,
       d.received_by_customer,
-      d.received_at
+      d.received_at,
+      d.notes AS delivery_notes,
+      uc.engine_check,
+      uc.hydraulic_check,
+      uc.bucket_check,
+      uc.body_check,
+      uc.undercarriage_check,
+      uc.accessories_check,
+      uc.notes AS pdi_notes,
+      uc.created_at AS pdi_created_at
     FROM quotations q
     LEFT JOIN alat_berat a  ON q.alat_berat_id = a.id
     LEFT JOIN users u       ON q.customer_id   = u.id
     LEFT JOIN users sales   ON q.sales_id      = sales.id
     LEFT JOIN users mgr     ON q.manager_id    = mgr.id
-    LEFT JOIN delivery_orders d ON d.quotation_id = q.id
+    LEFT JOIN (
+      SELECT * FROM delivery_orders WHERE id IN (SELECT MAX(id) FROM delivery_orders GROUP BY quotation_id)
+    ) d ON d.quotation_id = q.id
+    LEFT JOIN (
+      SELECT * FROM unit_checklists WHERE id IN (SELECT MAX(id) FROM unit_checklists GROUP BY quotation_id)
+    ) uc ON uc.quotation_id = q.id
     WHERE ${isNumeric ? 'q.id = ?' : 'q.nomor_pemesanan = ?'}
     LIMIT 1
   `;

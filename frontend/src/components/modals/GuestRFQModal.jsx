@@ -58,7 +58,7 @@ const GuestRFQModal = ({ isOpen, onClose, alatBeratId, namaAlat, onSuccess }) =>
           <div>
             <strong>Pengajuan Penawaran Cepat & Transparan.</strong>
             <p style={{ margin: 0, fontSize: '0.8rem', color: '#475569' }}>
-              Tim Sales & Technical Support akan menghitung penawaran harga resmi (OTR & opsi leasing) serta menerbitkan Nomor Pelacakan untuk Anda.
+              Tim Sales & Technical Support akan menghitung penawaran harga resmi (skema Cash atau Kredit Angsuran 5 Tahun) serta menerbitkan Nomor Pelacakan untuk Anda.
             </p>
           </div>
         </div>
@@ -138,9 +138,8 @@ const GuestRFQModal = ({ isOpen, onClose, alatBeratId, namaAlat, onSuccess }) =>
               value={form.metode_pembayaran}
               onChange={handleChange}
             >
-              <option value="cash">Cash / Pembayaran Langsung</option>
-              <option value="kredit">Kredit / Skema Leasing Alat Berat</option>
-              <option value="termin">Termin / Bertahap Sesuai Progress Proyek</option>
+              <option value="cash">Cash / Tunai (Pelunasan Penuh Tanpa Angsuran)</option>
+              <option value="credit">Credit / Kredit (Uang Muka + Angsuran 5 Tahun / 60 Bulan)</option>
             </select>
           </div>
 

@@ -5,6 +5,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { transaksiService } from '../../services/transaksi.service';
 import { generateQuotationPDF } from '../../utils/generateQuotationPDF';
+import { generateBASTPDF } from '../../utils/generateBASTPDF';
+import { generateInvoicePDF } from '../../utils/generateInvoicePDF';
 import {
   ArrowLeft,
   FileText,
@@ -118,25 +120,25 @@ const TransaksiDetail = () => {
     }
   };
 
-  // -- Handler Bayar DP (Customer) --
-  const handleBayarDP = async () => {
-    if (!window.confirm("Konfirmasi bahwa Anda telah melakukan pembayaran/transfer DP untuk pesanan ini?")) return;
+  // -- Handler Konfirmasi Pembayaran (Customer) --
+  const handleBayar = async () => {
+    if (!window.confirm("Konfirmasi bahwa Anda telah melakukan pembayaran / transfer untuk pesanan ini?")) return;
     try {
       await transaksiService.updateStatus(id, 'DP_DIBAYAR');
-      alert('Status berhasil diubah menjadi DP DIBAYAR. Tim Sales kami akan memverifikasi mutasi pembayaran.');
+      alert('Status berhasil diperbarui. Tim Sales kami akan memverifikasi mutasi pembayaran Anda.');
       fetchDetail();
     } catch (err) {
-      alert(err || 'Gagal mengubah status DP.');
+      alert(err || 'Gagal memperbarui status pembayaran.');
     }
   };
 
-  // -- Handler Verifikasi DP oleh Sales --
+  // -- Handler Verifikasi Pembayaran oleh Sales --
   const handleVerifikasiSales = async () => {
-    if (!window.confirm("Verifikasi bahwa pembayaran DP telah masuk ke rekening perusahaan?")) return;
+    if (!window.confirm("Verifikasi bahwa dana pembayaran telah masuk ke rekening resmi perusahaan?")) return;
     setSubmitting(true);
     try {
       await transaksiService.updateStatus(id, 'VERIFIKASI_DP_SALES');
-      alert("Pembayaran DP terverifikasi oleh Sales!");
+      alert("Pembayaran berhasil diverifikasi oleh Sales!");
       fetchDetail();
     } catch (err) {
       alert(err);
@@ -145,13 +147,13 @@ const TransaksiDetail = () => {
     }
   };
 
-  // -- Handler Approval DP oleh Manager (Teruskan ke Operasional) --
-  const handleApproveManagerDP = async () => {
-    if (!window.confirm("Teruskan pesanan ke Tim Operasional untuk inspeksi PDI?")) return;
+  // -- Handler Approval Pembayaran oleh Manager (Teruskan ke Operasional) --
+  const handleApproveManager = async () => {
+    if (!window.confirm("Setujui pembayaran dan teruskan pesanan ke Tim Operasional untuk inspeksi PDI?")) return;
     setSubmitting(true);
     try {
       await transaksiService.updateStatus(id, 'PROSES_OPERASIONAL');
-      alert("Pesanan diteruskan ke Tim Operasional!");
+      alert("Pesanan berhasil diteruskan ke Tim Operasional!");
       fetchDetail();
     } catch (err) {
       alert(err);
@@ -210,44 +212,11 @@ const TransaksiDetail = () => {
 
   // -- Handler Download BAST PDF --
   const handleDownloadBAST = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(22); doc.setTextColor(13, 20, 30); doc.setFont("helvetica", "bold");
-    doc.text("HEAVYCARE.ID", 14, 22);
-    doc.setFontSize(10); doc.setTextColor(100, 100, 100); doc.setFont("helvetica", "normal");
-    doc.text("Platform Layanan Purna Jual & Distribusi Alat Berat Nasional", 14, 28);
-    doc.setLineWidth(0.5); doc.line(14, 38, 196, 38);
-
-    doc.setFontSize(14); doc.setTextColor(0, 0, 0); doc.setFont("helvetica", "bold");
-    doc.text("BERITA ACARA SERAH TERIMA (BAST)", 105, 50, { align: "center" });
-
-    doc.setFontSize(11); doc.setFont("helvetica", "normal");
-    doc.text("Pada hari ini, telah dilakukan serah terima unit alat berat dengan rincian sebagai berikut:", 14, 65);
-    
-    doc.text(`Nomor Pesanan      : ${detail.nomor_dokumen || 'QO-' + detail.id}`, 14, 75);
-    doc.text(`Nama Customer      : ${detail.perusahaan || detail.guest_name || '-'}`, 14, 82);
-    doc.text(`Unit Alat Berat         : ${detail.nama_unit}`, 14, 89);
-    doc.text(`Metode Bayar         : ${(detail.metode_pembayaran || 'CASH').toUpperCase()}`, 14, 96);
-    
-    doc.setFont("helvetica", "bold");
-    doc.text(`Status                       : DITERIMA DENGAN BAIK & LOLOS PDI`, 14, 103);
-    
-    doc.setFont("helvetica", "normal");
-    const pernyataan = "Pihak pembeli menyatakan bahwa unit alat berat telah diterima di lokasi proyek dan telah diperiksa secara fisik dalam kondisi baik, serta kelengkapan aksesoris telah sesuai dengan Pre-Delivery Inspection (PDI) yang disepakati.";
-    const splitPernyataan = doc.splitTextToSize(pernyataan, 180);
-    doc.text(splitPernyataan, 14, 115);
-
-    doc.text("Pihak HeavyCare ID,", 30, 150);
-    doc.text("(..........................................)", 25, 175);
-    doc.setFont("helvetica", "bold");
-    doc.text("Tim Logistik & PDI", 32, 182);
-
-    doc.setFont("helvetica", "normal");
-    doc.text("Pihak Pembeli,", 130, 150);
-    doc.text("(..........................................)", 125, 175);
-    doc.setFont("helvetica", "bold");
-    doc.text(detail.perusahaan || detail.guest_name || 'Customer', 130, 182);
-
-    doc.save(`BAST_${detail.nomor_dokumen || detail.id}.pdf`);
+    if (!detail) {
+      alert("Data transaksi tidak ditemukan.");
+      return;
+    }
+    generateBASTPDF(detail);
   };
 
   if (loading) return (
@@ -333,7 +302,9 @@ const TransaksiDetail = () => {
                 </tr>
                 <tr>
                   <td style={styles.tdLabel}>Metode Pembayaran</td>
-                  <td>: {(detail.metode_pembayaran || 'cash').toUpperCase()}</td>
+                  <td>: <strong style={{ color: (detail.metode_pembayaran === 'credit' || detail.metode_pembayaran === 'kredit' || detail.metode_pembayaran === 'leasing') ? '#b45309' : '#15803d' }}>
+                    {(detail.metode_pembayaran === 'credit' || detail.metode_pembayaran === 'kredit' || detail.metode_pembayaran === 'leasing') ? 'KREDIT (TENOR 5 TAHUN / 60 BULAN)' : 'CASH / TUNAI (PELUNASAN 100%)'}
+                  </strong></td>
                 </tr>
                 {detail.harga_penawaran ? (
                   <>
@@ -355,10 +326,27 @@ const TransaksiDetail = () => {
                         : {formatRupiah(totalAkhir)}
                       </td>
                     </tr>
-                    <tr>
-                      <td style={styles.tdLabel}>Kewajiban DP (10%)</td>
-                      <td>: <strong style={{ color: '#15803d' }}>{formatRupiah(Math.round(totalAkhir * 0.1))}</strong></td>
-                    </tr>
+                    {(detail.metode_pembayaran === 'credit' || detail.metode_pembayaran === 'kredit' || detail.metode_pembayaran === 'leasing') ? (
+                      <>
+                        <tr>
+                          <td style={styles.tdLabel}>Pembayaran Awal (Uang Muka 20%)</td>
+                          <td>: <strong style={{ color: '#15803d' }}>{formatRupiah(Math.round(totalAkhir * 0.2))}</strong></td>
+                        </tr>
+                        <tr>
+                          <td style={styles.tdLabel}>Sisa Pokok Pembiayaan (80%)</td>
+                          <td>: <span>{formatRupiah(Math.round(totalAkhir * 0.8))}</span></td>
+                        </tr>
+                        <tr>
+                          <td style={styles.tdLabel}>Estimasi Angsuran (60 Bulan)</td>
+                          <td>: <strong style={{ color: '#b45309' }}>{formatRupiah(Math.round((totalAkhir * 0.8) / 60))} / bulan</strong></td>
+                        </tr>
+                      </>
+                    ) : (
+                      <tr>
+                        <td style={styles.tdLabel}>Skema Pelunasan</td>
+                        <td>: <strong style={{ color: '#15803d' }}>Pelunasan Penuh 100% (Tanpa Angsuran)</strong></td>
+                      </tr>
+                    )}
                   </>
                 ) : (
                   <tr>
@@ -398,12 +386,12 @@ const TransaksiDetail = () => {
             )}
           </div>
 
-          {/* Card BUKTI PEMBAYARAN DP */}
+          {/* Card BUKTI PEMBAYARAN */}
           {(detail.dp_bank_name || detail.dp_proof_url || ['DP_DIBAYAR', 'VERIFIKASI_DP_SALES', 'PROSES_OPERASIONAL', 'SIAP_KIRIM', 'PENGIRIMAN', 'SELESAI'].includes(detail.status)) && (
             <div style={{ ...styles.card, border: '1.5px solid #84cc16', backgroundColor: '#fafff5' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1.5px solid #d9f99d', paddingBottom: '0.6rem' }}>
                 <h3 style={{ ...styles.cardTitle, margin: 0, border: 'none', color: '#15803d' }}>
-                  💳 Bukti Pembayaran Uang Muka (DP)
+                  💳 Bukti Pembayaran
                 </h3>
                 <span style={{
                   padding: '0.25rem 0.65rem',
@@ -415,7 +403,7 @@ const TransaksiDetail = () => {
                   color: detail.status === 'DP_DIBAYAR' ? '#b45309' : '#15803d',
                   border: detail.status === 'DP_DIBAYAR' ? '1px solid #fde68a' : '1px solid #84cc16'
                 }}>
-                  {detail.status === 'DP_DIBAYAR' ? '⏳ Menunggu Verifikasi Sales' : '✅ DP Terverifikasi'}
+                  {detail.status === 'DP_DIBAYAR' ? '⏳ Menunggu Verifikasi Sales' : '✅ Pembayaran Terverifikasi'}
                 </span>
               </div>
 
@@ -434,11 +422,13 @@ const TransaksiDetail = () => {
                     <td>: <strong>{detail.dp_account_name || '-'}</strong></td>
                   </tr>
                   <tr>
-                    <td style={styles.tdLabel}>Nominal Transfer</td>
-                    <td>: <strong style={{ color: '#15803d', fontSize: '1.05rem', fontFamily: "'Sora', sans-serif" }}>{formatRupiah(detail.dp_amount || (totalAkhir ? Math.round(totalAkhir * 0.1) : 0))}</strong></td>
+                    <td style={styles.tdLabel}>Nominal Pembayaran</td>
+                    <td>: <strong style={{ color: '#15803d', fontSize: '1.05rem', fontFamily: "'Sora', sans-serif" }}>
+                      {formatRupiah(detail.dp_amount || ((detail.metode_pembayaran === 'credit' || detail.metode_pembayaran === 'kredit' || detail.metode_pembayaran === 'leasing') ? Math.round((totalAkhir || 0) * 0.2) : (totalAkhir || 0)))}
+                    </strong></td>
                   </tr>
                   <tr>
-                    <td style={styles.tdLabel}>Waktu Transfer</td>
+                    <td style={styles.tdLabel}>Waktu Pembayaran</td>
                     <td>: {detail.dp_paid_at ? new Date(detail.dp_paid_at).toLocaleString('id-ID') : '-'}</td>
                   </tr>
                 </tbody>
@@ -447,12 +437,12 @@ const TransaksiDetail = () => {
               {detail.dp_proof_url && (
                 <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #d9f99d', textAlign: 'center' }}>
                   <p style={{ fontSize: '0.84rem', fontWeight: '800', color: '#334155', marginBottom: '0.5rem' }}>
-                    Foto / Slip Bukti Transfer:
+                    Foto / Slip Bukti Pembayaran:
                   </p>
                   <a href={detail.dp_proof_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block' }}>
                     <img 
                       src={detail.dp_proof_url} 
-                      alt="Slip Bukti Pembayaran DP" 
+                      alt="Slip Bukti Pembayaran" 
                       style={{
                         maxWidth: '100%', 
                         maxHeight: '220px', 
@@ -484,6 +474,34 @@ const TransaksiDetail = () => {
                       🔍 Buka Slip Ukuran Penuh di Tab Baru ↗
                     </a>
                   </div>
+                </div>
+              )}
+
+              {['VERIFIKASI_DP_SALES', 'PROSES_OPERASIONAL', 'SIAP_KIRIM', 'PENGIRIMAN', 'SELESAI'].includes(detail.status) && (
+                <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #d9f99d' }}>
+                  <button
+                    onClick={() => generateInvoicePDF(detail)}
+                    style={{
+                      width: '100%',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      padding: '0.75rem 1rem',
+                      backgroundColor: '#15803d',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontFamily: "'Urbanist', sans-serif",
+                      fontWeight: '900',
+                      fontSize: '0.88rem',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 8px rgba(21, 128, 61, 0.25)',
+                    }}
+                  >
+                    <Download size={15} />
+                    <span>Download Invoice Resmi Pembayaran (PDF)</span>
+                  </button>
                 </div>
               )}
             </div>
@@ -581,27 +599,31 @@ const TransaksiDetail = () => {
               <div>
                 <div style={{ backgroundColor: '#ecfccb', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #d9f99d' }}>
                   <h4 style={{ margin: '0 0 0.35rem', color: '#15803d' }}>✅ Penawaran Disetujui!</h4>
-                  <p style={{ margin: 0, fontSize: '0.86rem', color: '#166534' }}>Menunggu pembeli melakukan konfirmasi dan pengiriman bukti transfer DP.</p>
+                  <p style={{ margin: 0, fontSize: '0.86rem', color: '#166534' }}>
+                    {(detail.metode_pembayaran === 'credit' || detail.metode_pembayaran === 'kredit' || detail.metode_pembayaran === 'leasing')
+                      ? 'Menunggu pembeli melakukan konfirmasi dan pengiriman bukti transfer Pembayaran Awal (Uang Muka 20%).'
+                      : 'Menunggu pembeli melakukan konfirmasi dan pengiriman bukti transfer Pelunasan (Cash 100%).'}
+                  </p>
                 </div>
                 {user?.role === 'Customer' && (
-                  <button onClick={handleBayarDP} style={styles.btnPrimarySubmit}>
-                    💳 Konfirmasi / Bayar DP (10%)
+                  <button onClick={handleBayar} style={styles.btnPrimarySubmit}>
+                    💳 Konfirmasi Pembayaran
                   </button>
                 )}
               </div>
             )}
 
-            {/* 4. SALES: VERIFIKASI DP */}
+            {/* 4. SALES: VERIFIKASI PEMBAYARAN */}
             {(user?.role === 'Sales' || user?.role === 'Admin') && detail.status === 'DP_DIBAYAR' && (
               <div>
                 <div style={{ backgroundColor: '#e0e7ff', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #c7d2fe' }}>
-                  <h4 style={{ margin: '0 0 0.35rem', color: '#3730a3' }}>💳 Bukti Bayar DP Masuk!</h4>
+                  <h4 style={{ margin: '0 0 0.35rem', color: '#3730a3' }}>💳 Bukti Pembayaran Masuk!</h4>
                   <p style={{ margin: 0, fontSize: '0.86rem', color: '#4338ca', lineHeight: '1.4' }}>
-                    Pembeli telah mengirim slip transfer. Cek data mutasi bank, lalu klik verifikasi.
+                    Pembeli telah mengirim slip transfer pembayaran. Cek data mutasi bank, lalu klik verifikasi.
                   </p>
                 </div>
                 <button onClick={handleVerifikasiSales} style={styles.btnPrimarySubmit} disabled={submitting}>
-                  {submitting ? 'Memproses...' : '✅ Verifikasi Pembayaran DP Masuk'}
+                  {submitting ? 'Memproses...' : '✅ Verifikasi Pembayaran Masuk'}
                 </button>
               </div>
             )}
@@ -609,28 +631,28 @@ const TransaksiDetail = () => {
             {user?.role === 'Manager' && detail.status === 'DP_DIBAYAR' && (
               <div style={styles.alertCustomer}>
                 <h4 style={{ margin: '0 0 0.35rem' }}>⏳ Menunggu Verifikasi Sales</h4>
-                <p style={{ fontSize: '0.86rem', margin: 0 }}>Pembeli telah mengirimkan bukti transfer DP. Tim Sales sedang memvalidasi dana.</p>
+                <p style={{ fontSize: '0.86rem', margin: 0 }}>Pembeli telah mengirimkan bukti pembayaran. Tim Sales sedang memvalidasi dana di rekening.</p>
               </div>
             )}
 
-            {/* 5. MANAGER: APPROVE DP KE OPERASIONAL */}
+            {/* 5. MANAGER: APPROVE PEMBAYARAN KE OPERASIONAL */}
             {(user?.role === 'Manager' || user?.role === 'Admin') && detail.status === 'VERIFIKASI_DP_SALES' && (
               <div>
                 <div style={{ backgroundColor: '#ecfccb', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #d9f99d' }}>
-                  <h4 style={{ margin: '0 0 0.35rem', color: '#15803d' }}>📋 DP Telah Diverifikasi Sales</h4>
+                  <h4 style={{ margin: '0 0 0.35rem', color: '#15803d' }}>📋 Pembayaran Telah Diverifikasi Sales</h4>
                   <p style={{ margin: 0, fontSize: '0.86rem', color: '#166534', lineHeight: '1.4' }}>
-                    Sales telah memvalidasi dana DP. Klik tombol di bawah untuk menyetujui pelepasan unit ke Tim Operasional (PDI).
+                    Sales telah memvalidasi dana pembayaran. Klik tombol di bawah untuk menyetujui pelepasan unit ke Tim Operasional (PDI).
                   </p>
                 </div>
-                <button onClick={handleApproveManagerDP} style={styles.btnPrimarySubmit} disabled={submitting}>
-                  {submitting ? 'Memproses...' : '🚀 Setujui DP & Teruskan ke Operasional'}
+                <button onClick={handleApproveManager} style={styles.btnPrimarySubmit} disabled={submitting}>
+                  {submitting ? 'Memproses...' : '🚀 Setujui & Teruskan ke Operasional'}
                 </button>
               </div>
             )}
 
             {user?.role === 'Sales' && detail.status === 'VERIFIKASI_DP_SALES' && (
               <div style={{ ...styles.alertCustomer, backgroundColor: '#ecfccb', color: '#15803d', border: '1px solid #d9f99d' }}>
-                <h4 style={{ margin: '0 0 0.35rem' }}>✅ DP Telah Anda Verifikasi</h4>
+                <h4 style={{ margin: '0 0 0.35rem' }}>✅ Pembayaran Telah Anda Verifikasi</h4>
                 <p style={{ fontSize: '0.86rem', margin: 0 }}>Dokumen sedang menunggu approval dari Manager untuk memulai inspeksi PDI.</p>
               </div>
             )}
@@ -736,10 +758,23 @@ const TransaksiDetail = () => {
                 <p style={{ fontSize: '0.86rem', marginBottom: '1.25rem', color: '#166534' }}>
                   Unit telah diterima di lokasi proyek dan Berita Acara Serah Terima (BAST) resmi telah diterbitkan.
                 </p>
-                <button onClick={handleDownloadBAST} style={styles.btnPrimarySubmit}>
-                  <Download size={16} />
-                  <span>Download Dokumen BAST (PDF)</span>
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                  <button onClick={handleDownloadBAST} style={styles.btnPrimarySubmit}>
+                    <Download size={16} />
+                    <span>Download Dokumen BAST (PDF)</span>
+                  </button>
+                  <button
+                    onClick={() => generateInvoicePDF(detail)}
+                    style={{
+                      ...styles.btnPrimarySubmit,
+                      backgroundColor: '#15803d',
+                      color: '#ffffff',
+                    }}
+                  >
+                    <FileText size={16} />
+                    <span>Download Invoice Resmi Pembayaran (PDF)</span>
+                  </button>
+                </div>
               </div>
             )}
 
