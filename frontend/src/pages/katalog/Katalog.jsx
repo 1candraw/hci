@@ -4,17 +4,12 @@ import { alatBeratService } from '../../services/alatBerat.service';
 import FormPemesananModal from '../../components/forms/FormPemesananModal';
 import {
   Truck,
-  Sparkles,
   Search,
   Scale,
-  Check,
   FileText,
-  ShieldCheck,
-  Layers,
   ArrowRight,
   X,
-  SlidersHorizontal,
-  ExternalLink
+  SlidersHorizontal
 } from 'lucide-react';
 
 const Katalog = () => {

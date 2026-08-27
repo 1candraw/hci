@@ -1,5 +1,5 @@
 import { useAuth } from '../../hooks/useAuth';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { alatBeratService } from '../../services/alatBerat.service'; 
 import {
   Plus,
@@ -8,10 +8,7 @@ import {
   CheckCircle2,
   X,
   Truck,
-  ShieldCheck,
-  Search,
-  Filter,
-  Image as ImageIcon
+  Search
 } from 'lucide-react';
 
 const MasterAlatBerat = () => {

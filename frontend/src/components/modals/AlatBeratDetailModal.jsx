@@ -9,9 +9,7 @@ import {
   ShieldCheck,
   X,
   Sparkles,
-  Check,
-  Headphones,
-  Award
+  Check
 } from 'lucide-react';
 
 const AlatBeratDetailModal = ({

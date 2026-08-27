@@ -147,7 +147,7 @@ Halaman khusus untuk pengguna internal (Sales, Manager, Operasional).
 
 Alur Perhitungan *Simple Additive Weighting* (SAW) di aplikasi ini:
 1. **Penentuan Kriteria**: Benefit (Tenaga Mesin, Kapasitas Bucket, Kedalaman Gali, Berat) & Cost (Harga).
-2. **Pembobotan**: Customer memberikan nilai kepentingan (1 hingga 5).
+2. **Pembobotan**: Customer memberikan nilai kepentingan (1 hingga 4: 1-Tidak Penting, 2-Cukup Penting, 3-Penting, 4-Sangat Penting).
 3. **Normalisasi Matriks**: 
    - *Benefit* = Nilai / Max(Nilai)
    - *Cost* = Min(Nilai) / Nilai

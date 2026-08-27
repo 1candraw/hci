@@ -6,14 +6,52 @@ import FormPemesananModal from '../../components/forms/FormPemesananModal';
 import {
   SlidersHorizontal,
   Download,
-  CheckCircle2,
   Sparkles,
   Trophy,
-  FileText,
-  Truck,
-  TrendingUp,
-  Layers
+  FileText
 } from 'lucide-react';
+
+const PRESET_SKENARIO = {
+  pertambangan: {
+    id: 'pertambangan',
+    label: 'Pertambangan',
+    sub: 'Fokus Tenaga Mesin (35%), Bucket (25%), & Kedalaman Gali (25%)',
+    decimalWeights: { harga: 0.05, tenaga_mesin: 0.35, kapasitas_bucket: 0.25, kedalaman_gali: 0.25, berat_operasional: 0.10 },
+    weights: {
+      harga_weight: 1,
+      tenaga_mesin_weight: 4,
+      kapasitas_bucket_weight: 3,
+      kedalaman_gali_weight: 3,
+      berat_operasional_weight: 1,
+    },
+  },
+  konstruksi: {
+    id: 'konstruksi',
+    label: 'Konstruksi',
+    sub: 'Fokus Stabilitas Berat (25%), Bucket (25%), Tenaga (20%), & Kedalaman (20%)',
+    decimalWeights: { harga: 0.10, tenaga_mesin: 0.20, kapasitas_bucket: 0.25, kedalaman_gali: 0.20, berat_operasional: 0.25 },
+    weights: {
+      harga_weight: 1,
+      tenaga_mesin_weight: 2,
+      kapasitas_bucket_weight: 3,
+      kedalaman_gali_weight: 2,
+      berat_operasional_weight: 3,
+    },
+  },
+  perkebunan: {
+    id: 'perkebunan',
+    label: 'Perkebunan',
+    sub: 'Fokus Kedalaman Gali (25%), Harga (20%), Tenaga (20%), & Bucket (20%)',
+    decimalWeights: { harga: 0.20, tenaga_mesin: 0.20, kapasitas_bucket: 0.20, kedalaman_gali: 0.25, berat_operasional: 0.15 },
+    weights: {
+      harga_weight: 2,
+      tenaga_mesin_weight: 2,
+      kapasitas_bucket_weight: 2,
+      kedalaman_gali_weight: 3,
+      berat_operasional_weight: 2,
+    },
+  },
+};
 
 const Saw = () => {
   const [ranking, setRanking] = useState([]);
@@ -22,13 +60,14 @@ const Saw = () => {
 
   // Default langsung diarahkan ke kelas 20 Ton
   const [filterTonase, setFilterTonase] = useState('20');
+  const [activePreset, setActivePreset] = useState(null);
 
   const [bobot, setBobot] = useState({
-    harga_weight: 3,
-    tenaga_mesin_weight: 3,
-    kapasitas_bucket_weight: 3,
-    kedalaman_gali_weight: 3,
-    berat_operasional_weight: 3,
+    harga_weight: 2,
+    tenaga_mesin_weight: 2,
+    kapasitas_bucket_weight: 2,
+    kedalaman_gali_weight: 2,
+    berat_operasional_weight: 2,
   });
 
   const [isOrderOpen, setIsOrderOpen] = useState(false);
@@ -39,7 +78,15 @@ const Saw = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const handleSelectPreset = (presetId) => {
+    setActivePreset(presetId);
+    if (PRESET_SKENARIO[presetId]) {
+      setBobot({ ...PRESET_SKENARIO[presetId].weights });
+    }
+  };
+
   const handleBobotChange = (e) => {
+    setActivePreset(null);
     setBobot({
       ...bobot,
       [e.target.name]: parseInt(e.target.value)
@@ -48,11 +95,10 @@ const Saw = () => {
 
   const getLabelKepentingan = (nilai) => {
     switch (nilai) {
-      case 1: return "1 - Sangat Rendah";
-      case 2: return "2 - Rendah";
-      case 3: return "3 - Cukup";
-      case 4: return "4 - Penting";
-      case 5: return "5 - Sangat Prioritas";
+      case 1: return "1 - Tidak Penting";
+      case 2: return "2 - Cukup Penting";
+      case 3: return "3 - Penting";
+      case 4: return "4 - Sangat Penting";
       default: return "";
     }
   };
@@ -188,8 +234,58 @@ const Saw = () => {
               </select>
             </div>
 
+            {/* Skenario Sektor Proyek (Rekomendasi Pakar) */}
+            <div style={{ marginTop: '1.15rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.45rem' }}>
+                <span style={styles.subHeading}>SKENARIO SEKTOR (PRESET PAKAR)</span>
+                <span style={{
+                  fontSize: '0.68rem',
+                  color: activePreset ? '#15803d' : '#64748b',
+                  backgroundColor: activePreset ? '#ecfccb' : '#f1f5f9',
+                  padding: '0.08rem 0.35rem',
+                  borderRadius: '4px',
+                  fontFamily: "'Urbanist', sans-serif",
+                  fontWeight: '800'
+                }}>
+                  {activePreset ? `${PRESET_SKENARIO[activePreset].label}` : 'Mode Kustom'}
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.45rem' }}>
+                {Object.values(PRESET_SKENARIO).map((p) => {
+                  const isSelected = activePreset === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => handleSelectPreset(p.id)}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-start',
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
+                        border: isSelected ? '1.5px solid #84cc16' : '1.5px solid #e2e8f0',
+                        backgroundColor: isSelected ? '#ecfccb' : '#ffffff',
+                        boxShadow: isSelected ? '0 2px 8px rgba(116, 192, 44, 0.2)' : 'none',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      <span style={{ fontWeight: '800', fontSize: '0.85rem', color: isSelected ? '#14532d' : '#0d141e' }}>
+                        {p.label}
+                      </span>
+                      <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.1rem' }}>
+                        {p.sub}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div style={{ margin: '1.25rem 0 0.85rem' }}>
-              <span style={styles.subHeading}>BOBOT KEPENTINGAN KRITERIA (1 s/d 5)</span>
+              <span style={styles.subHeading}>BOBOT KEPENTINGAN KRITERIA (1 s/d 4)</span>
             </div>
             
             <div style={styles.inputGroup}>
@@ -197,7 +293,7 @@ const Saw = () => {
                 <label style={styles.label}>Efisiensi Harga Beli (Cost)</label>
                 <span style={styles.badge}>{getLabelKepentingan(bobot.harga_weight)}</span>
               </div>
-              <input type="range" name="harga_weight" min="1" max="5" value={bobot.harga_weight} onChange={handleBobotChange} style={styles.slider} />
+              <input type="range" name="harga_weight" min="1" max="4" value={bobot.harga_weight} onChange={handleBobotChange} style={styles.slider} />
             </div>
 
             <div style={styles.inputGroup}>
@@ -205,7 +301,7 @@ const Saw = () => {
                 <label style={styles.label}>Tenaga Mesin / Horsepower (Benefit)</label>
                 <span style={styles.badge}>{getLabelKepentingan(bobot.tenaga_mesin_weight)}</span>
               </div>
-              <input type="range" name="tenaga_mesin_weight" min="1" max="5" value={bobot.tenaga_mesin_weight} onChange={handleBobotChange} style={styles.slider} />
+              <input type="range" name="tenaga_mesin_weight" min="1" max="4" value={bobot.tenaga_mesin_weight} onChange={handleBobotChange} style={styles.slider} />
             </div>
 
             <div style={styles.inputGroup}>
@@ -213,7 +309,7 @@ const Saw = () => {
                 <label style={styles.label}>Kapasitas Bucket m³ (Benefit)</label>
                 <span style={styles.badge}>{getLabelKepentingan(bobot.kapasitas_bucket_weight)}</span>
               </div>
-              <input type="range" name="kapasitas_bucket_weight" min="1" max="5" value={bobot.kapasitas_bucket_weight} onChange={handleBobotChange} style={styles.slider} />
+              <input type="range" name="kapasitas_bucket_weight" min="1" max="4" value={bobot.kapasitas_bucket_weight} onChange={handleBobotChange} style={styles.slider} />
             </div>
 
             <div style={styles.inputGroup}>
@@ -221,7 +317,7 @@ const Saw = () => {
                 <label style={styles.label}>Kedalaman Galian mm (Benefit)</label>
                 <span style={styles.badge}>{getLabelKepentingan(bobot.kedalaman_gali_weight)}</span>
               </div>
-              <input type="range" name="kedalaman_gali_weight" min="1" max="5" value={bobot.kedalaman_gali_weight} onChange={handleBobotChange} style={styles.slider} />
+              <input type="range" name="kedalaman_gali_weight" min="1" max="4" value={bobot.kedalaman_gali_weight} onChange={handleBobotChange} style={styles.slider} />
             </div>
 
             <div style={styles.inputGroup}>
@@ -229,7 +325,7 @@ const Saw = () => {
                 <label style={styles.label}>Berat Operasional Kg (Benefit)</label>
                 <span style={styles.badge}>{getLabelKepentingan(bobot.berat_operasional_weight)}</span>
               </div>
-              <input type="range" name="berat_operasional_weight" min="1" max="5" value={bobot.berat_operasional_weight} onChange={handleBobotChange} style={styles.slider} />
+              <input type="range" name="berat_operasional_weight" min="1" max="4" value={bobot.berat_operasional_weight} onChange={handleBobotChange} style={styles.slider} />
             </div>
 
             <button type="submit" disabled={loading} style={styles.submitBtn}>

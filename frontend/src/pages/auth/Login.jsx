@@ -9,12 +9,7 @@ import {
   LogIn as LogInIcon,
   ShieldCheck,
   ArrowLeft,
-  KeyRound,
-  AlertCircle,
-  Truck,
-  CheckCircle2,
-  Sparkles,
-  Layers
+  AlertCircle
 } from 'lucide-react';
 
 const Login = () => {
@@ -42,7 +37,7 @@ const Login = () => {
     }
   };
 
-  const handleQuickFill = (demoEmail, demoRole) => {
+  const handleQuickFill = (demoEmail) => {
     setEmail(demoEmail);
     setPassword('password123');
     setError('');

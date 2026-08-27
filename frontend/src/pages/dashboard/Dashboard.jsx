@@ -9,13 +9,10 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
-  AreaChart,
-  Area,
 } from 'recharts';
 import {
   Truck,
@@ -24,14 +21,8 @@ import {
   CheckCircle2,
   TrendingUp,
   RefreshCw,
-  ExternalLink,
   ShieldCheck,
-  AlertCircle,
-  Layers,
   ArrowUpRight,
-  Package,
-  Calendar,
-  Sparkles,
 } from 'lucide-react';
 
 const STATUS_BADGE = {
@@ -52,7 +43,6 @@ const PIE_COLORS = ['#74c02c', '#0d141e', '#10b981', '#3b82f6', '#8b5cf6', '#06b
 const Dashboard = () => {
   const { user } = useAuth();
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState('');
 
@@ -65,7 +55,6 @@ const Dashboard = () => {
     } catch (err) {
       console.error('Error fetching dashboard summary:', err);
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
   }, []);

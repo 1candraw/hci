@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { guestService } from '../../services/guest.service';
-import { FileText, X, CheckCircle2, ShieldCheck, MapPin, Building, Phone, Mail, User } from 'lucide-react';
+import { FileText, X, ShieldCheck } from 'lucide-react';
 
 const GuestRFQModal = ({ isOpen, onClose, alatBeratId, namaAlat, onSuccess }) => {
   const [form, setForm] = useState({

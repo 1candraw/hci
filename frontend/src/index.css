@@ -1,33 +1,42 @@
-:root {
+@import "tailwindcss";
+
+@theme {
   /* ZOOMLION Official Industrial Color Palette */
-  --zoomlion-green: #74c02c;
-  --zoomlion-green-light: #ecfccb;
-  --zoomlion-green-hover: #84cc16;
-  --zoomlion-green-dark: #4d7c0f;
-  --zoomlion-emerald: #15803d;
-  --zoomlion-emerald-dark: #14532d;
+  --color-zoomlion-green: #74c02c;
+  --color-zoomlion-green-light: #ecfccb;
+  --color-zoomlion-green-hover: #84cc16;
+  --color-zoomlion-green-dark: #4d7c0f;
+  --color-zoomlion-emerald: #15803d;
+  --color-zoomlion-emerald-dark: #14532d;
 
-  --industrial-dark: #0d141e;
-  --industrial-slate: #111827;
-  --industrial-navy: #1e293b;
-  --industrial-gray: #334155;
-  --industrial-muted: #64748b;
-  --industrial-light: #f8fafc;
-  --industrial-border: #e2e8f0;
+  --color-industrial-dark: #0d141e;
+  --color-industrial-slate: #111827;
+  --color-industrial-navy: #1e293b;
+  --color-industrial-gray: #334155;
+  --color-industrial-muted: #64748b;
+  --color-industrial-light: #f8fafc;
+  --color-industrial-border: #e2e8f0;
 
-  /* Eye-Catching Display & Heading Fonts */
+  /* Typography */
   --font-display: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-heading: 'Urbanist', 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
+  /* Shadows */
   --shadow-sm: 0 1px 3px rgba(13, 20, 30, 0.06), 0 1px 2px rgba(13, 20, 30, 0.04);
   --shadow-md: 0 4px 12px -2px rgba(13, 20, 30, 0.08), 0 2px 6px -1px rgba(13, 20, 30, 0.04);
   --shadow-lg: 0 12px 28px -4px rgba(13, 20, 30, 0.12), 0 4px 12px -2px rgba(13, 20, 30, 0.06);
   --shadow-green: 0 8px 24px -4px rgba(116, 192, 44, 0.35);
 
+  /* Custom Animations */
+  --animate-spin-slow: spin 3s linear infinite;
+  --animate-pulse-glow: pulseGlow 2s ease-in-out infinite;
+}
+
+:root {
   font-family: var(--font-body);
-  color: var(--industrial-dark);
-  background-color: var(--industrial-light);
+  color: var(--color-industrial-dark);
+  background-color: var(--color-industrial-light);
   font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -65,7 +74,7 @@ h4,
 h5,
 h6 {
   font-family: var(--font-display);
-  color: var(--industrial-dark);
+  color: var(--color-industrial-dark);
   font-weight: 800;
   letter-spacing: -0.03em;
   margin: 0;
@@ -101,25 +110,22 @@ textarea {
   background: #94a3b8;
 }
 
-/* Animations */
+/* Keyframes */
 @keyframes spin {
   from {
     transform: rotate(0deg);
   }
-
   to {
     transform: rotate(360deg);
   }
 }
 
 @keyframes pulseGlow {
-
   0%,
   100% {
     opacity: 1;
     transform: scale(1);
   }
-
   50% {
     opacity: 0.85;
     transform: scale(1.03);
@@ -131,7 +137,6 @@ textarea {
     opacity: 0;
     transform: translate(-50%, 20px);
   }
-
   to {
     opacity: 1;
     transform: translate(-50%, 0);
@@ -143,7 +148,6 @@ textarea {
     opacity: 0;
     transform: translateY(-16px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -154,7 +158,7 @@ textarea {
   animation: spin 1s linear infinite;
 }
 
-/* ZOOMLION Style Utility Classes */
+/* Brand Utility Classes */
 .gradient-text-green {
   background: linear-gradient(135deg, #a3e635 0%, #74c02c 50%, #4d7c0f 100%);
   -webkit-background-clip: text;
@@ -167,9 +171,11 @@ textarea {
 }
 
 .zoomlion-hazard-bar {
-  background: repeating-linear-gradient(-45deg,
-      #74c02c,
-      #74c02c 8px,
-      #0d141e 8px,
-      #0d141e 16px);
+  background: repeating-linear-gradient(
+    -45deg,
+    #74c02c,
+    #74c02c 8px,
+    #0d141e 8px,
+    #0d141e 16px
+  );
 }

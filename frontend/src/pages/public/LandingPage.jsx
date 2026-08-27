@@ -8,12 +8,9 @@ import ComparisonDock from '../../components/common/ComparisonDock';
 import { Link } from 'react-router-dom';
 import {
   Truck,
-  BarChart3,
   Wrench,
-  FileCheck,
   SlidersHorizontal,
   Package,
-  MessageSquare,
   Sparkles,
   Zap,
   Layers,
@@ -23,7 +20,6 @@ import {
   Award,
   Search,
   CheckCircle2,
-  ArrowDown,
   ShieldCheck,
   ChevronRight,
   Eye,
@@ -31,22 +27,60 @@ import {
   AlertCircle,
   Headphones,
   Globe,
-  Radio,
   BookOpen,
-  Cpu,
-  PhoneCall,
-  CheckCheck,
-  Send
+  Cpu
 } from 'lucide-react';
 
 const getLabelKepentingan = (v) =>
-  ['', 'Sangat Rendah', 'Rendah', 'Cukup Penting', 'Penting', 'Sangat Penting'][v] || '';
+  ['', 'Tidak Penting', 'Cukup Penting', 'Penting', 'Sangat Penting'][v] || '';
 
 const getBadgeStyle = (v) => {
-  if (v >= 5) return { bg: '#ecfccb', text: '#365314', border: '#84cc16' };
-  if (v >= 4) return { bg: '#e0e7ff', text: '#3730a3', border: '#818cf8' };
-  if (v >= 3) return { bg: '#f1f5f9', text: '#334155', border: '#cbd5e1' };
+  if (v >= 4) return { bg: '#ecfccb', text: '#365314', border: '#84cc16' };
+  if (v >= 3) return { bg: '#e0e7ff', text: '#3730a3', border: '#818cf8' };
+  if (v >= 2) return { bg: '#f1f5f9', text: '#334155', border: '#cbd5e1' };
   return { bg: '#f8fafc', text: '#64748b', border: '#e2e8f0' };
+};
+
+const PRESET_SKENARIO = {
+  pertambangan: {
+    id: 'pertambangan',
+    label: 'Pertambangan',
+    sub: 'Fokus Tenaga Mesin (35%), Bucket (25%), & Kedalaman Gali (25%)',
+    decimalWeights: { harga: 0.05, tenaga_mesin: 0.35, kapasitas_bucket: 0.25, kedalaman_gali: 0.25, berat_operasional: 0.10 },
+    weights: {
+      harga_weight: 1,
+      tenaga_mesin_weight: 4,
+      kapasitas_bucket_weight: 3,
+      kedalaman_gali_weight: 3,
+      berat_operasional_weight: 1,
+    },
+  },
+  konstruksi: {
+    id: 'konstruksi',
+    label: 'Konstruksi',
+    sub: 'Fokus Stabilitas Berat (25%), Bucket (25%), Tenaga (20%), & Kedalaman (20%)',
+    decimalWeights: { harga: 0.10, tenaga_mesin: 0.20, kapasitas_bucket: 0.25, kedalaman_gali: 0.20, berat_operasional: 0.25 },
+    weights: {
+      harga_weight: 1,
+      tenaga_mesin_weight: 2,
+      kapasitas_bucket_weight: 3,
+      kedalaman_gali_weight: 2,
+      berat_operasional_weight: 3,
+    },
+  },
+  perkebunan: {
+    id: 'perkebunan',
+    label: 'Perkebunan',
+    sub: 'Fokus Kedalaman Gali (25%), Harga (20%), Tenaga (20%), & Bucket (20%)',
+    decimalWeights: { harga: 0.20, tenaga_mesin: 0.20, kapasitas_bucket: 0.20, kedalaman_gali: 0.25, berat_operasional: 0.15 },
+    weights: {
+      harga_weight: 2,
+      tenaga_mesin_weight: 2,
+      kapasitas_bucket_weight: 2,
+      kedalaman_gali_weight: 3,
+      berat_operasional_weight: 2,
+    },
+  },
 };
 
 const getMedalInfo = (i) => {
@@ -59,16 +93,30 @@ const getMedalInfo = (i) => {
 const LandingPage = () => {
   // ── SAW State ──
   const [ranking, setRanking] = useState([]);
+  const [hasCalculated, setHasCalculated] = useState(false);
   const [loadingCalc, setLoadingCalc] = useState(false);
   const [filterTonase, setFilterTonase] = useState('5');
+  const [activePreset, setActivePreset] = useState(null);
   const [bobot, setBobot] = useState({
-    harga_weight: 4,
-    tenaga_mesin_weight: 4,
-    kapasitas_bucket_weight: 3,
-    kedalaman_gali_weight: 3,
-    berat_operasional_weight: 3,
+    harga_weight: 3,
+    tenaga_mesin_weight: 3,
+    kapasitas_bucket_weight: 2,
+    kedalaman_gali_weight: 2,
+    berat_operasional_weight: 2,
   });
   const [errorSAW, setErrorSAW] = useState('');
+
+  const handleSelectPreset = (presetId) => {
+    setActivePreset(presetId);
+    if (PRESET_SKENARIO[presetId]) {
+      setBobot({ ...PRESET_SKENARIO[presetId].weights });
+    }
+  };
+
+  const handleSliderChange = (key, val) => {
+    setActivePreset(null);
+    setBobot((prev) => ({ ...prev, [key]: val }));
+  };
 
   // ── Catalog State ──
   const [catalog, setCatalog] = useState([]);
@@ -94,7 +142,6 @@ const LandingPage = () => {
 
   useEffect(() => {
     fetchCatalog('Semua');
-    fetchRanking();
     // eslint-disable-next-line
   }, []);
 
@@ -129,6 +176,7 @@ const LandingPage = () => {
 
   const fetchRanking = async (e) => {
     if (e) e.preventDefault();
+    setHasCalculated(true);
     setLoadingCalc(true);
     setErrorSAW('');
     try {
@@ -620,7 +668,7 @@ const LandingPage = () => {
               </div>
               <div>
                 <h3 style={s.panelHeadTitle}>Parameter Kriteria Proyek</h3>
-                <p style={s.panelHeadSub}>Geser slider 1-5 (1: Rendah, 5: Sangat Penting)</p>
+                <p style={s.panelHeadSub}>Geser slider 1-4 (1: Tidak Penting, 4: Sangat Penting)</p>
               </div>
             </div>
 
@@ -659,6 +707,48 @@ const LandingPage = () => {
                 </div>
               </div>
 
+              {/* Skenario Sektor Proyek (Rekomendasi Pakar) */}
+              <div style={{ ...s.fieldGroup, marginTop: '1.15rem' }}>
+                <label style={s.fieldLabel}>
+                  <span>Skenario Sektor Proyek (Rekomendasi Pakar)</span>
+                  <span style={{
+                    fontSize: '0.68rem',
+                    color: activePreset ? '#15803d' : '#64748b',
+                    backgroundColor: activePreset ? '#ecfccb' : '#f1f5f9',
+                    padding: '0.08rem 0.35rem',
+                    borderRadius: '4px',
+                    fontWeight: '700'
+                  }}>
+                    {activePreset ? `${PRESET_SKENARIO[activePreset].label}` : 'Mode Kustom'}
+                  </span>
+                </label>
+                <div style={s.tonaseGrid}>
+                  {Object.values(PRESET_SKENARIO).map((p) => {
+                    const isSelected = activePreset === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => handleSelectPreset(p.id)}
+                        style={{
+                          ...s.tonaseBtn,
+                          backgroundColor: isSelected ? '#ecfccb' : '#ffffff',
+                          borderColor: isSelected ? '#84cc16' : '#e2e8f0',
+                          boxShadow: isSelected ? '0 2px 8px rgba(116, 192, 44, 0.2)' : 'none',
+                        }}
+                      >
+                        <span style={{ fontWeight: '800', color: isSelected ? '#14532d' : '#0d141e' }}>
+                          {p.label}
+                        </span>
+                        <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.1rem' }}>
+                          {p.sub}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div style={s.formDivider} />
 
               {/* Sliders */}
@@ -686,9 +776,9 @@ const LandingPage = () => {
                     <input
                       type="range"
                       min={1}
-                      max={5}
+                      max={4}
                       value={bobot[key]}
-                      onChange={(e) => setBobot({ ...bobot, [key]: +e.target.value })}
+                      onChange={(e) => handleSliderChange(key, +e.target.value)}
                       style={s.sliderInput}
                     />
                     <span style={s.sliderDesc}>{desc}</span>
@@ -698,7 +788,7 @@ const LandingPage = () => {
 
               <button type="submit" disabled={loadingCalc} style={s.submitBtn}>
                 <Sparkles size={16} />
-                <span>{loadingCalc ? 'Menghitung Matriks SAW...' : 'Hitung Rekomendasi Unit Terbaik'}</span>
+                <span>{loadingCalc ? 'Menghitung Matriks SAW...' : 'Hitung Rekomendasi'}</span>
               </button>
             </form>
           </div>
@@ -708,12 +798,16 @@ const LandingPage = () => {
             <div style={s.resultHeader}>
               <div>
                 <h3 style={s.resultTitle}>
-                  Hasil Perangkingan SAW — Kelas {filterTonase} Ton
+                  {hasCalculated
+                    ? `Hasil Perangkingan SAW — Kelas ${filterTonase} Ton`
+                    : 'Hasil Rekomendasi SAW'}
                 </h3>
                 <p style={s.resultSub}>
-                  {ranking.length > 0
-                    ? `Ditemukan ${ranking.length} unit excavator yang diurutkan berdasarkan skor kelayakan tertinggi.`
-                    : 'Pilih kelas tonase dan klik "Hitung Rekomendasi" untuk melihat peringkat.'}
+                  {hasCalculated
+                    ? (ranking.length > 0
+                      ? `Ditemukan ${ranking.length} unit excavator yang diurutkan berdasarkan skor kelayakan tertinggi.`
+                      : `Tidak ada data unit di kelas ${filterTonase} Ton.`)
+                    : 'Atur bobot kriteria di sebelah kiri dan klik tombol "Hitung Rekomendasi Unit Terbaik" untuk melihat peringkat.'}
                 </p>
               </div>
             </div>
@@ -733,7 +827,32 @@ const LandingPage = () => {
               </div>
             )}
 
-            {!loadingCalc && ranking.length > 0 && (
+            {/* State Awal: Sebelum klik Hitung */}
+            {!hasCalculated && !loadingCalc && (
+              <div style={s.emptyState}>
+                <div style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '16px',
+                  backgroundColor: '#f1f5f9',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1.25rem',
+                }}>
+                  <SlidersHorizontal size={30} style={{ color: '#64748b' }} />
+                </div>
+                <h4 style={{ color: '#0d141e', marginBottom: '0.45rem', fontFamily: "'Sora', sans-serif", fontWeight: '800', fontSize: '1.1rem' }}>
+                  Hasil Analisis Belum Dihitung
+                </h4>
+                <p style={{ color: '#64748b', fontSize: '0.88rem', maxWidth: '420px', margin: '0 auto', lineHeight: '1.5' }}>
+                  Silakan tentukan kelas tonase dan sesuaikan tingkat kepentingan (1–4) pada panel kriteria, lalu klik <strong>"Hitung Rekomendasi Unit Terbaik"</strong> untuk melihat perankingan unit.
+                </p>
+              </div>
+            )}
+
+            {/* Hasil Perhitungan */}
+            {hasCalculated && !loadingCalc && ranking.length > 0 && (
               <div style={s.unitGrid}>
                 {ranking.map((item, idx) => {
                   const medal = getMedalInfo(idx);
@@ -834,12 +953,13 @@ const LandingPage = () => {
               </div>
             )}
 
-            {!loadingCalc && ranking.length === 0 && !errorSAW && (
+            {/* State Kosong Setelah Dihitung */}
+            {hasCalculated && !loadingCalc && ranking.length === 0 && !errorSAW && (
               <div style={s.emptyState}>
                 <Truck size={44} style={{ color: '#94a3b8', marginBottom: '0.75rem' }} />
-                <h4 style={{ color: '#0d141e', marginBottom: '0.4rem' }}>Belum ada data untuk kelas ini</h4>
+                <h4 style={{ color: '#0d141e', marginBottom: '0.4rem' }}>Belum ada data untuk kelas {filterTonase} Ton</h4>
                 <p style={{ color: '#64748b', fontSize: '0.9rem' }}>
-                  Pilih tonase 5 Ton, 20 Ton, atau 30 Ton lalu klik <strong>Hitung Rekomendasi</strong>.
+                  Pilih tonase 5 Ton, 20 Ton, atau 30 Ton lalu klik <strong>Hitung Rekomendasi Unit Terbaik</strong>.
                 </p>
               </div>
             )}

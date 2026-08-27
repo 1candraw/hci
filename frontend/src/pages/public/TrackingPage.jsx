@@ -4,23 +4,15 @@ import { guestService } from '../../services/guest.service';
 import { generateQuotationPDF } from '../../utils/generateQuotationPDF';
 import { generateBASTPDF } from '../../utils/generateBASTPDF';
 import { generateInvoicePDF } from '../../utils/generateInvoicePDF';
-import jsPDF from 'jspdf';
 import {
   Search,
   FileText,
   Download,
   CheckCircle2,
   Clock,
-  CreditCard,
   Truck,
   ShieldCheck,
-  Building,
-  User,
-  Phone,
-  MapPin,
   AlertCircle,
-  ExternalLink,
-  ChevronRight,
   Sparkles,
   PackageCheck
 } from 'lucide-react';
@@ -157,8 +149,6 @@ const TrackingPage = () => {
   const totalAkhir = data?.harga_penawaran
     ? Number(data.harga_penawaran) + Number(data.ongkos_kirim || 0) - Number(data.diskon || 0)
     : null;
-
-  const kewajibanDP = totalAkhir ? Math.round(totalAkhir * 0.1) : null;
 
   return (
     <div style={s.page}>

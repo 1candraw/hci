@@ -9,15 +9,10 @@ import {
   ShieldCheck,
   X,
   Sparkles,
-  ArrowRight,
-  TrendingUp,
   Tag,
   Trash2,
   Check,
-  AlertCircle,
-  Clock,
-  Award,
-  ChevronRight
+  Award
 } from 'lucide-react';
 
 const CompareAlatBeratModal = ({

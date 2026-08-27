@@ -6,13 +6,8 @@ import {
   ClipboardList,
   Search,
   CheckCircle2,
-  ExternalLink,
   Edit,
-  Eye,
-  FileText,
-  Clock,
-  ShieldCheck,
-  Truck
+  Eye
 } from 'lucide-react';
 
 const Transaksi = () => {

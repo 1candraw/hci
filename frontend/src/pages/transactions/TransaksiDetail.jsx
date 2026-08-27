@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { transaksiService } from '../../services/transaksi.service';
@@ -12,16 +10,8 @@ import {
   FileText,
   CheckCircle2,
   XCircle,
-  Truck,
   ShieldCheck,
-  CreditCard,
-  Download,
-  ExternalLink,
-  Clock,
-  User,
-  Building,
-  MapPin,
-  Sparkles
+  Download
 } from 'lucide-react';
 
 const TransaksiDetail = () => {

@@ -1,20 +1,13 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import {
-  PhoneCall,
   Clock,
   Package,
   LogIn,
-  SlidersHorizontal,
   ShieldCheck,
-  Truck,
   MapPin,
   Mail,
-  ChevronRight,
   Headphones,
-  Wrench,
   Globe,
-  Award,
-  Sparkles,
   FileText
 } from 'lucide-react';
 

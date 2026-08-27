@@ -3,10 +3,7 @@ import { useAuth } from '../../hooks/useAuth';
 import {
   ExternalLink,
   LogOut,
-  Bell,
-  Search,
   ShieldCheck,
-  User as UserIcon,
 } from 'lucide-react';
 
 const Navbar = () => {

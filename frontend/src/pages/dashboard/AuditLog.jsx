@@ -1,22 +1,16 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { auditService } from '../../services/audit.service';
 import {
   Activity,
   RefreshCw,
   Search,
-  Filter,
-  ShieldCheck,
-  CheckCircle2,
   Clock,
-  User,
   Layers,
   Zap,
   PlusCircle,
   Edit3,
   Trash2,
-  Radio,
-  SlidersHorizontal,
-  ChevronDown
+  SlidersHorizontal
 } from 'lucide-react';
 
 const AuditLog = () => {

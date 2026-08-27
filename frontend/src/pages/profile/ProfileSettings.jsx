@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
 import {
@@ -14,12 +14,8 @@ import {
   KeyRound,
   CheckCircle2,
   AlertCircle,
-  Clock,
   Eye,
   EyeOff,
-  Activity,
-  Layers,
-  Sparkles,
   Building,
   Check
 } from 'lucide-react';
@@ -39,7 +35,6 @@ const ProfileSettings = () => {
     jobTitle: '',
     hubLocation: 'Hub Jakarta Pusat (Headquarters)',
   });
-  const [loadingProfile, setLoadingProfile] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileSuccess, setProfileSuccess] = useState('');
   const [profileError, setProfileError] = useState('');
@@ -80,7 +75,6 @@ const ProfileSettings = () => {
 
   const fetchUserProfile = async () => {
     try {
-      setLoadingProfile(true);
       const res = await authService.getProfile();
       if (res.data) {
         setProfileForm({
@@ -92,7 +86,7 @@ const ProfileSettings = () => {
           hubLocation: 'Hub Jakarta Pusat (Headquarters & Pool Logistik)',
         });
       }
-    } catch (err) {
+    } catch {
       // Fallback ke user context jika API error
       if (user) {
         setProfileForm({
@@ -104,8 +98,6 @@ const ProfileSettings = () => {
           hubLocation: 'Hub Jakarta Pusat (Headquarters & Pool Logistik)',
         });
       }
-    } finally {
-      setLoadingProfile(false);
     }
   };
 

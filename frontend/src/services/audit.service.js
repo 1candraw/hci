@@ -39,7 +39,7 @@ const subscribeLogs = (onNewLog, onStatusChange) => {
       }
     });
 
-    eventSource.onerror = (err) => {
+    eventSource.onerror = () => {
       if (!isClosed) {
         if (onStatusChange) onStatusChange('error');
       }

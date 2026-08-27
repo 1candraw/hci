@@ -4,7 +4,7 @@ const { calculateSAW } = require('../utils/sawCalculator');
 // Contoh: const db = require('../config/database'); 
 const db = require('../config/database'); 
 
-const getRecommendations = async ({ userId, filterKapasitas, normalizedWeights, rawWeights }) => {
+const getRecommendations = async ({ userId, filterKapasitas, normalizedWeights, rawWeights } = {}) => {
   // 1. Ambil data alat berat kategori 'saw' yang SUDAH DIFILTER berdasarkan kelas/tonase
   // Nanti kita akan perbarui repository ini agar bisa menerima filterKapasitas
   const alternatives = await alatBeratRepository.findAll('saw', filterKapasitas);
@@ -32,10 +32,10 @@ const getRecommendations = async ({ userId, filterKapasitas, normalizedWeights, 
   let sessionId = null;
 
   try {
-    // Siapkan data bobot mentah (skala 1-5). Jika kosong, asumsikan nilai tengah (3)
+    // Siapkan data bobot mentah (skala 1-4). Jika kosong, asumsikan nilai default (2)
     const sessionWeights = rawWeights || {
-      harga_weight: 3, tenaga_mesin_weight: 3, kapasitas_bucket_weight: 3, 
-      kedalaman_gali_weight: 3, berat_operasional_weight: 3
+      harga_weight: 2, tenaga_mesin_weight: 2, kapasitas_bucket_weight: 2, 
+      kedalaman_gali_weight: 2, berat_operasional_weight: 2
     };
 
     // A. Simpan data sesi ke tabel saw_sessions

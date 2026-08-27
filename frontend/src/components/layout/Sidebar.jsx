@@ -6,11 +6,7 @@ import {
   ClipboardList,
   SlidersHorizontal,
   Wrench,
-  ShieldAlert,
   ChevronRight,
-  Sparkles,
-  Layers,
-  HelpCircle,
   Activity,
   UserCog
 } from 'lucide-react';
