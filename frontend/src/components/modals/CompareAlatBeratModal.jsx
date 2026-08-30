@@ -123,9 +123,9 @@ const CompareAlatBeratModal = ({
                 <p style={s.unitCardModel}>Model: <strong>{unitA.model || '-'}</strong></p>
 
                 <div style={s.unitPriceBox}>
-                  <span style={s.priceLabel}>Estimasi Harga Beli OTR</span>
-                  <div style={s.priceVal}>
-                    {unitA.harga ? `Rp ${(Number(unitA.harga) / 1e6).toLocaleString('id-ID')} Jt` : 'Hubungi Sales'}
+                  <span style={s.priceLabel}>Skema Pengadaan</span>
+                  <div style={{ ...s.priceVal, fontSize: '0.92rem', color: '#15803d' }}>
+                    Penawaran Resmi (RFQ)
                   </div>
                 </div>
 
@@ -190,9 +190,9 @@ const CompareAlatBeratModal = ({
                   <p style={s.unitCardModel}>Model: <strong>{unitB.model || '-'}</strong></p>
 
                   <div style={s.unitPriceBox}>
-                    <span style={s.priceLabel}>Estimasi Harga Beli OTR</span>
-                    <div style={s.priceVal}>
-                      {unitB.harga ? `Rp ${(Number(unitB.harga) / 1e6).toLocaleString('id-ID')} Jt` : 'Hubungi Sales'}
+                    <span style={s.priceLabel}>Skema Pengadaan</span>
+                    <div style={{ ...s.priceVal, fontSize: '0.92rem', color: '#15803d' }}>
+                      Penawaran Resmi (RFQ)
                     </div>
                   </div>
 
@@ -249,7 +249,7 @@ const CompareAlatBeratModal = ({
                       <li><Check size={14} style={{ color: '#74c02c', marginRight: '4px' }} /> <strong>Jangkauan Gali Lebih Dalam:</strong> Selisih +{(depthA - depthB).toFixed(2)} m untuk parit/fondasi.</li>
                     )}
                     {priceA && priceB && priceA < priceB && (
-                      <li><Check size={14} style={{ color: '#74c02c', marginRight: '4px' }} /> <strong>Investasi Lebih Ekonomis:</strong> Lebih hemat Rp {((priceB - priceA) / 1e6).toLocaleString('id-ID')} Juta.</li>
+                      <li><Check size={14} style={{ color: '#74c02c', marginRight: '4px' }} /> <strong>Efisiensi Anggaran:</strong> Skema investasi awal unit lebih kompetitif untuk efisiensi proyek.</li>
                     )}
                     {aScore === 0 && (
                       <li style={{ color: '#94a3b8' }}>Parameter teknis seimbang dengan unit pembanding.</li>
@@ -271,7 +271,7 @@ const CompareAlatBeratModal = ({
                       <li><Check size={14} style={{ color: '#38bdf8', marginRight: '4px' }} /> <strong>Jangkauan Gali Lebih Dalam:</strong> Selisih +{(depthB - depthA).toFixed(2)} m jangkauan fondasi.</li>
                     )}
                     {priceA && priceB && priceB < priceA && (
-                      <li><Check size={14} style={{ color: '#38bdf8', marginRight: '4px' }} /> <strong>Investasi Lebih Ekonomis:</strong> Lebih hemat Rp {((priceA - priceB) / 1e6).toLocaleString('id-ID')} Juta.</li>
+                      <li><Check size={14} style={{ color: '#38bdf8', marginRight: '4px' }} /> <strong>Efisiensi Anggaran:</strong> Skema investasi awal unit lebih kompetitif untuk efisiensi proyek.</li>
                     )}
                     {bScore === 0 && (
                       <li style={{ color: '#94a3b8' }}>Parameter teknis seimbang dengan unit pembanding.</li>
@@ -424,11 +424,11 @@ const CompareAlatBeratModal = ({
               </table>
             </div>
 
-            {/* 4. FINANSIAL, KESIAPAN STOK & LAYANAN PDI */}
+            {/* 4. SKEMA PENGADAAN, KESIAPAN STOK & LAYANAN PDI */}
             <div style={s.specSectionCard}>
               <div style={s.specSectionHead}>
                 <Tag size={16} style={{ color: '#15803d' }} />
-                <span style={s.specSectionTitle}>4. Estimasi Harga Beli, Kesiapan Stok & Layanan PDI</span>
+                <span style={s.specSectionTitle}>4. Skema Pengadaan, Kesiapan Stok & Layanan PDI</span>
               </div>
               <table style={s.compareTable}>
                 <thead>
@@ -441,24 +441,20 @@ const CompareAlatBeratModal = ({
                 <tbody>
                   <tr style={s.tr}>
                     <td style={s.tdParam}>
-                      <div style={s.paramTitle}><Tag size={14} style={{ color: '#15803d' }} /> Estimasi Harga Unit (OTR)</div>
-                      <div style={s.paramDesc}>Estimasi harga resmi belum termasuk diskon volume</div>
+                      <div style={s.paramTitle}><Tag size={14} style={{ color: '#15803d' }} /> Skema Penawaran Unit (RFQ)</div>
+                      <div style={s.paramDesc}>Penawaran resmi langsung dari distributor dengan diskon volume</div>
                     </td>
                     <td style={s.tdValue}>
-                      <div style={{ ...s.valNumber, color: '#15803d' }}>
-                        {priceA ? `Rp ${(priceA / 1e6).toLocaleString('id-ID')} Jt` : 'Hubungi Sales'}
+                      <div style={{ ...s.valNumber, color: '#15803d', fontSize: '0.95rem' }}>
+                        Penawaran Resmi (RFQ)
                       </div>
-                      {priceA && priceB && priceA < priceB && (
-                        <span style={s.betterBadgeGreen}>✓ Lebih Ekonomis (Hemat Rp {((priceB - priceA) / 1e6).toLocaleString('id-ID')} Jt)</span>
-                      )}
+                      <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginTop: '2px' }}>Tersedia Diskon Volume & Skema Kredit</span>
                     </td>
                     <td style={s.tdValue}>
-                      <div style={{ ...s.valNumber, color: '#15803d' }}>
-                        {priceB ? `Rp ${(priceB / 1e6).toLocaleString('id-ID')} Jt` : 'Hubungi Sales'}
+                      <div style={{ ...s.valNumber, color: '#15803d', fontSize: '0.95rem' }}>
+                        Penawaran Resmi (RFQ)
                       </div>
-                      {priceA && priceB && priceB < priceA && (
-                        <span style={s.betterBadgeGreen}>✓ Lebih Ekonomis (Hemat Rp {((priceA - priceB) / 1e6).toLocaleString('id-ID')} Jt)</span>
-                      )}
+                      <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginTop: '2px' }}>Tersedia Diskon Volume & Skema Kredit</span>
                     </td>
                   </tr>
 

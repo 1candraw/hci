@@ -82,10 +82,10 @@ const AlatBeratDetailModal = ({
             {/* Price & Highlight Summary */}
             <div style={s.summaryCard}>
               <div style={s.priceBox}>
-                <span style={s.priceLabel}>Estimasi Harga Beli Resmi (OTR Proyek)</span>
-                <div style={s.priceMain}>{priceText}</div>
-                <div style={s.priceExact}>{fullPriceFormatted}</div>
-                <div style={s.priceNote}>*Harga estimasi belum termasuk opsi attachment tambahan & diskon volume.</div>
+                <span style={s.priceLabel}>Skema Pengadaan & Penawaran</span>
+                <div style={{ ...s.priceMain, fontSize: '1.25rem', color: '#15803d' }}>Penawaran Resmi (RFQ)</div>
+                <div style={{ ...s.priceExact, fontSize: '0.88rem', color: '#334155', fontWeight: '700' }}>Harga Khusus Proyek & Diskon Volume</div>
+                <div style={s.priceNote}>*Ajukan permintaan penawaran (RFQ) untuk mendapatkan harga resmi, diskon proyek, dan estimasi ongkir.</div>
               </div>
 
               {/* Quick Actions in Summary */}

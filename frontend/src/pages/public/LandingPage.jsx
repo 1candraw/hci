@@ -596,12 +596,12 @@ const LandingPage = () => {
                       </div>
                     </div>
 
-                    {/* Price & Actions */}
+                    {/* Penawaran Resmi & Actions */}
                     <div style={s.cardFooter}>
                       <div>
-                        <span style={s.cardPriceLabel}>Harga Estimasi</span>
-                        <div style={s.cardPriceVal}>
-                          {unit.harga ? `Rp ${(Number(unit.harga) / 1e6).toLocaleString('id-ID')} Juta` : 'Hubungi Sales'}
+                        <span style={s.cardPriceLabel}>Penawaran Resmi</span>
+                        <div style={{ ...s.cardPriceVal, fontSize: '0.92rem', color: '#15803d', fontWeight: '800' }}>
+                          Minta Penawaran (RFQ)
                         </div>
                       </div>
 
@@ -914,12 +914,12 @@ const LandingPage = () => {
                           </div>
                         </div>
 
-                        {/* Price & Action */}
+                        {/* RFQ Scheme & Action */}
                         <div style={s.unitFooter}>
                           <div>
-                            <span style={s.priceLabel}>Estimasi Harga Unit</span>
-                            <div style={s.priceValue}>
-                              {item.harga ? `Rp ${(Number(item.harga) / 1e6).toLocaleString('id-ID')} Jt` : 'Hubungi Sales'}
+                            <span style={s.priceLabel}>Skema Pembelian</span>
+                            <div style={{ ...s.priceValue, fontSize: '0.98rem', color: '#15803d', fontWeight: '800' }}>
+                              Penawaran Khusus (RFQ)
                             </div>
                           </div>
                           <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center' }}>
