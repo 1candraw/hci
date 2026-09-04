@@ -45,7 +45,7 @@ const PRESET_SKENARIO = {
   pertambangan: {
     id: 'pertambangan',
     label: 'Pertambangan',
-    sub: 'Fokus Tenaga Mesin (35%), Bucket (25%), & Kedalaman Gali (25%)',
+    sub: 'Fokus pada tenaga mesin dan kapasitas bucket',
     decimalWeights: { harga: 0.05, tenaga_mesin: 0.35, kapasitas_bucket: 0.25, kedalaman_gali: 0.25, berat_operasional: 0.10 },
     weights: {
       harga_weight: 1,
@@ -57,8 +57,8 @@ const PRESET_SKENARIO = {
   },
   konstruksi: {
     id: 'konstruksi',
-    label: 'Konstruksi',
-    sub: 'Fokus Stabilitas Berat (25%), Bucket (25%), Tenaga (20%), & Kedalaman (20%)',
+    label: 'Perkotaan',
+    sub: 'Fokus pada berat unit dan kapasitas bucket',
     decimalWeights: { harga: 0.10, tenaga_mesin: 0.20, kapasitas_bucket: 0.25, kedalaman_gali: 0.20, berat_operasional: 0.25 },
     weights: {
       harga_weight: 1,
@@ -71,7 +71,7 @@ const PRESET_SKENARIO = {
   perkebunan: {
     id: 'perkebunan',
     label: 'Perkebunan',
-    sub: 'Fokus Kedalaman Gali (25%), Harga (20%), Tenaga (20%), & Bucket (20%)',
+    sub: 'Fokus pada kedalaman galian dan harga unit',
     decimalWeights: { harga: 0.20, tenaga_mesin: 0.20, kapasitas_bucket: 0.20, kedalaman_gali: 0.25, berat_operasional: 0.15 },
     weights: {
       harga_weight: 2,
@@ -667,8 +667,8 @@ const LandingPage = () => {
                 <SlidersHorizontal size={20} style={{ color: '#15803d' }} />
               </div>
               <div>
-                <h3 style={s.panelHeadTitle}>Parameter Kriteria Proyek</h3>
-                <p style={s.panelHeadSub}>Geser slider 1-4 (1: Tidak Penting, 4: Sangat Penting)</p>
+                <h3 style={s.panelHeadTitle}>Rekomendasi Unit</h3>
+                <p style={s.panelHeadSub}>Atur kriteria berdasarkan bisnis anda</p>
               </div>
             </div>
 
@@ -676,14 +676,14 @@ const LandingPage = () => {
               {/* Kelas Tonase */}
               <div style={s.fieldGroup}>
                 <label style={s.fieldLabel}>
-                  <span>Kelas Excavator (Tonase)</span>
-                  <span style={s.fieldRequired}>*Wajib</span>
+                  <span>Kelas Excavator</span>
+                  <span style={s.fieldRequired}>*Pilih salah satu</span>
                 </label>
                 <div style={s.tonaseGrid}>
                   {[
-                    { val: '5', label: 'Mini 5 Ton', sub: 'Perkotaan & Saluran Irigasi' },
-                    { val: '20', label: 'Medium 20 Ton', sub: 'Konstruksi Umum & Cut-Fill' },
-                    { val: '30', label: 'Heavy 30 Ton+', sub: 'Tambang & Quarry Berat' },
+                    { val: '5', label: 'Kelas 5 Ton', sub: 'Excavator Mini' },
+                    { val: '20', label: 'Kelas 20 Ton', sub: 'Excavator Sedang' },
+                    { val: '30', label: 'Kelas 30 Ton', sub: 'Excavator Besar' },
                   ].map((t) => (
                     <button
                       key={t.val}
@@ -710,7 +710,7 @@ const LandingPage = () => {
               {/* Skenario Sektor Proyek (Rekomendasi Pakar) */}
               <div style={{ ...s.fieldGroup, marginTop: '1.15rem' }}>
                 <label style={s.fieldLabel}>
-                  <span>Skenario Sektor Proyek (Rekomendasi Pakar)</span>
+                  <span>Sesuaikan proyek anda</span>
                   <span style={{
                     fontSize: '0.68rem',
                     color: activePreset ? '#15803d' : '#64748b',
@@ -753,11 +753,11 @@ const LandingPage = () => {
 
               {/* Sliders */}
               {[
-                { key: 'harga_weight', label: 'Harga Beli Unit', desc: 'Prioritaskan harga paling ekonomis (Cost Criteria)' },
-                { key: 'tenaga_mesin_weight', label: 'Tenaga Mesin (Horsepower)', desc: 'Daya dorong & produktivitas di medan berat' },
-                { key: 'kapasitas_bucket_weight', label: 'Kapasitas Bucket (m³)', desc: 'Volume muat material per siklus kerja' },
-                { key: 'kedalaman_gali_weight', label: 'Kedalaman Galian Maksimal (m)', desc: 'Kemampuan penggalian fondasi dalam' },
-                { key: 'berat_operasional_weight', label: 'Stabilitas & Berat Operasional (Ton)', desc: 'Keseimbangan dan traksi di tanah labil' },
+                { key: 'harga_weight', label: 'Harga Unit', desc: 'Harga per unit' },
+                { key: 'tenaga_mesin_weight', label: 'Tenaga Mesin', desc: 'Tenaga yang dihasilkan mesin dalam satuan horsepower' },
+                { key: 'kapasitas_bucket_weight', label: 'Kapasitas Bucket', desc: 'Volume bucket dalam satuan meter kubik' },
+                { key: 'kedalaman_gali_weight', label: 'Kedalaman Gali', desc: 'Kemampuan penggalian maksimal dalam satuan meter' },
+                { key: 'berat_operasional_weight', label: 'Berat Unit', desc: 'Berat total unit dalam satuan ton' },
               ].map(({ key, label, desc }) => {
                 const bStyle = getBadgeStyle(bobot[key]);
                 return (
@@ -788,7 +788,7 @@ const LandingPage = () => {
 
               <button type="submit" disabled={loadingCalc} style={s.submitBtn}>
                 <Sparkles size={16} />
-                <span>{loadingCalc ? 'Menghitung Matriks SAW...' : 'Hitung Rekomendasi'}</span>
+                <span>{loadingCalc ? 'Menghitung Matriks SAW...' : 'Tampilkan Rekomendasi'}</span>
               </button>
             </form>
           </div>
