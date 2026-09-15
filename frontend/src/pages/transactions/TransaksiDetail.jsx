@@ -5,13 +5,19 @@ import { transaksiService } from '../../services/transaksi.service';
 import { generateQuotationPDF } from '../../utils/generateQuotationPDF';
 import { generateBASTPDF } from '../../utils/generateBASTPDF';
 import { generateInvoicePDF } from '../../utils/generateInvoicePDF';
+import { generateSuratJalanPDF } from '../../utils/generateSuratJalanPDF';
 import {
   ArrowLeft,
   FileText,
   CheckCircle2,
   XCircle,
   ShieldCheck,
-  Download
+  Download,
+  Layers,
+  Wrench,
+  Tag,
+  Package,
+  Truck
 } from 'lucide-react';
 
 const TransaksiDetail = () => {
@@ -283,69 +289,265 @@ const TransaksiDetail = () => {
 
           {/* Card Info Unit & Penawaran */}
           <div style={styles.card}>
-            <h3 style={styles.cardTitle}>Rincian Unit & Kalkulasi Biaya</h3>
-            <table style={styles.infoTable}>
-              <tbody>
-                <tr>
-                  <td style={styles.tdLabel}>Unit Diminta</td>
-                  <td>: <strong style={{ color: '#0d141e', fontSize: '1rem' }}>{detail.nama_unit}</strong></td>
-                </tr>
-                <tr>
-                  <td style={styles.tdLabel}>Metode Pembayaran</td>
-                  <td>: <strong style={{ color: (detail.metode_pembayaran === 'credit' || detail.metode_pembayaran === 'kredit' || detail.metode_pembayaran === 'leasing') ? '#b45309' : '#15803d' }}>
-                    {(detail.metode_pembayaran === 'credit' || detail.metode_pembayaran === 'kredit' || detail.metode_pembayaran === 'leasing') ? 'KREDIT (TENOR 5 TAHUN / 60 BULAN)' : 'CASH / TUNAI (PELUNASAN 100%)'}
-                  </strong></td>
-                </tr>
-                {detail.harga_penawaran ? (
-                  <>
-                    <tr>
-                      <td style={styles.tdLabel}>Harga Penawaran Unit</td>
-                      <td>: {formatRupiah(detail.harga_penawaran)}</td>
-                    </tr>
-                    <tr>
-                      <td style={styles.tdLabel}>Ongkos Kirim Armada</td>
-                      <td>: {formatRupiah(detail.ongkos_kirim)}</td>
-                    </tr>
-                    <tr>
-                      <td style={styles.tdLabel}>Potongan Diskon</td>
-                      <td>: <span style={{ color: '#dc2626' }}>- {formatRupiah(detail.diskon)}</span></td>
-                    </tr>
-                    <tr style={{ borderTop: '2px solid #e2e8f0' }}>
-                      <td style={{ ...styles.tdLabel, fontWeight: '900', color: '#0d141e', paddingTop: '0.75rem' }}>Total Akhir (OTR)</td>
-                      <td style={{ fontWeight: '900', color: '#15803d', fontSize: '1.25rem', fontFamily: "'Sora', sans-serif", paddingTop: '0.75rem' }}>
-                        : {formatRupiah(totalAkhir)}
-                      </td>
-                    </tr>
-                    {(detail.metode_pembayaran === 'credit' || detail.metode_pembayaran === 'kredit' || detail.metode_pembayaran === 'leasing') ? (
-                      <>
-                        <tr>
-                          <td style={styles.tdLabel}>Pembayaran Awal (Uang Muka 20%)</td>
-                          <td>: <strong style={{ color: '#15803d' }}>{formatRupiah(Math.round(totalAkhir * 0.2))}</strong></td>
-                        </tr>
-                        <tr>
-                          <td style={styles.tdLabel}>Sisa Pokok Pembiayaan (80%)</td>
-                          <td>: <span>{formatRupiah(Math.round(totalAkhir * 0.8))}</span></td>
-                        </tr>
-                        <tr>
-                          <td style={styles.tdLabel}>Estimasi Angsuran (60 Bulan)</td>
-                          <td>: <strong style={{ color: '#b45309' }}>{formatRupiah(Math.round((totalAkhir * 0.8) / 60))} / bulan</strong></td>
-                        </tr>
-                      </>
-                    ) : (
-                      <tr>
-                        <td style={styles.tdLabel}>Skema Pelunasan</td>
-                        <td>: <strong style={{ color: '#15803d' }}>Pelunasan Penuh 100% (Tanpa Angsuran)</strong></td>
-                      </tr>
-                    )}
-                  </>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid #f1f5f9', paddingBottom: '0.65rem', marginBottom: '1.25rem' }}>
+              <h3 style={{ ...styles.cardTitle, margin: 0, border: 'none', padding: 0 }}>
+                Rincian Unit & Kalkulasi Biaya
+              </h3>
+              <span style={{
+                fontSize: '0.75rem',
+                fontFamily: "'Urbanist', sans-serif",
+                fontWeight: '900',
+                padding: '0.25rem 0.65rem',
+                borderRadius: '6px',
+                backgroundColor: '#ecfccb',
+                color: '#15803d',
+                border: '1px solid #d9f99d'
+              }}>
+                🚜 {detail.brand_alat || detail.brand || 'Unit'} {detail.model_alat || detail.model || ''}
+              </span>
+            </div>
+
+            {/* Showcase Unit Banner */}
+            <div style={{
+              display: 'flex',
+              gap: '1.25rem',
+              backgroundColor: '#f8fafc',
+              border: '1.5px solid #e2e8f0',
+              borderRadius: '12px',
+              padding: '1.25rem',
+              marginBottom: '1.5rem',
+              alignItems: 'center'
+            }}>
+              {/* Unit Image / Thumbnail */}
+              <div style={{
+                width: '120px',
+                height: '100px',
+                flexShrink: 0,
+                borderRadius: '10px',
+                overflow: 'hidden',
+                backgroundColor: '#ffffff',
+                border: '1px solid #cbd5e1',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                {(detail.image_url || detail.image_unit) ? (
+                  <img
+                    src={detail.image_url || detail.image_unit}
+                    alt={detail.model_alat || detail.nama_unit || 'Unit Excavator'}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://images.unsplash.com/photo-1579829366248-204fe8413f31?w=400&q=80';
+                    }}
+                  />
                 ) : (
-                  <tr>
-                    <td style={styles.tdLabel}>Status Penawaran</td>
-                    <td>: <span style={{ color: '#b45309', fontWeight: '800' }}>Belum diinput oleh Sales</span></td>
-                  </tr>
+                  <Package size={40} style={{ color: '#94a3b8' }} />
                 )}
-              </tbody>
-            </table>
+              </div>
+
+              {/* Unit Brand, Model, & Badges */}
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap', marginBottom: '0.35rem' }}>
+                  <span style={{
+                    fontSize: '0.72rem',
+                    fontFamily: "'Urbanist', sans-serif",
+                    fontWeight: '900',
+                    color: '#0284c7',
+                    backgroundColor: '#e0f2fe',
+                    padding: '0.15rem 0.5rem',
+                    borderRadius: '4px',
+                    border: '1px solid #bae6fd'
+                  }}>
+                    {detail.nama_unit || detail.nama_alat || 'EXCAVATOR'}
+                  </span>
+                  {detail.kapasitas_ton && (
+                    <span style={{
+                      fontSize: '0.72rem',
+                      fontFamily: "'Urbanist', sans-serif",
+                      fontWeight: '900',
+                      color: '#15803d',
+                      backgroundColor: '#ecfccb',
+                      padding: '0.15rem 0.5rem',
+                      borderRadius: '4px',
+                      border: '1px solid #d9f99d'
+                    }}>
+                      KELAS {detail.kapasitas_ton} TON
+                    </span>
+                  )}
+                  {detail.tipe_katalog && (
+                    <span style={{
+                      fontSize: '0.72rem',
+                      fontFamily: "'Urbanist', sans-serif",
+                      fontWeight: '900',
+                      color: '#475569',
+                      backgroundColor: '#f1f5f9',
+                      padding: '0.15rem 0.5rem',
+                      borderRadius: '4px'
+                    }}>
+                      {detail.tipe_katalog.toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                
+                <h4 style={{
+                  margin: '0 0 0.35rem 0',
+                  fontSize: '1.25rem',
+                  fontFamily: "'Sora', sans-serif",
+                  fontWeight: '900',
+                  color: '#0d141e'
+                }}>
+                  {detail.brand_alat || detail.brand ? `${detail.brand_alat || detail.brand} ${detail.model_alat || detail.model || ''}`.trim() : (detail.nama_unit || 'Excavator')}
+                </h4>
+                
+                <div style={{ fontSize: '0.84rem', color: '#64748b' }}>
+                  {detail.deskripsi_unit ? detail.deskripsi_unit : `Unit alat berat ${detail.brand_alat || detail.brand || ''} ${detail.model_alat || detail.model || ''} spesifikasi standar industri.`}
+                </div>
+              </div>
+            </div>
+
+            {/* Spesifikasi Teknis Unit */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h4 style={{
+                margin: '0 0 0.85rem 0',
+                fontSize: '0.88rem',
+                fontFamily: "'Urbanist', sans-serif",
+                fontWeight: '900',
+                color: '#334155',
+                letterSpacing: '0.5px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem'
+              }}>
+                <Wrench size={14} style={{ color: '#15803d' }} />
+                SPESIFIKASI TEKNIS & IDENTITAS UNIT
+              </h4>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+                gap: '0.75rem'
+              }}>
+                <div style={styles.specBox}>
+                  <span style={styles.specLabel}>Brand Pabrikan</span>
+                  <strong style={styles.specValue}>{detail.brand_alat || detail.brand || '-'}</strong>
+                </div>
+                <div style={styles.specBox}>
+                  <span style={styles.specLabel}>Tipe / Model Unit</span>
+                  <strong style={{ ...styles.specValue, color: '#15803d' }}>{detail.model_alat || detail.model || '-'}</strong>
+                </div>
+                <div style={styles.specBox}>
+                  <span style={styles.specLabel}>Kelas Kapasitas</span>
+                  <strong style={styles.specValue}>{detail.kapasitas_ton ? `${detail.kapasitas_ton} Ton` : '-'}</strong>
+                </div>
+                <div style={styles.specBox}>
+                  <span style={styles.specLabel}>Tenaga Mesin</span>
+                  <strong style={styles.specValue}>{detail.tenaga_mesin ? `${detail.tenaga_mesin} HP / kW` : '-'}</strong>
+                </div>
+                <div style={styles.specBox}>
+                  <span style={styles.specLabel}>Kapasitas Bucket</span>
+                  <strong style={styles.specValue}>{detail.kapasitas_bucket ? `${detail.kapasitas_bucket} m³` : '-'}</strong>
+                </div>
+                <div style={styles.specBox}>
+                  <span style={styles.specLabel}>Kedalaman Gali</span>
+                  <strong style={styles.specValue}>
+                    {detail.kedalaman_gali 
+                      ? (Number(detail.kedalaman_gali) >= 100 
+                          ? `${(Number(detail.kedalaman_gali)/1000).toFixed(2)} m` 
+                          : `${detail.kedalaman_gali} m`) 
+                      : '-'}
+                  </strong>
+                </div>
+                <div style={styles.specBox}>
+                  <span style={styles.specLabel}>Berat Operasional</span>
+                  <strong style={styles.specValue}>
+                    {detail.berat_operasional ? `${Number(detail.berat_operasional).toLocaleString('id-ID')} kg` : '-'}
+                  </strong>
+                </div>
+                <div style={styles.specBox}>
+                  <span style={styles.specLabel}>Harga Patokan Katalog</span>
+                  <strong style={{ ...styles.specValue, color: '#0d141e' }}>
+                    {detail.harga_unit ? formatRupiah(detail.harga_unit) : '-'}
+                  </strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div style={{ borderTop: '1.5px solid #f1f5f9', paddingTop: '1.25rem', marginTop: '1.25rem' }}>
+              <h4 style={{
+                margin: '0 0 0.85rem 0',
+                fontSize: '0.88rem',
+                fontFamily: "'Urbanist', sans-serif",
+                fontWeight: '900',
+                color: '#334155',
+                letterSpacing: '0.5px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem'
+              }}>
+                <Tag size={14} style={{ color: '#15803d' }} />
+                KALKULASI BIAYA & SKEMA PEMBAYARAN
+              </h4>
+
+              <table style={styles.infoTable}>
+                <tbody>
+                  <tr>
+                    <td style={styles.tdLabel}>Metode Pembayaran</td>
+                    <td>: <strong style={{ color: (detail.metode_pembayaran === 'credit' || detail.metode_pembayaran === 'kredit' || detail.metode_pembayaran === 'leasing') ? '#b45309' : '#15803d' }}>
+                      {(detail.metode_pembayaran === 'credit' || detail.metode_pembayaran === 'kredit' || detail.metode_pembayaran === 'leasing') ? 'KREDIT (TENOR 5 TAHUN / 60 BULAN)' : 'CASH / TUNAI (PELUNASAN 100%)'}
+                    </strong></td>
+                  </tr>
+                  {detail.harga_penawaran ? (
+                    <>
+                      <tr>
+                        <td style={styles.tdLabel}>Harga Penawaran Unit</td>
+                        <td>: {formatRupiah(detail.harga_penawaran)}</td>
+                      </tr>
+                      <tr>
+                        <td style={styles.tdLabel}>Ongkos Kirim Armada</td>
+                        <td>: {formatRupiah(detail.ongkos_kirim)}</td>
+                      </tr>
+                      <tr>
+                        <td style={styles.tdLabel}>Potongan Diskon</td>
+                        <td>: <span style={{ color: '#dc2626' }}>- {formatRupiah(detail.diskon)}</span></td>
+                      </tr>
+                      <tr style={{ borderTop: '2px solid #e2e8f0' }}>
+                        <td style={{ ...styles.tdLabel, fontWeight: '900', color: '#0d141e', paddingTop: '0.75rem' }}>Total Akhir (OTR)</td>
+                        <td style={{ fontWeight: '900', color: '#15803d', fontSize: '1.25rem', fontFamily: "'Sora', sans-serif", paddingTop: '0.75rem' }}>
+                          : {formatRupiah(totalAkhir)}
+                        </td>
+                      </tr>
+                      {(detail.metode_pembayaran === 'credit' || detail.metode_pembayaran === 'kredit' || detail.metode_pembayaran === 'leasing') ? (
+                        <>
+                          <tr>
+                            <td style={styles.tdLabel}>Pembayaran Awal (Uang Muka 20%)</td>
+                            <td>: <strong style={{ color: '#15803d' }}>{formatRupiah(Math.round(totalAkhir * 0.2))}</strong></td>
+                          </tr>
+                          <tr>
+                            <td style={styles.tdLabel}>Sisa Pokok Pembiayaan (80%)</td>
+                            <td>: <span>{formatRupiah(Math.round(totalAkhir * 0.8))}</span></td>
+                          </tr>
+                          <tr>
+                            <td style={styles.tdLabel}>Estimasi Angsuran (60 Bulan)</td>
+                            <td>: <strong style={{ color: '#b45309' }}>{formatRupiah(Math.round((totalAkhir * 0.8) / 60))} / bulan</strong></td>
+                          </tr>
+                        </>
+                      ) : (
+                        <tr>
+                          <td style={styles.tdLabel}>Skema Pelunasan</td>
+                          <td>: <strong style={{ color: '#15803d' }}>Pelunasan Penuh 100% (Tanpa Angsuran)</strong></td>
+                        </tr>
+                      )}
+                    </>
+                  ) : (
+                    <tr>
+                      <td style={styles.tdLabel}>Status Penawaran</td>
+                      <td>: <span style={{ color: '#b45309', fontWeight: '800' }}>Belum diinput oleh Sales</span></td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
             {detail.harga_penawaran && (
               <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
@@ -496,6 +698,77 @@ const TransaksiDetail = () => {
               )}
             </div>
           )}
+
+          {/* Card SURAT JALAN & EKSPEDISI RESMI */}
+          {(detail.surat_jalan_number || ['SIAP_KIRIM', 'PENGIRIMAN', 'SELESAI'].includes(detail.status)) && (
+            <div style={{ ...styles.card, border: '1.5px solid #38bdf8', backgroundColor: '#f0f9ff' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1.5px solid #bae6fd', paddingBottom: '0.6rem' }}>
+                <h3 style={{ ...styles.cardTitle, margin: 0, border: 'none', color: '#0369a1', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Truck size={18} style={{ color: '#0284c7' }} />
+                  Surat Jalan Pengiriman (Delivery Order)
+                </h3>
+                <span style={{
+                  padding: '0.25rem 0.65rem',
+                  borderRadius: '6px',
+                  fontSize: '0.72rem',
+                  fontFamily: "'Urbanist', sans-serif",
+                  fontWeight: '900',
+                  backgroundColor: detail.status === 'SELESAI' ? '#ecfccb' : '#e0f2fe',
+                  color: detail.status === 'SELESAI' ? '#15803d' : '#0369a1',
+                  border: detail.status === 'SELESAI' ? '1px solid #84cc16' : '1px solid #7dd3fc'
+                }}>
+                  {detail.status === 'SELESAI' ? '✅ Unit Telah Diterima' : '🚚 Dalam Pengiriman'}
+                </span>
+              </div>
+
+              <table style={styles.infoTable}>
+                <tbody>
+                  <tr>
+                    <td style={styles.tdLabel}>No. Surat Jalan</td>
+                    <td>: <strong style={{ color: '#0369a1' }}>{detail.surat_jalan_number || `SJ-${detail.nomor_pemesanan || detail.id}`}</strong></td>
+                  </tr>
+                  <tr>
+                    <td style={styles.tdLabel}>Driver / Ekspedisi</td>
+                    <td>: <strong>{detail.driver_name || 'Tim Driver Ekspedisi HeavyCare'}</strong></td>
+                  </tr>
+                  <tr>
+                    <td style={styles.tdLabel}>Armada / Truk Trailer</td>
+                    <td>: <code style={{ backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>{detail.vehicle_number || '-'}</code></td>
+                  </tr>
+                  <tr>
+                    <td style={styles.tdLabel}>Alamat Site Tujuan</td>
+                    <td>: <span>{detail.destination || detail.catatan || '-'}</span></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #bae6fd' }}>
+                <button
+                  onClick={() => generateSuratJalanPDF(detail)}
+                  style={{
+                    width: '100%',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    padding: '0.75rem 1rem',
+                    backgroundColor: '#0d141e',
+                    color: '#74c02c',
+                    border: '1.5px solid #74c02c',
+                    borderRadius: '8px',
+                    fontFamily: "'Urbanist', sans-serif",
+                    fontWeight: '900',
+                    fontSize: '0.88rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(13, 20, 30, 0.2)',
+                  }}
+                >
+                  <Download size={15} />
+                  <span>Download Surat Jalan Pengiriman (PDF)</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* KOLOM KANAN: Aksi Berdasarkan Role & Status */}
@@ -503,12 +776,51 @@ const TransaksiDetail = () => {
           <div style={{ ...styles.card, borderTop: '4px solid #74c02c' }}>
             <h3 style={styles.cardTitle}>Panel Aksi & Status Workflow</h3>
 
-            {/* 1. SALES: INPUT HARGA PENAWARAN */}
-            {(user?.role === 'Sales' || user?.role === 'Admin') && detail.status === 'PENDING' && (
+            {/* 1. SALES: INPUT / REVISI HARGA PENAWARAN */}
+            {(user?.role === 'Sales' || user?.role === 'Admin') && (detail.status === 'PENDING' || detail.status === 'REJECTED') && (
               <div>
-                <div style={{ backgroundColor: '#ecfccb', padding: '1rem', borderRadius: '8px', marginBottom: '1.25rem', border: '1px solid #d9f99d' }}>
-                  <h4 style={{ margin: '0 0 0.35rem', color: '#15803d' }}>📝 Form Penawaran Resmi Sales</h4>
-                  <p style={{ margin: 0, fontSize: '0.84rem', color: '#166534' }}>Tentukan harga penawaran OTR dan ajukan untuk disetujui Manager.</p>
+                <div style={{
+                  backgroundColor: detail.status === 'REJECTED' ? '#fef2f2' : '#ecfccb',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  marginBottom: '1.25rem',
+                  border: detail.status === 'REJECTED' ? '1.5px solid #fecaca' : '1px solid #d9f99d'
+                }}>
+                  <h4 style={{
+                    margin: '0 0 0.35rem',
+                    color: detail.status === 'REJECTED' ? '#991b1b' : '#15803d',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem'
+                  }}>
+                    {detail.status === 'REJECTED' ? '⚠️ Penawaran Ditolak Manager — Perlu Revisi' : '📝 Form Penawaran Resmi Sales'}
+                  </h4>
+                  <p style={{
+                    margin: '0 0 0.6rem 0',
+                    fontSize: '0.84rem',
+                    color: detail.status === 'REJECTED' ? '#7f1d1d' : '#166534',
+                    lineHeight: '1.4'
+                  }}>
+                    {detail.status === 'REJECTED'
+                      ? 'Penawaran sebelumnya telah ditolak oleh Manager. Silakan sesuaikan kalkulasi harga, ongkos kirim, atau diskon, lalu ajukan ulang dokumen penawaran ke Manager.'
+                      : 'Tentukan harga penawaran OTR dan ajukan untuk disetujui Manager.'}
+                  </p>
+                  <div style={{
+                    backgroundColor: '#ffffff',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '6px',
+                    border: detail.status === 'REJECTED' ? '1px solid #fca5a5' : '1px solid #bbf7d0',
+                    fontSize: '0.82rem'
+                  }}>
+                    <div style={{ color: '#0d141e', fontWeight: '800' }}>
+                      🚜 {detail.brand_alat || detail.brand || 'Unit'} {detail.model_alat || detail.model || ''} {detail.kapasitas_ton ? `(${detail.kapasitas_ton} Ton)` : ''}
+                    </div>
+                    {detail.harga_unit && (
+                      <div style={{ color: '#15803d', fontWeight: '700', marginTop: '0.2rem' }}>
+                        Harga Patokan Katalog: {formatRupiah(detail.harga_unit)}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <form onSubmit={handleKirimPenawaran}>
                   <div style={styles.inputGroup}>
@@ -542,10 +854,50 @@ const TransaksiDetail = () => {
                       onChange={(e) => setDiskon(e.target.value)} 
                     />
                   </div>
-                  <button type="submit" style={styles.btnPrimarySubmit} disabled={submitting}>
-                    {submitting ? 'Mengirim...' : '🚀 Ajukan Penawaran ke Manager'}
+                  <button
+                    type="submit"
+                    style={{
+                      ...styles.btnPrimarySubmit,
+                      backgroundColor: detail.status === 'REJECTED' ? '#dc2626' : '#0d141e',
+                      color: detail.status === 'REJECTED' ? '#ffffff' : '#74c02c'
+                    }}
+                    disabled={submitting}
+                  >
+                    {submitting ? 'Mengirim...' : (detail.status === 'REJECTED' ? '🔄 Ajukan Ulang Penawaran ke Manager' : '🚀 Ajukan Penawaran ke Manager')}
                   </button>
                 </form>
+              </div>
+            )}
+
+            {/* STATUS REJECTED: TAMPILAN UNTUK MANAGER */}
+            {user?.role === 'Manager' && detail.status === 'REJECTED' && (
+              <div style={{ backgroundColor: '#fee2e2', padding: '1.25rem', borderRadius: '10px', border: '1.5px solid #fca5a5' }}>
+                <h4 style={{ margin: '0 0 0.35rem', color: '#991b1b', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  ❌ Penawaran Ditolak
+                </h4>
+                <p style={{ fontSize: '0.86rem', margin: '0 0 0.75rem', color: '#7f1d1d', lineHeight: '1.4' }}>
+                  Dokumen penawaran harga ini telah Anda tolak. Status saat ini menunggu Sales merevisi dan mengajukan ulang penawaran harga.
+                </p>
+                <div style={{ backgroundColor: '#ffffff', padding: '0.65rem 0.85rem', borderRadius: '6px', border: '1px solid #fecaca', fontSize: '0.82rem' }}>
+                  <div style={{ color: '#0d141e', fontWeight: '800' }}>
+                    🚜 Unit: {detail.brand_alat || detail.brand || 'Unit'} {detail.model_alat || detail.model || ''} {detail.kapasitas_ton ? `(${detail.kapasitas_ton} Ton)` : ''}
+                  </div>
+                  {totalAkhir && (
+                    <div style={{ color: '#991b1b', fontWeight: '700', marginTop: '0.2rem' }}>
+                      Penawaran Terakhir Ditolak: {formatRupiah(totalAkhir)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* STATUS REJECTED: TAMPILAN UNTUK CUSTOMER */}
+            {user?.role === 'Customer' && detail.status === 'REJECTED' && (
+              <div style={{ backgroundColor: '#fef2f2', padding: '1.25rem', borderRadius: '10px', border: '1.5px solid #fecaca' }}>
+                <h4 style={{ margin: '0 0 0.35rem', color: '#991b1b' }}>⏳ Penawaran Sedang Direvisi</h4>
+                <p style={{ fontSize: '0.86rem', margin: 0, color: '#7f1d1d', lineHeight: '1.4' }}>
+                  Dokumen penawaran harga pesanan Anda sedang disesuaikan kembali oleh tim internal kami. Penawaran harga resmi akan segera diterbitkan.
+                </p>
               </div>
             )}
 
@@ -554,7 +906,17 @@ const TransaksiDetail = () => {
               <div>
                 <div style={{ backgroundColor: '#fef3c7', padding: '1rem', borderRadius: '8px', marginBottom: '1.25rem', border: '1px solid #fde68a' }}>
                   <h4 style={{ margin: '0 0 0.35rem', color: '#92400e' }}>⏳ Menunggu Persetujuan Manager</h4>
-                  <p style={{ margin: 0, fontSize: '0.84rem', color: '#78350f' }}>Periksa rincian kalkulasi harga yang diajukan Sales di sebelah kiri.</p>
+                  <p style={{ margin: '0 0 0.6rem 0', fontSize: '0.84rem', color: '#78350f' }}>Periksa rincian kalkulasi harga yang diajukan Sales di sebelah kiri.</p>
+                  <div style={{ backgroundColor: '#ffffff', padding: '0.65rem 0.85rem', borderRadius: '6px', border: '1px solid #fde68a', fontSize: '0.82rem' }}>
+                    <div style={{ color: '#0d141e', fontWeight: '800' }}>
+                      🚜 Unit: {detail.brand_alat || detail.brand || 'Unit'} {detail.model_alat || detail.model || ''} {detail.kapasitas_ton ? `(${detail.kapasitas_ton} Ton)` : ''}
+                    </div>
+                    {totalAkhir && (
+                      <div style={{ color: '#b45309', fontWeight: '700', marginTop: '0.2rem' }}>
+                        Total OTR: {formatRupiah(totalAkhir)}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
                   <button 
@@ -734,9 +1096,23 @@ const TransaksiDetail = () => {
                   <h4 style={{ margin: '0 0 0.35rem', color: '#713f12' }}>🚚 Unit Dalam Perjalanan</h4>
                   <p style={{ margin: 0, fontSize: '0.86rem', color: '#854d0e' }}>Armada excavator sedang dalam perjalanan menuju lokasi proyek.</p>
                 </div>
-                <button onClick={handleTerimaUnit} style={styles.btnPrimarySubmit}>
-                  📦 Konfirmasi Unit Tiba di Lokasi
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                  <button
+                    onClick={() => generateSuratJalanPDF(detail)}
+                    style={{
+                      ...styles.btnPrimarySubmit,
+                      backgroundColor: '#0d141e',
+                      color: '#74c02c',
+                      border: '1.5px solid #74c02c',
+                    }}
+                  >
+                    <Download size={16} />
+                    <span>Download Surat Jalan (Delivery Order PDF)</span>
+                  </button>
+                  <button onClick={handleTerimaUnit} style={styles.btnPrimarySubmit}>
+                    📦 Konfirmasi Unit Tiba di Lokasi
+                  </button>
+                </div>
               </div>
             )}
 
@@ -754,6 +1130,18 @@ const TransaksiDetail = () => {
                     <span>Download Dokumen BAST (PDF)</span>
                   </button>
                   <button
+                    onClick={() => generateSuratJalanPDF(detail)}
+                    style={{
+                      ...styles.btnPrimarySubmit,
+                      backgroundColor: '#0d141e',
+                      color: '#74c02c',
+                      border: '1.5px solid #74c02c',
+                    }}
+                  >
+                    <Download size={16} />
+                    <span>Download Surat Jalan Pengiriman (PDF)</span>
+                  </button>
+                  <button
                     onClick={() => generateInvoicePDF(detail)}
                     style={{
                       ...styles.btnPrimarySubmit,
@@ -763,6 +1151,18 @@ const TransaksiDetail = () => {
                   >
                     <FileText size={16} />
                     <span>Download Invoice Resmi Pembayaran (PDF)</span>
+                  </button>
+                  <button
+                    onClick={() => generateQuotationPDF(detail)}
+                    style={{
+                      ...styles.btnPrimarySubmit,
+                      backgroundColor: '#f1f5f9',
+                      color: '#334155',
+                      border: '1px solid #cbd5e1',
+                    }}
+                  >
+                    <FileText size={16} />
+                    <span>Download Arsip Surat Penawaran (PDF)</span>
                   </button>
                 </div>
               </div>
@@ -888,6 +1288,28 @@ const styles = {
     fontWeight: '900', 
     fontSize: '0.92rem',
     boxShadow: '0 4px 14px rgba(13, 20, 30, 0.25)',
+  },
+  specBox: {
+    backgroundColor: '#f8fafc',
+    border: '1.5px solid #e2e8f0',
+    borderRadius: '8px',
+    padding: '0.65rem 0.85rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.2rem'
+  },
+  specLabel: {
+    fontSize: '0.72rem',
+    color: '#64748b',
+    fontWeight: '700',
+    fontFamily: "'Urbanist', sans-serif",
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px'
+  },
+  specValue: {
+    fontSize: '0.88rem',
+    color: '#0d141e',
+    fontWeight: '800'
   }
 };
 

@@ -84,7 +84,10 @@ const Transaksi = () => {
     const docNo = (item.nomor_dokumen || item.nomor_pemesanan || '').toLowerCase();
     const cust = (item.perusahaan || item.nama_customer || '').toLowerCase();
     const unit = (item.nama_unit || item.nama_alat || '').toLowerCase();
-    return docNo.includes(q) || cust.includes(q) || unit.includes(q);
+    const brand = (item.brand_alat || item.brand || '').toLowerCase();
+    const model = (item.model_alat || item.model || '').toLowerCase();
+    const ton = (item.kapasitas_ton ? `${item.kapasitas_ton} ton` : '').toLowerCase();
+    return docNo.includes(q) || cust.includes(q) || unit.includes(q) || brand.includes(q) || model.includes(q) || ton.includes(q);
   });
 
   return (
@@ -105,7 +108,7 @@ const Transaksi = () => {
             <Search size={15} style={{ color: '#94a3b8' }} />
             <input
               type="text"
-              placeholder="Cari no. pesanan, PIC, unit..."
+              placeholder="Cari no. pesanan, PIC, unit, tipe/model..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={styles.searchInput}
@@ -135,7 +138,7 @@ const Transaksi = () => {
                 <tr>
                   <th style={styles.th}>NO. DOKUMEN / RFQ</th>
                   <th style={styles.th}>CUSTOMER / PIC</th>
-                  <th style={styles.th}>UNIT EXCAVATOR</th>
+                  <th style={styles.th}>UNIT & TIPE ALAT</th>
                   <th style={styles.th}>SUMBER</th>
                   <th style={styles.th}>TANGGAL</th>
                   <th style={styles.th}>STATUS PROGRES</th>
@@ -165,7 +168,18 @@ const Transaksi = () => {
                         )}
                       </td>
                       <td style={styles.td}>
-                        <div style={{ fontWeight: '700', color: '#0d141e' }}>{item.nama_unit || item.nama_alat || '-'}</div>
+                        <div style={{ fontWeight: '800', color: '#0d141e', fontSize: '0.92rem' }}>
+                          {item.brand_alat || item.model_alat ? `${item.brand_alat || ''} ${item.model_alat || ''}`.trim() : (item.nama_unit || item.nama_alat || '-')}
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '0.15rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <span>{item.nama_unit || item.nama_alat || 'Excavator'}</span>
+                          {item.kapasitas_ton && (
+                            <>
+                              <span>•</span>
+                              <span style={{ fontWeight: '700', color: '#15803d' }}>{item.kapasitas_ton} Ton</span>
+                            </>
+                          )}
+                        </div>
                       </td>
                       <td style={styles.td}>
                         <span style={{
@@ -193,11 +207,25 @@ const Transaksi = () => {
                               <span>Approve</span>
                             </button>
                           )}
-                          <button onClick={() => navigate(`/transaksi/${item.id}`)} style={styles.detailBtn}>
+                          <button
+                            onClick={() => navigate(`/transaksi/${item.id}`)}
+                            style={{
+                              ...styles.detailBtn,
+                              backgroundColor: (user?.role === 'Sales' && item.status === 'REJECTED') ? '#fef2f2' : '#0d141e',
+                              color: (user?.role === 'Sales' && item.status === 'REJECTED') ? '#dc2626' : '#74c02c',
+                              border: (user?.role === 'Sales' && item.status === 'REJECTED') ? '1px solid #fca5a5' : 'none',
+                              boxShadow: (user?.role === 'Sales' && item.status === 'REJECTED') ? '0 2px 6px rgba(220, 38, 38, 0.15)' : '0 2px 6px rgba(13, 20, 30, 0.25)'
+                            }}
+                          >
                             {user?.role === 'Sales' && item.status === 'PENDING' ? (
                               <>
                                 <Edit size={13} />
                                 <span>Input Harga</span>
+                              </>
+                            ) : (user?.role === 'Sales' && item.status === 'REJECTED') ? (
+                              <>
+                                <Edit size={13} />
+                                <span>Revisi Penawaran</span>
                               </>
                             ) : (
                               <>

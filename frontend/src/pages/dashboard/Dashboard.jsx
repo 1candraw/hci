@@ -337,8 +337,12 @@ const Dashboard = () => {
                         <div style={s.custLoc}>{tx.customer_company || tx.lokasi_pengiriman || '-'}</div>
                       </td>
                       <td style={s.td}>
-                        <div style={s.unitName}>{tx.nama_alat || `${tx.brand || ''} ${tx.model || ''}`}</div>
-                        <div style={s.unitBrand}>Kelas {tx.kapasitas_ton || 5} Ton</div>
+                        <div style={s.unitName}>
+                          {tx.brand || tx.model ? `${tx.brand || ''} ${tx.model || ''}`.trim() : (tx.nama_alat || tx.unit_name || 'Excavator')}
+                        </div>
+                        <div style={s.unitBrand}>
+                          {tx.nama_alat || tx.unit_name || 'Excavator'} • Kelas {tx.kapasitas_ton || 5} Ton
+                        </div>
                       </td>
                       <td style={s.td}>
                         <span style={{

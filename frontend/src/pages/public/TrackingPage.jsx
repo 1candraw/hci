@@ -4,6 +4,7 @@ import { guestService } from '../../services/guest.service';
 import { generateQuotationPDF } from '../../utils/generateQuotationPDF';
 import { generateBASTPDF } from '../../utils/generateBASTPDF';
 import { generateInvoicePDF } from '../../utils/generateInvoicePDF';
+import { generateSuratJalanPDF } from '../../utils/generateSuratJalanPDF';
 import {
   Search,
   FileText,
@@ -59,6 +60,7 @@ const TrackingPage = () => {
   const [error, setError] = useState('');
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [downloadingInvoice, setDownloadingInvoice] = useState(false);
+  const [downloadingSuratJalan, setDownloadingSuratJalan] = useState(false);
 
   useEffect(() => {
     const nomor = searchParams.get('nomor');
@@ -115,6 +117,19 @@ const TrackingPage = () => {
     }
   };
 
+  const handleDownloadSuratJalanPDF = () => {
+    if (!data) return;
+    setDownloadingSuratJalan(true);
+    try {
+      generateSuratJalanPDF(data);
+    } catch (err) {
+      console.error('Gagal generate Surat Jalan PDF:', err);
+      alert('Terjadi kesalahan saat mengunduh dokumen Surat Jalan.');
+    } finally {
+      setTimeout(() => setDownloadingSuratJalan(false), 800);
+    }
+  };
+
   const handleDownloadBAST = () => {
     if (!data) return;
     try {
@@ -142,6 +157,12 @@ const TrackingPage = () => {
     'PENGIRIMAN',
     'SELESAI',
   ].includes(data?.status);
+
+  const isDeliveryOrBeyond = [
+    'SIAP_KIRIM',
+    'PENGIRIMAN',
+    'SELESAI',
+  ].includes(data?.status) || Boolean(data?.surat_jalan_number);
 
   const badge = data ? getStatusBadge(data.status) : null;
   const activeStep = data ? data.step_index ?? 0 : 0;
@@ -513,6 +534,91 @@ const TrackingPage = () => {
                     </div>
                   </div>
                 )}
+
+                {/* 4. CARD SURAT JALAN PENGIRIMAN RESMI (Muncul saat SIAP_KIRIM / PENGIRIMAN / SELESAI) */}
+                {isDeliveryOrBeyond && (
+                  <div style={{ ...s.quotationCard, border: '1.5px solid #0284c7', backgroundColor: '#ffffff', marginTop: '1.5rem' }}>
+                    {/* Header Card Surat Jalan */}
+                    <div style={{ ...s.quotationHeader, borderBottom: '1.5px solid #e0f2fe', paddingBottom: '0.85rem' }}>
+                      <div>
+                        <div style={{ ...s.docBadge, backgroundColor: '#e0f2fe', color: '#0369a1' }}>
+                          <Truck size={13} style={{ color: '#0284c7' }} />
+                          <span>DOKUMEN LOGISTIK & DISPATCH</span>
+                        </div>
+                        <h3 style={s.quotationTitle}>Surat Jalan Pengiriman (Delivery Order)</h3>
+                        <p style={s.quotationSub}>
+                          No. Surat Jalan: <strong>{data.surat_jalan_number || `SJ-${(data.nomor_pemesanan || data.id || '').toString().replace(/[^a-zA-Z0-9]/g, '')}`}</strong> · Ref PO: <strong>{data.nomor_pemesanan || 'QO-' + data.id}</strong>
+                        </p>
+                      </div>
+                      <div style={{ ...s.approvedPill, backgroundColor: '#e0f2fe', color: '#0369a1', border: '1px solid #7dd3fc' }}>
+                        <CheckCircle2 size={16} />
+                        <span>{data.status === 'SELESAI' ? 'Unit Tiba & Diserahterimakan' : 'Dalam Proses Ekspedisi'}</span>
+                      </div>
+                    </div>
+
+                    {/* Body Card Surat Jalan */}
+                    <div style={s.quotationBody}>
+                      <div style={{
+                        backgroundColor: '#f8fafc',
+                        borderRadius: '12px',
+                        padding: '1rem 1.25rem',
+                        border: '1px solid #e2e8f0',
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                        gap: '0.85rem',
+                        marginBottom: '1rem'
+                      }}>
+                        <div>
+                          <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            Driver / Ekspedisi
+                          </span>
+                          <div style={{ fontSize: '0.92rem', fontWeight: '800', color: '#0f172a', marginTop: '0.15rem' }}>
+                            {data.driver_name || 'Tim Driver Ekspedisi HeavyCare'}
+                          </div>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            Armada / Plat Truk Trailer
+                          </span>
+                          <div style={{ fontSize: '0.92rem', fontWeight: '800', color: '#0f172a', marginTop: '0.15rem' }}>
+                            {data.vehicle_number || 'Trailer Flatbed HeavyCare'}
+                          </div>
+                        </div>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            Alamat Site Proyek Tujuan
+                          </span>
+                          <div style={{ fontSize: '0.86rem', fontWeight: '700', color: '#334155', marginTop: '0.15rem' }}>
+                            {data.destination || data.guest_location || data.catatan || 'Lokasi Site Proyek Pemesan'}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tombol Download PDF Surat Jalan */}
+                      <div style={s.pdfDownloadWrap}>
+                        <button
+                          onClick={handleDownloadSuratJalanPDF}
+                          disabled={downloadingSuratJalan}
+                          style={{
+                            ...s.downloadQuotationBtn,
+                            backgroundColor: '#0d141e',
+                            color: '#74c02c',
+                            border: '1.5px solid #74c02c',
+                            boxShadow: '0 4px 14px rgba(13, 20, 30, 0.25)',
+                          }}
+                        >
+                          <Download size={18} />
+                          <span>
+                            {downloadingSuratJalan ? 'Menyiapkan Dokumen Surat Jalan...' : 'Unduh Surat Jalan Pengiriman (PDF)'}
+                          </span>
+                        </button>
+                        <p style={s.pdfHint}>
+                          📄 Dokumen resmi berkop PT Heavy Care Indonesia lengkap untuk dicetak & ditandatangani oleh customer saat serah terima unit di lokasi.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* KOLOM KANAN: Aksi Berdasarkan Status */}
@@ -604,10 +710,7 @@ const TrackingPage = () => {
                 {/* 7. PENGIRIMAN → Konfirmasi terima unit */}
                 {data.status === 'PENGIRIMAN' && (
                   <ReceiveUnitBox
-                    quotationId={data.nomor_pemesanan || data.id}
-                    suratJalanNumber={data.surat_jalan_number}
-                    driverName={data.driver_name}
-                    vehicleNumber={data.vehicle_number}
+                    data={data}
                     onSuccess={() => handleSearch(null, data.nomor_pemesanan)}
                   />
                 )}
@@ -624,6 +727,29 @@ const TrackingPage = () => {
                       <button onClick={handleDownloadBAST} style={s.downloadBastBtn}>
                         <Download size={16} />
                         <span>Download Berita Acara Serah Terima (BAST)</span>
+                      </button>
+                      <button
+                        onClick={handleDownloadSuratJalanPDF}
+                        style={{
+                          ...s.downloadBastBtn,
+                          backgroundColor: '#0d141e',
+                          color: '#74c02c',
+                          border: '1.5px solid #74c02c',
+                        }}
+                      >
+                        <Download size={16} />
+                        <span>Download Surat Jalan Pengiriman (PDF)</span>
+                      </button>
+                      <button
+                        onClick={handleDownloadInvoicePDF}
+                        style={{
+                          ...s.downloadBastBtn,
+                          backgroundColor: '#15803d',
+                          color: '#ffffff',
+                        }}
+                      >
+                        <FileText size={16} />
+                        <span>Download Invoice Pembayaran Sah (PDF)</span>
                       </button>
                       <button onClick={handleDownloadQuotationPDF} style={s.downloadQuotationAltBtn}>
                         <FileText size={16} />
@@ -711,36 +837,76 @@ const PaymentConfirmForm = ({ nomor, totalAkhir, metodePembayaran, onSuccess }) 
 
   return (
     <div style={s2.dpBox}>
-      <h4 style={s2.dpTitle}>
-        {isCredit ? '💳 Konfirmasi Pembayaran Awal (Uang Muka 20%)' : '💳 Konfirmasi Pembayaran Pelunasan (Cash 100%)'}
-      </h4>
+      {/* Header Form */}
+      <div style={s2.headerWrap}>
+        <div style={s2.headerTop}>
+          <h4 style={s2.dpTitle}>
+            {isCredit ? '💳 Konfirmasi Pembayaran Awal' : '💳 Konfirmasi Pembayaran Pelunasan'}
+          </h4>
+          <span style={{
+            ...s2.schemeBadge,
+            backgroundColor: isCredit ? '#fef3c7' : '#ecfccb',
+            color: isCredit ? '#b45309' : '#15803d',
+            border: isCredit ? '1px solid #fde68a' : '1px solid #84cc16'
+          }}>
+            {isCredit ? 'UANG MUKA (DP 20%)' : 'CASH LUNAS (100%)'}
+          </span>
+        </div>
+        <p style={s2.headerDesc}>
+          {isCredit
+            ? 'Penawaran telah disetujui. Silakan transfer pembayaran awal (Uang Muka 20%) ke rekening resmi di bawah ini, lalu unggah slip bukti transfer.'
+            : 'Penawaran telah disetujui. Silakan transfer pelunasan penuh (100%) ke rekening resmi di bawah ini, lalu unggah slip bukti transfer.'}
+        </p>
+      </div>
 
+      {/* Rincian Nominal Card */}
       {targetAmount && (
         <div style={s2.dpAmountBox}>
-          <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
-            {isCredit ? 'Kewajiban Pembayaran Awal (Uang Muka 20%)' : 'Total Tagihan Pelunasan Tunai (100%)'}
-          </span>
-          <span style={s2.dpAmountVal}>{formatRupiah(targetAmount)}</span>
-          {isCredit && (
-            <span style={{ display: 'block', fontSize: '0.78rem', color: '#b45309', fontWeight: '700', marginTop: '0.25rem' }}>
-              Sisa pokok pembiayaan diangsur 5 tahun (60 bulan) @ {formatRupiah(cicilan)} / bulan
+          <div style={s2.amountHeaderRow}>
+            <span style={s2.amountLabel}>
+              {isCredit ? 'Total Pembayaran Awal (Uang Muka 20%)' : 'Total Tagihan Pelunasan Tunai (100%)'}
             </span>
+            <span style={s2.otrBadge}>Total OTR Termasuk Ongkir</span>
+          </div>
+
+          <div style={s2.dpAmountVal}>
+            {formatRupiah(targetAmount)}
+          </div>
+
+          {isCredit && (
+            <div style={s2.creditInfoRow}>
+              <span style={{ fontSize: '0.9rem' }}>ℹ️</span>
+              <span>
+                Sisa pokok pembiayaan (80%) diangsur <strong>5 tahun (60 bulan)</strong> @ <strong>{formatRupiah(cicilan)} / bulan</strong>
+              </span>
+            </div>
           )}
         </div>
       )}
 
+      {/* Rekening Tujuan Card */}
       <div style={s2.rekCard}>
-        <div style={{ fontSize: '0.78rem', color: '#b45309', fontWeight: '800', marginBottom: '0.2rem' }}>
-          REKENING TUJUAN TRANSFER RESMI:
+        <div style={s2.rekHeader}>
+          <span>🏛️</span>
+          <span>REKENING TUJUAN TRANSFER RESMI</span>
         </div>
-        <div style={{ fontSize: '0.92rem', color: '#0f172a', fontWeight: '800' }}>
-          Bank Central Asia (BCA) · <code>1234-5678-90</code>
+        <div style={s2.rekContent}>
+          <div>
+            <div style={s2.bankName}>Bank Central Asia (BCA)</div>
+            <div style={s2.rekNumber}>1234-5678-90</div>
+          </div>
+          <div style={s2.rekOwnerWrap}>
+            <div style={s2.rekOwnerLabel}>Atas Nama:</div>
+            <div style={s2.rekOwnerName}>PT Heavy Care Indonesia</div>
+          </div>
         </div>
-        <div style={{ fontSize: '0.82rem', color: '#475569' }}>
-          a/n <strong>PT Heavy Care Indonesia</strong>
+        <div style={s2.rekFooterNote}>
+          <span>🔒</span>
+          <span>Pastikan nominal transfer sesuai tagihan di atas untuk mempercepat verifikasi Finance.</span>
         </div>
       </div>
 
+      {/* Alert Notifikasi */}
       {msg.text && (
         <div
           style={{
@@ -754,7 +920,8 @@ const PaymentConfirmForm = ({ nomor, totalAkhir, metodePembayaran, onSuccess }) 
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
+      {/* Form Input */}
+      <form onSubmit={handleSubmit} style={s2.formWrap}>
         <div style={s2.field}>
           <label style={s2.label}>Nama Bank Pengirim *</label>
           <input
@@ -778,10 +945,10 @@ const PaymentConfirmForm = ({ nomor, totalAkhir, metodePembayaran, onSuccess }) 
         </div>
 
         <div style={s2.field}>
-          <label style={s2.label}>Nama Pemilik Rekening (Atas Nama) *</label>
+          <label style={s2.label}>Nama Pemilik Rekening (Sesuai Rekening) *</label>
           <input
             style={s2.input}
-            placeholder="Contoh: PT Konstruksi Jaya / Budi"
+            placeholder="Contoh: PT Konstruksi Jaya / Budi Santoso"
             value={form.nama_pemilik}
             onChange={(e) => setForm({ ...form, nama_pemilik: e.target.value })}
             required
@@ -789,24 +956,30 @@ const PaymentConfirmForm = ({ nomor, totalAkhir, metodePembayaran, onSuccess }) 
         </div>
 
         <div style={s2.field}>
-          <label style={s2.label}>Upload File Bukti Transfer (Foto / PDF) *</label>
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/jpg,image/webp,application/pdf"
-            onChange={handleFileChange}
-            style={s2.fileInput}
-            required
-          />
+          <label style={s2.label}>Upload File Bukti Transfer (Foto / Struk / PDF) *</label>
+          <div style={s2.uploadArea}>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/jpg,image/webp,application/pdf"
+              onChange={handleFileChange}
+              style={s2.fileInput}
+              required
+            />
+            <p style={s2.uploadHint}>
+              Format file: JPG, PNG, WEBP, atau PDF (Maks. 5 MB)
+            </p>
+          </div>
         </div>
 
         {previewUrl && (
-          <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
+          <div style={s2.previewWrap}>
+            <p style={s2.previewLabel}>Pratinjau Bukti Transfer:</p>
             <img src={previewUrl} alt="Preview Bukti Transfer" style={s2.previewImg} />
           </div>
         )}
 
         <button type="submit" style={s2.submitBtn} disabled={loading}>
-          {loading ? '⏳ Mengunggah Bukti...' : (isCredit ? '🚀 Kirim Bukti Pembayaran Awal' : '🚀 Kirim Bukti Pembayaran Lunas')}
+          {loading ? '⏳ Mengunggah Bukti...' : (isCredit ? '🚀 Kirim Bukti Pembayaran Awal (DP 20%)' : '🚀 Kirim Bukti Pembayaran Lunas (Cash 100%)')}
         </button>
       </form>
     </div>
@@ -814,9 +987,11 @@ const PaymentConfirmForm = ({ nomor, totalAkhir, metodePembayaran, onSuccess }) 
 };
 
 // ── Sub-komponen: Terima Unit ──
-const ReceiveUnitBox = ({ quotationId, suratJalanNumber, driverName, vehicleNumber, onSuccess }) => {
+const ReceiveUnitBox = ({ data, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ type: '', text: '' });
+
+  const quotationId = data?.nomor_pemesanan || data?.id;
 
   const handleReceive = async () => {
     if (!window.confirm('Konfirmasi bahwa unit alat berat telah tiba di lokasi proyek Anda dan telah diperiksa dalam kondisi baik?')) return;
@@ -841,11 +1016,12 @@ const ReceiveUnitBox = ({ quotationId, suratJalanNumber, driverName, vehicleNumb
         Armada trailer sedang mengangkut excavator menuju lokasi site proyek Anda.
       </p>
 
-      {suratJalanNumber && (
+      {data?.surat_jalan_number && (
         <div style={s2.deliveryDetail}>
-          <div>No. Surat Jalan: <strong>{suratJalanNumber}</strong></div>
-          {driverName && <div>Driver / Ekspedisi: <strong>{driverName}</strong></div>}
-          {vehicleNumber && <div>Plat Truk: <strong>{vehicleNumber}</strong></div>}
+          <div>No. Surat Jalan: <strong>{data.surat_jalan_number}</strong></div>
+          {data.driver_name && <div>Driver / Ekspedisi: <strong>{data.driver_name}</strong></div>}
+          {data.vehicle_number && <div>Plat Truk: <strong>{data.vehicle_number}</strong></div>}
+          {data.destination && <div>Site Tujuan: <strong>{data.destination}</strong></div>}
         </div>
       )}
 
@@ -1427,75 +1603,231 @@ const s = {
 
 const s2 = {
   dpBox: {
-    backgroundColor: '#f8fafc',
-    border: '1.5px solid #74c02c',
-    borderRadius: '12px',
-    padding: '1.25rem',
+    backgroundColor: '#ffffff',
+    border: '1.5px solid #84cc16',
+    borderRadius: '16px',
+    padding: '1.4rem',
+    boxShadow: '0 4px 14px -2px rgba(13, 20, 30, 0.06)',
+  },
+  headerWrap: {
+    marginBottom: '1.25rem',
+    borderBottom: '1.5px solid #f1f5f9',
+    paddingBottom: '0.85rem',
+  },
+  headerTop: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '0.5rem',
+    flexWrap: 'wrap',
+    marginBottom: '0.35rem',
   },
   dpTitle: {
-    fontSize: '1.05rem',
-    fontWeight: '800',
+    fontSize: '1.08rem',
+    fontWeight: '900',
     color: '#0d141e',
-    margin: '0 0 0.75rem',
+    margin: 0,
+    fontFamily: "'Sora', sans-serif",
+  },
+  schemeBadge: {
+    fontSize: '0.72rem',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900',
+    padding: '0.2rem 0.55rem',
+    borderRadius: '5px',
+    letterSpacing: '0.5px',
+  },
+  headerDesc: {
+    margin: 0,
+    fontSize: '0.84rem',
+    color: '#64748b',
+    lineHeight: '1.45',
   },
   dpAmountBox: {
+    backgroundColor: '#fafff5',
+    border: '1.5px solid #d9f99d',
+    borderRadius: '12px',
+    padding: '1rem',
+    marginBottom: '1rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.35rem',
+  },
+  amountHeaderRow: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
-    padding: '0.6rem 0.85rem',
-    borderRadius: '8px',
-    marginBottom: '0.75rem',
+    gap: '0.5rem',
+    flexWrap: 'wrap',
+  },
+  amountLabel: {
+    fontSize: '0.75rem',
+    fontWeight: '800',
+    color: '#475569',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    fontFamily: "'Urbanist', sans-serif",
+  },
+  otrBadge: {
+    fontSize: '0.72rem',
+    fontWeight: '800',
+    color: '#15803d',
+    backgroundColor: '#ecfccb',
+    padding: '0.15rem 0.45rem',
+    borderRadius: '4px',
   },
   dpAmountVal: {
-    fontSize: '1.15rem',
+    fontSize: '1.4rem',
     fontWeight: '900',
     color: '#15803d',
     fontFamily: "'Sora', sans-serif",
+    margin: '0.2rem 0 0.1rem 0',
+  },
+  creditInfoRow: {
+    marginTop: '0.45rem',
+    paddingTop: '0.55rem',
+    borderTop: '1px dashed #cbd5e1',
+    fontSize: '0.8rem',
+    color: '#92400e',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    lineHeight: '1.35',
   },
   rekCard: {
-    backgroundColor: '#ecfccb',
-    border: '1px solid #d9f99d',
-    padding: '0.75rem',
+    backgroundColor: '#f8fafc',
+    border: '1.5px solid #e2e8f0',
+    borderRadius: '12px',
+    padding: '1rem',
+    marginBottom: '1.25rem',
+  },
+  rekHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    fontSize: '0.72rem',
+    color: '#0369a1',
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: '0.6px',
+    fontFamily: "'Urbanist', sans-serif",
+    marginBottom: '0.55rem',
+  },
+  rekContent: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '0.5rem',
+    backgroundColor: '#ffffff',
+    padding: '0.75rem 0.85rem',
     borderRadius: '8px',
-    marginBottom: '1rem',
+    border: '1px solid #cbd5e1',
+    marginBottom: '0.45rem',
+  },
+  bankName: {
+    fontSize: '0.82rem',
+    color: '#64748b',
+    fontWeight: '700',
+  },
+  rekNumber: {
+    fontSize: '1.15rem',
+    color: '#0d141e',
+    fontWeight: '900',
+    fontFamily: 'monospace',
+    letterSpacing: '1px',
+  },
+  rekOwnerWrap: {
+    textAlign: 'right',
+  },
+  rekOwnerLabel: {
+    fontSize: '0.72rem',
+    color: '#64748b',
+    fontWeight: '700',
+  },
+  rekOwnerName: {
+    fontSize: '0.86rem',
+    color: '#0d141e',
+    fontWeight: '800',
+  },
+  rekFooterNote: {
+    fontSize: '0.74rem',
+    color: '#64748b',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.3rem',
+    lineHeight: '1.35',
   },
   alertBox: {
     padding: '0.65rem 0.85rem',
-    borderRadius: '6px',
+    borderRadius: '8px',
     fontSize: '0.85rem',
     fontWeight: '600',
     border: '1px solid',
     marginBottom: '1rem',
   },
+  formWrap: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.85rem',
+  },
   field: {
-    marginBottom: '0.75rem',
+    marginBottom: 0,
   },
   label: {
     display: 'block',
-    fontSize: '0.8rem',
-    fontWeight: '700',
+    fontSize: '0.82rem',
+    fontWeight: '800',
     color: '#334155',
-    marginBottom: '0.25rem',
+    marginBottom: '0.35rem',
+    fontFamily: "'Urbanist', sans-serif",
   },
   input: {
     width: '100%',
-    padding: '0.65rem 0.75rem',
-    border: '1px solid #cbd5e1',
-    borderRadius: '6px',
+    padding: '0.7rem 0.85rem',
+    border: '1.5px solid #cbd5e1',
+    borderRadius: '8px',
     fontSize: '0.88rem',
     outline: 'none',
+    boxSizing: 'border-box',
+    backgroundColor: '#ffffff',
+  },
+  uploadArea: {
+    border: '1.5px dashed #cbd5e1',
+    borderRadius: '8px',
+    padding: '0.85rem',
+    backgroundColor: '#ffffff',
+    textAlign: 'center',
   },
   fileInput: {
-    fontSize: '0.85rem',
+    width: '100%',
+    fontSize: '0.84rem',
+    color: '#475569',
+  },
+  uploadHint: {
+    margin: '0.35rem 0 0 0',
+    fontSize: '0.74rem',
+    color: '#94a3b8',
+  },
+  previewWrap: {
+    textAlign: 'center',
+    backgroundColor: '#ffffff',
+    padding: '0.65rem',
+    borderRadius: '8px',
+    border: '1px solid #e2e8f0',
+  },
+  previewLabel: {
+    margin: '0 0 0.4rem 0',
+    fontSize: '0.76rem',
+    fontWeight: '800',
     color: '#475569',
   },
   previewImg: {
-    maxHeight: '140px',
+    maxHeight: '160px',
+    maxWidth: '100%',
     borderRadius: '8px',
     border: '1px solid #cbd5e1',
-    boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
   },
   submitBtn: {
     width: '100%',
@@ -1504,10 +1836,12 @@ const s2 = {
     color: '#74c02c',
     border: 'none',
     borderRadius: '8px',
-    fontWeight: '800',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900',
     fontSize: '0.92rem',
     cursor: 'pointer',
-    boxShadow: '0 2px 8px rgba(13,20,30,0.3)',
+    boxShadow: '0 4px 14px rgba(13,20,30,0.25)',
+    marginTop: '0.35rem',
   },
   receiveBox: {
     padding: '1.5rem 1rem',
