@@ -50,6 +50,10 @@ const CompareAlatBeratModal = ({
 
   const priceA = Number(unitA?.harga || 0);
   const priceB = Number(unitB?.harga || 0);
+  const stockA = unitA ? Number(unitA.stok ?? unitA.stock ?? 0) : 0;
+  const stockB = unitB ? Number(unitB.stok ?? unitB.stock ?? 0) : 0;
+  const isOutOfStockA = stockA <= 0;
+  const isOutOfStockB = stockB <= 0;
 
   // Advantage counters
   let aScore = 0;
@@ -131,13 +135,21 @@ const CompareAlatBeratModal = ({
 
                 <button
                   onClick={() => {
+                    if (isOutOfStockA) return;
                     onClose();
                     onRFQ(unitA);
                   }}
-                  style={s.btnRfqDirect}
+                  disabled={isOutOfStockA}
+                  style={isOutOfStockA ? {
+                    ...s.btnRfqDirect,
+                    backgroundColor: '#94a3b8',
+                    color: '#ffffff',
+                    cursor: 'not-allowed',
+                    boxShadow: 'none'
+                  } : s.btnRfqDirect}
                 >
                   <FileText size={14} />
-                  <span>Ajukan RFQ Unit 1</span>
+                  <span>{isOutOfStockA ? 'Stok Habis' : 'Ajukan RFQ Unit 1'}</span>
                 </button>
               </div>
             </div>
@@ -198,17 +210,25 @@ const CompareAlatBeratModal = ({
 
                   <button
                     onClick={() => {
+                      if (isOutOfStockB) return;
                       onClose();
                       onRFQ(unitB);
                     }}
-                    style={{
+                    disabled={isOutOfStockB}
+                    style={isOutOfStockB ? {
+                      ...s.btnRfqDirect,
+                      backgroundColor: '#94a3b8',
+                      color: '#ffffff',
+                      cursor: 'not-allowed',
+                      boxShadow: 'none'
+                    } : {
                       ...s.btnRfqDirect,
                       backgroundColor: '#1e3a8a',
                       color: '#93c5fd',
                     }}
                   >
                     <FileText size={14} />
-                    <span>Ajukan RFQ Unit 2</span>
+                    <span>{isOutOfStockB ? 'Stok Habis' : 'Ajukan RFQ Unit 2'}</span>
                   </button>
                 </div>
               </div>
@@ -464,10 +484,20 @@ const CompareAlatBeratModal = ({
                       <div style={s.paramDesc}>Status ketersediaan unit di pool pengiriman</div>
                     </td>
                     <td style={s.tdValue}>
-                      <span style={{ color: '#15803d', fontWeight: '800' }}>Ready Stock ({unitA?.stock || 1} Unit)</span>
+                      {stockA > 0 ? (
+                        <span style={{ color: '#15803d', fontWeight: '800' }}>Ready Stock ({stockA} Unit)</span>
+                      ) : (
+                        <span style={{ color: '#ef4444', fontWeight: '800', backgroundColor: '#fee2e2', padding: '2px 8px', borderRadius: '4px' }}>Stok Habis (0 Unit)</span>
+                      )}
                     </td>
                     <td style={s.tdValue}>
-                      <span style={{ color: '#15803d', fontWeight: '800' }}>Ready Stock ({unitB?.stock || 1} Unit)</span>
+                      {unitB ? (
+                        stockB > 0 ? (
+                          <span style={{ color: '#15803d', fontWeight: '800' }}>Ready Stock ({stockB} Unit)</span>
+                        ) : (
+                          <span style={{ color: '#ef4444', fontWeight: '800', backgroundColor: '#fee2e2', padding: '2px 8px', borderRadius: '4px' }}>Stok Habis (0 Unit)</span>
+                        )
+                      ) : '-'}
                     </td>
                   </tr>
 

@@ -49,5 +49,15 @@ export const alatBeratService = {
     } catch (error) {
       throw error.response?.data?.message || 'Gagal menyetujui data';
     }
+  },
+
+  // 6. Manager mengubah stok secara langsung
+  updateStock: async (id, stock) => {
+    try {
+      const response = await api.put(`/alat-berat/${id}/stock`, { stock, stok: stock });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || 'Gagal mengubah stok alat berat';
+    }
   }
 };

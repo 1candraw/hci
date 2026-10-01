@@ -1,4 +1,6 @@
 const quotationRepo = require('../repositories/quotation.repository');
+const alatBeratRepo = require('../repositories/alatBerat.repository');
+const auditLogService = require('../services/auditlog.service');
 
 const createQuotation = async (req, res) => {
   try {
@@ -7,6 +9,16 @@ const createQuotation = async (req, res) => {
     
     // 2. Tangkap data dari form React
     const { alat_berat_id, sumber_pesanan, saw_result_id, metode_pembayaran, catatan } = req.body;
+
+    // Validasi ketersediaan stok
+    const unit = await alatBeratRepo.findById(alat_berat_id);
+    if (!unit) {
+      return res.status(404).json({ message: 'Unit alat berat tidak ditemukan' });
+    }
+    const unitStock = unit.stok !== undefined ? unit.stok : (unit.stock || 0);
+    if (unitStock <= 0) {
+      return res.status(400).json({ message: 'Stok unit tidak mencukupi. Unit ini sedang habis.' });
+    }
 
     // 3. Generate Nomor Pemesanan Unik ala Enterprise (Contoh: PO-202607-A8F2)
     const date = new Date();
@@ -116,6 +128,20 @@ const reviewPenawaran = async (req, res) => {
       return res.status(400).json({ message: 'Aksi tidak valid' });
     }
 
+    // Pengecekan stok jika disetujui (Approval)
+    const quotation = await quotationRepo.getById(id);
+    if (!quotation) {
+      return res.status(404).json({ message: 'Data pesanan tidak ditemukan' });
+    }
+
+    if (action === 'approve') {
+      const unit = await alatBeratRepo.findById(quotation.alat_berat_id);
+      const unitStock = unit ? (unit.stok !== undefined ? unit.stok : (unit.stock || 0)) : 0;
+      if (unitStock <= 0) {
+        return res.status(400).json({ message: 'Stok unit tidak mencukupi' });
+      }
+    }
+
     const affectedRows = await quotationRepo.updateStatusManager(id, statusFinal, manager_id);
 
     if (affectedRows === 0) {
@@ -129,11 +155,44 @@ const reviewPenawaran = async (req, res) => {
   }
 };
 
-// Fungsi update status pesanan
+// Fungsi update status pesanan dengan Auto-Deduct Stock
 const updateStatusPesanan = async (req, res) => {
   try {
     const id = req.params.id;
     const { status } = req.body;
+
+    const quotation = await quotationRepo.getById(id);
+    if (!quotation) {
+      return res.status(404).json({ message: 'Data pesanan tidak ditemukan' });
+    }
+
+    // Auto-Deduct Stock saat Verifikasi DP disetujui Manager (PROSES_OPERASIONAL) atau saat PENGIRIMAN
+    const postDeductStatuses = ['PROSES_OPERASIONAL', 'SIAP_KIRIM', 'PENGIRIMAN', 'SELESAI'];
+    const willTriggerDeduction = (status === 'PROSES_OPERASIONAL' || status === 'PENGIRIMAN') && !postDeductStatuses.includes(quotation.status);
+
+    if (willTriggerDeduction) {
+      const unit = await alatBeratRepo.findById(quotation.alat_berat_id);
+      const unitStock = unit ? (unit.stok !== undefined ? unit.stok : (unit.stock || 0)) : 0;
+      if (unitStock <= 0) {
+        return res.status(400).json({ message: 'Stok unit tidak mencukupi' });
+      }
+
+      // Kurangi stok unit sebanyak 1
+      const deducted = await alatBeratRepo.deductStock(quotation.alat_berat_id, 1);
+      if (deducted === 0) {
+        return res.status(400).json({ message: 'Stok unit tidak mencukupi' });
+      }
+
+      if (req.user?.id) {
+        await auditLogService.logActivity(
+          req.user.id,
+          'UPDATE',
+          'alat_berat',
+          quotation.alat_berat_id,
+          `Pengurangan stok otomatis (1 unit) untuk pesanan #${quotation.nomor_pemesanan || id} (Status pesanan berubah ke ${status})`
+        );
+      }
+    }
 
     const affectedRows = await quotationRepo.updateStatus(id, status);
     if (affectedRows === 0) {
@@ -173,6 +232,22 @@ const createDeliveryOrder = async (req, res) => {
     const id = req.params.id;
     const deliveryData = req.body; 
 
+    const quotation = await quotationRepo.getById(id);
+    if (!quotation) {
+      return res.status(404).json({ message: 'Data pesanan tidak ditemukan' });
+    }
+
+    // Pastikan stok dikurangi jika belum pernah dipotong sebelumnya
+    const postDeductStatuses = ['PROSES_OPERASIONAL', 'SIAP_KIRIM', 'PENGIRIMAN', 'SELESAI'];
+    if (!postDeductStatuses.includes(quotation.status)) {
+      const unit = await alatBeratRepo.findById(quotation.alat_berat_id);
+      const unitStock = unit ? (unit.stok !== undefined ? unit.stok : (unit.stock || 0)) : 0;
+      if (unitStock <= 0) {
+        return res.status(400).json({ message: 'Stok unit tidak mencukupi' });
+      }
+      await alatBeratRepo.deductStock(quotation.alat_berat_id, 1);
+    }
+
     // 1. Simpan data pengiriman
     await quotationRepo.submitDeliveryOrder(id, deliveryData);
 
@@ -206,6 +281,16 @@ const createGuestQuotation = async (req, res) => {
     // Validasi field wajib
     if (!alat_berat_id || !guest_name || !guest_company || !guest_phone || !guest_email) {
       return res.status(400).json({ message: 'Field wajib: alat_berat_id, guest_name, guest_company, guest_phone, guest_email' });
+    }
+
+    // Validasi ketersediaan stok
+    const unit = await alatBeratRepo.findById(alat_berat_id);
+    if (!unit) {
+      return res.status(404).json({ message: 'Unit alat berat tidak ditemukan' });
+    }
+    const unitStock = unit.stok !== undefined ? unit.stok : (unit.stock || 0);
+    if (unitStock <= 0) {
+      return res.status(400).json({ message: 'Stok unit tidak mencukupi. Unit ini sedang habis.' });
     }
 
     // Generate nomor RFQ format HC-YYYYMM-XXXX

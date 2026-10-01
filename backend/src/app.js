@@ -8,6 +8,7 @@ const dashboardRoutes = require('./routes/dashboard.routes');
 const quotationRoutes = require('./routes/quotation.routes');
 const transactionRoutes = require('./routes/transaction.routes');
 const auditRoutes = require('./routes/audit.routes'); 
+const stockRequestRoutes = require('./routes/stockRequest.routes');
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.get('/', (req, res) => {
 // Nanti semua routes (auth, saw, transaksi) akan di-import di sini
 app.use('/api/auth', authRoutes);
 app.use('/api/alat-berat', alatBeratRoutes);
+app.use('/api/stock-requests', stockRequestRoutes);
 app.use('/api/saw', sawRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/dashboard', dashboardRoutes);

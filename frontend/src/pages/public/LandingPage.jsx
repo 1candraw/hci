@@ -227,6 +227,11 @@ const LandingPage = () => {
   };
 
   const handleRFQClick = (item) => {
+    const stockVal = item?.stok !== undefined ? item?.stok : (item?.stock !== undefined ? item?.stock : 1);
+    if (Number(stockVal) <= 0) {
+      showToast('Mohon maaf, unit ini sedang tidak memiliki stok tersedia (Stok Habis).');
+      return;
+    }
     setRfqItem(item);
     setRfqOpen(true);
   };
@@ -558,82 +563,108 @@ const LandingPage = () => {
                   </div>
 
                   {/* Body Card */}
-                  <div style={s.cardBody}>
-                    <div style={s.brandRow}>
-                      <span style={s.brandBadgeText}>{unit.brand || 'Excavator'}</span>
-                      <span style={s.stockBadge}>
-                        <CheckCircle2 size={12} style={{ color: '#15803d' }} />
-                        <span>Ready Stock ({unit.stock || 1} Unit)</span>
-                      </span>
-                    </div>
+                  {(() => {
+                    const stockQty = unit.stok !== undefined ? unit.stok : (unit.stock !== undefined ? unit.stock : 0);
+                    const isOutOfStock = Number(stockQty) <= 0;
 
-                    <h3 style={s.cardUnitName}>
-                      {unit.name && unit.name.trim() !== 'Excavator' ? unit.name : `${unit.brand} ${unit.model || ''}`}
-                    </h3>
-                    <p style={s.cardModelText}>Model: <strong>{unit.model || '-'}</strong></p>
+                    return (
+                      <div style={s.cardBody}>
+                        <div style={s.brandRow}>
+                          <span style={s.brandBadgeText}>{unit.brand || 'Excavator'}</span>
+                          {isOutOfStock ? (
+                            <span style={s.stockBadgeOut}>
+                              <AlertCircle size={12} style={{ color: '#64748b' }} />
+                              <span>Stok Habis</span>
+                            </span>
+                          ) : (
+                            <span style={s.stockBadge}>
+                              <CheckCircle2 size={12} style={{ color: '#15803d' }} />
+                              <span>Ready Stock ({stockQty} Unit)</span>
+                            </span>
+                          )}
+                        </div>
 
-                    {/* Tech Specs Grid */}
-                    <div style={s.cardSpecsGrid}>
-                      <div style={s.cardSpecItem}>
-                        <Zap size={13} style={{ color: '#74c02c' }} />
-                        <span style={s.cardSpecVal}>{unit.tenaga_mesin || '-'} HP</span>
-                        <span style={s.cardSpecLab}>Tenaga</span>
-                      </div>
-                      <div style={s.cardSpecItem}>
-                        <Layers size={13} style={{ color: '#3b82f6' }} />
-                        <span style={s.cardSpecVal}>{unit.kapasitas_bucket || '-'} m³</span>
-                        <span style={s.cardSpecLab}>Bucket</span>
-                      </div>
-                      <div style={s.cardSpecItem}>
-                        <Maximize2 size={13} style={{ color: '#10b981' }} />
-                        <span style={s.cardSpecVal}>{unit.kedalaman_gali || '-'} m</span>
-                        <span style={s.cardSpecLab}>Kedalaman</span>
-                      </div>
-                      <div style={s.cardSpecItem}>
-                        <Scale size={13} style={{ color: '#8b5cf6' }} />
-                        <span style={s.cardSpecVal}>{unit.berat_operasional || unit.kapasitas_ton || '-'} Ton</span>
-                        <span style={s.cardSpecLab}>Bobot</span>
-                      </div>
-                    </div>
+                        <h3 style={s.cardUnitName}>
+                          {unit.name && unit.name.trim() !== 'Excavator' ? unit.name : `${unit.brand} ${unit.model || ''}`}
+                        </h3>
+                        <p style={s.cardModelText}>Model: <strong>{unit.model || '-'}</strong></p>
 
-                    {/* Penawaran Resmi & Actions */}
-                    <div style={s.cardFooter}>
-                      <div>
-                        <span style={s.cardPriceLabel}>Penawaran Resmi</span>
-                        <div style={{ ...s.cardPriceVal, fontSize: '0.92rem', color: '#15803d', fontWeight: '800' }}>
-                          Minta Penawaran (RFQ)
+                        {/* Tech Specs Grid */}
+                        <div style={s.cardSpecsGrid}>
+                          <div style={s.cardSpecItem}>
+                            <Zap size={13} style={{ color: '#74c02c' }} />
+                            <span style={s.cardSpecVal}>{unit.tenaga_mesin || '-'} HP</span>
+                            <span style={s.cardSpecLab}>Tenaga</span>
+                          </div>
+                          <div style={s.cardSpecItem}>
+                            <Layers size={13} style={{ color: '#3b82f6' }} />
+                            <span style={s.cardSpecVal}>{unit.kapasitas_bucket || '-'} m³</span>
+                            <span style={s.cardSpecLab}>Bucket</span>
+                          </div>
+                          <div style={s.cardSpecItem}>
+                            <Maximize2 size={13} style={{ color: '#10b981' }} />
+                            <span style={s.cardSpecVal}>{unit.kedalaman_gali || '-'} m</span>
+                            <span style={s.cardSpecLab}>Kedalaman</span>
+                          </div>
+                          <div style={s.cardSpecItem}>
+                            <Scale size={13} style={{ color: '#8b5cf6' }} />
+                            <span style={s.cardSpecVal}>{unit.berat_operasional || unit.kapasitas_ton || '-'} Ton</span>
+                            <span style={s.cardSpecLab}>Bobot</span>
+                          </div>
+                        </div>
+
+                        {/* Penawaran Resmi & Actions */}
+                        <div style={s.cardFooter}>
+                          <div>
+                            <span style={s.cardPriceLabel}>Penawaran Resmi</span>
+                            <div style={{ ...s.cardPriceVal, fontSize: '0.92rem', color: '#15803d', fontWeight: '800' }}>
+                              Minta Penawaran (RFQ)
+                            </div>
+                          </div>
+
+                          <div style={s.cardBtnGroup}>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenDetail(unit);
+                              }}
+                              style={s.cardDetailBtn}
+                              title="Lihat spesifikasi lengkap unit"
+                            >
+                              <Eye size={13} />
+                              <span>Detail</span>
+                            </button>
+
+                            {isOutOfStock ? (
+                              <button
+                                type="button"
+                                disabled
+                                style={s.cardRfqBtnDisabled}
+                                title="Unit ini sedang tidak memiliki stok tersedia"
+                              >
+                                <FileText size={13} />
+                                <span>Habis</span>
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRFQClick(unit);
+                                }}
+                                style={s.cardRfqBtn}
+                                title="Ajukan penawaran harga resmi (RFQ)"
+                              >
+                                <FileText size={13} />
+                                <span>RFQ</span>
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
-
-                      <div style={s.cardBtnGroup}>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenDetail(unit);
-                          }}
-                          style={s.cardDetailBtn}
-                          title="Lihat spesifikasi lengkap unit"
-                        >
-                          <Eye size={13} />
-                          <span>Detail</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRFQClick(unit);
-                          }}
-                          style={s.cardRfqBtn}
-                          title="Ajukan penawaran harga resmi (RFQ)"
-                        >
-                          <FileText size={13} />
-                          <span>RFQ</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                    );
+                  })()}
                 </div>
               );
             })}
@@ -1589,6 +1620,18 @@ const s = {
     fontWeight: '700',
     color: '#15803d',
   },
+  stockBadgeOut: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    color: '#64748b',
+    backgroundColor: '#f1f5f9',
+    padding: '0.1rem 0.45rem',
+    borderRadius: '4px',
+    border: '1px solid #cbd5e1',
+  },
   cardUnitName: {
     fontSize: '1.15rem',
     fontFamily: "'Sora', sans-serif",
@@ -1686,6 +1729,20 @@ const s = {
     cursor: 'pointer',
     boxShadow: '0 2px 8px rgba(13, 20, 30, 0.2)',
     transition: 'all 0.15s',
+  },
+  cardRfqBtnDisabled: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    padding: '0.55rem 0.85rem',
+    backgroundColor: '#f1f5f9',
+    color: '#94a3b8',
+    border: '1px solid #e2e8f0',
+    borderRadius: '7px',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '800',
+    fontSize: '0.82rem',
+    cursor: 'not-allowed',
   },
   // ── SAW Section ──
   sawSection: {

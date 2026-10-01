@@ -186,6 +186,11 @@ const Saw = () => {
   };
 
   const handleOrderClick = (mesin) => {
+    const stock = Number(mesin.stok ?? mesin.stock ?? 1);
+    if (stock <= 0) {
+      alert('Maaf, stok unit ini sedang habis (0 unit). Silakan pilih unit rekomendasi lainnya.');
+      return;
+    }
     setOrderItem(mesin);
     setIsOrderOpen(true);
   };
@@ -374,7 +379,14 @@ const Saw = () => {
                         <span style={{ fontSize: '1.4rem' }}>{getMedal(index)}</span>
                       </td>
                       <td style={styles.td}>
-                        <strong style={{ color: '#0d141e', fontSize: '0.92rem' }}>{item.name || item.nama_unit}</strong><br/>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <strong style={{ color: '#0d141e', fontSize: '0.92rem' }}>{item.name || item.nama_unit}</strong>
+                          {(Number(item.stok ?? item.stock ?? 1) <= 0) && (
+                            <span style={{ fontSize: '0.68rem', fontWeight: '800', backgroundColor: '#fee2e2', color: '#dc2626', padding: '1px 6px', borderRadius: '4px' }}>
+                              Stok Habis
+                            </span>
+                          )}
+                        </div>
                         <span style={{ fontSize: '0.78rem', color: '#64748b' }}>{item.brand} · {item.model || 'OEM Unit'}</span>
                       </td>
                       <td style={styles.td}>
@@ -395,13 +407,28 @@ const Saw = () => {
                         )}
                       </td>
                       <td style={{ ...styles.td, textAlign: 'center' }}>
-                        <button 
-                          onClick={() => handleOrderClick(item)} 
-                          style={styles.orderBtn}
-                        >
-                          <FileText size={13} />
-                          <span>Buat RFQ</span>
-                        </button>
+                        {Number(item.stok ?? item.stock ?? 1) <= 0 ? (
+                          <button 
+                            disabled
+                            style={{
+                              ...styles.orderBtn,
+                              backgroundColor: '#94a3b8',
+                              color: '#ffffff',
+                              cursor: 'not-allowed',
+                              boxShadow: 'none'
+                            }}
+                          >
+                            <span>Stok Habis</span>
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={() => handleOrderClick(item)} 
+                            style={styles.orderBtn}
+                          >
+                            <FileText size={13} />
+                            <span>Buat RFQ</span>
+                          </button>
+                        )}
                       </td>
                     </tr>
                   )) : (

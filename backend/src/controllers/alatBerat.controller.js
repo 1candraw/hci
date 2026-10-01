@@ -84,6 +84,9 @@ const updateAlatBerat = async (req, res) => {
       dataInput.approved_by = req.user.id;
     } else {
       // Jika Sales yang edit, status turun kasta kembali ke 'pending'
+      // Sales TIDAK BISA mengubah kolom stok secara langsung
+      delete dataInput.stock;
+      delete dataInput.stok;
       dataInput.status_approval = 'pending';
       dataInput.approved_by = null; 
     }
@@ -211,10 +214,69 @@ const approveAlatBerat = async (req, res) => {
   }
 };
 
+// 6. Manager Mengubah Stok Secara Langsung (Direct Update)
+const updateStockDirect = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const userRole = req.user.role ? req.user.role.toLowerCase() : '';
+
+    if (userRole !== 'manager') {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Akses ditolak. Hanya Manager yang dapat mengubah stok secara langsung.' 
+      });
+    }
+
+    const { stock, stok } = req.body;
+    const rawStock = stok !== undefined ? stok : stock;
+    
+    if (rawStock === undefined || rawStock === null || isNaN(rawStock) || Number(rawStock) < 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Nilai stok harus berupa angka bulat positif (>= 0).' 
+      });
+    }
+
+    const targetStock = parseInt(rawStock, 10);
+    const item = await alatBeratRepo.findById(id);
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Data alat berat tidak ditemukan.' });
+    }
+
+    const affectedRows = await alatBeratRepo.updateStock(id, targetStock);
+    if (affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Gagal memperbarui stok alat berat.' });
+    }
+
+    await auditLogService.logActivity(
+      userId,
+      'UPDATE',
+      'alat_berat',
+      id,
+      `Manager memperbarui stok langsung unit ${item.brand || ''} ${item.model || ''} (ID #${id}) menjadi ${targetStock} unit`
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Stok unit ${item.brand || ''} ${item.model || ''} berhasil diperbarui menjadi ${targetStock} unit.`,
+      data: {
+        id: Number(id),
+        stok: targetStock,
+        stock: targetStock
+      }
+    });
+  } catch (error) {
+    console.error("Error updateStockDirect:", error);
+    res.status(500).json({ success: false, message: 'Gagal memperbarui stok.' });
+  }
+};
+
 module.exports = {
   getAlatBerat,
   addAlatBerat,
   updateAlatBerat,
   deleteAlatBerat,
-  approveAlatBerat
+  approveAlatBerat,
+  updateStockDirect
 };

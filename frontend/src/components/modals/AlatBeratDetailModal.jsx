@@ -6,6 +6,7 @@ import {
   Scale,
   FileText,
   CheckCircle2,
+  AlertCircle,
   ShieldCheck,
   X,
   Sparkles,
@@ -21,6 +22,9 @@ const AlatBeratDetailModal = ({
   isCompared = false
 }) => {
   if (!isOpen || !unit) return null;
+
+  const stockQty = unit.stok !== undefined ? unit.stok : (unit.stock !== undefined ? unit.stock : 0);
+  const isOutOfStock = Number(stockQty) <= 0;
 
   const unitName = unit.name && unit.name.trim() !== 'Excavator'
     ? unit.name
@@ -43,10 +47,17 @@ const AlatBeratDetailModal = ({
             <div style={s.headerMetaRow}>
               <span style={s.brandBadge}>{unit.brand || 'Excavator'}</span>
               <span style={s.tonBadge}>Kelas {unit.kapasitas_ton || 5} Ton</span>
-              <span style={s.stockBadge}>
-                <CheckCircle2 size={13} style={{ color: '#15803d' }} />
-                <span>Ready Stock ({unit.stock || 1} Unit)</span>
-              </span>
+              {isOutOfStock ? (
+                <span style={s.stockBadgeOut}>
+                  <AlertCircle size={13} style={{ color: '#64748b' }} />
+                  <span>Stok Habis (0 Unit)</span>
+                </span>
+              ) : (
+                <span style={s.stockBadge}>
+                  <CheckCircle2 size={13} style={{ color: '#15803d' }} />
+                  <span>Ready Stock ({stockQty} Unit)</span>
+                </span>
+              )}
             </div>
             <h2 style={s.unitTitle}>{unitName}</h2>
             <p style={s.unitSubtitle}>
@@ -90,16 +101,27 @@ const AlatBeratDetailModal = ({
 
               {/* Quick Actions in Summary */}
               <div style={s.quickActionWrap}>
-                <button
-                  onClick={() => {
-                    onClose();
-                    onRFQ(unit);
-                  }}
-                  style={s.btnPrimaryRFQ}
-                >
-                  <FileText size={16} />
-                  <span>Ajukan Penawaran (RFQ)</span>
-                </button>
+                {isOutOfStock ? (
+                  <button
+                    disabled
+                    style={s.btnPrimaryRFQDisabled}
+                    title="Unit ini sedang tidak memiliki stok tersedia"
+                  >
+                    <FileText size={16} />
+                    <span>Stok Unit Habis</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      onClose();
+                      onRFQ(unit);
+                    }}
+                    style={s.btnPrimaryRFQ}
+                  >
+                    <FileText size={16} />
+                    <span>Ajukan Penawaran (RFQ)</span>
+                  </button>
+                )}
 
                 <button
                   onClick={() => onToggleCompare(unit)}
@@ -193,7 +215,13 @@ const AlatBeratDetailModal = ({
                   <td style={s.tableLabel}>Kelas Tonase</td>
                   <td style={s.tableValue}>{unit.kapasitas_ton ? `${unit.kapasitas_ton} Ton Class` : 'Standard'}</td>
                   <td style={s.tableLabel}>Ketersediaan Unit</td>
-                  <td style={s.tableValue}><span style={{ color: '#15803d', fontWeight: '700' }}>Ready Stock ({unit.stock || 1} Unit)</span></td>
+                  <td style={s.tableValue}>
+                    {isOutOfStock ? (
+                      <span style={{ color: '#64748b', fontWeight: '700' }}>Stok Habis (0 Unit)</span>
+                    ) : (
+                      <span style={{ color: '#15803d', fontWeight: '700' }}>Ready Stock ({stockQty} Unit)</span>
+                    )}
+                  </td>
                 </tr>
                 <tr>
                   <td style={s.tableLabel}>Kategori Pengadaan</td>
@@ -269,16 +297,27 @@ const AlatBeratDetailModal = ({
                 </>
               )}
             </button>
-            <button
-              onClick={() => {
-                onClose();
-                onRFQ(unit);
-              }}
-              style={s.btnPrimaryAction}
-            >
-              <FileText size={16} />
-              <span>Ajukan RFQ Unit Ini</span>
-            </button>
+            {isOutOfStock ? (
+              <button
+                disabled
+                style={s.btnPrimaryActionDisabled}
+                title="Unit ini sedang tidak memiliki stok tersedia"
+              >
+                <FileText size={16} />
+                <span>Stok Habis</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  onClose();
+                  onRFQ(unit);
+                }}
+                style={s.btnPrimaryAction}
+              >
+                <FileText size={16} />
+                <span>Ajukan RFQ Unit Ini</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -359,6 +398,18 @@ const s = {
     padding: '0.15rem 0.55rem',
     borderRadius: '5px',
     border: '1px solid #bbf7d0',
+  },
+  stockBadgeOut: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.3rem',
+    fontSize: '0.72rem',
+    fontWeight: '700',
+    color: '#64748b',
+    backgroundColor: '#f1f5f9',
+    padding: '0.15rem 0.55rem',
+    borderRadius: '5px',
+    border: '1px solid #cbd5e1',
   },
   unitTitle: {
     fontSize: '1.45rem',
@@ -512,6 +563,21 @@ const s = {
     fontSize: '0.92rem',
     cursor: 'pointer',
     boxShadow: '0 4px 12px rgba(13, 20, 30, 0.25)',
+  },
+  btnPrimaryRFQDisabled: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.45rem',
+    padding: '0.75rem 1.25rem',
+    backgroundColor: '#f1f5f9',
+    color: '#94a3b8',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900',
+    fontSize: '0.92rem',
+    cursor: 'not-allowed',
   },
   btnToggleCompare: {
     display: 'flex',
@@ -697,6 +763,20 @@ const s = {
     fontSize: '0.9rem',
     cursor: 'pointer',
     boxShadow: '0 4px 14px rgba(13, 20, 30, 0.25)',
+  },
+  btnPrimaryActionDisabled: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.45rem',
+    padding: '0.75rem 1.5rem',
+    backgroundColor: '#f1f5f9',
+    color: '#94a3b8',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900',
+    fontSize: '0.9rem',
+    cursor: 'not-allowed',
   },
 };
 

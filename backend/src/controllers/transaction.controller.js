@@ -58,12 +58,48 @@ const getAll = async (req, res) => {
   }
 };
 
+const alatBeratRepo = require('../repositories/alatBerat.repository');
+const auditLogService = require('../services/auditlog.service');
+
 // Memperbarui status di tabel quotations
 const updateStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
   try {
+    const [rows] = await db.query('SELECT * FROM quotations WHERE id = ?', [id]);
+    const quotation = rows[0];
+    if (!quotation) {
+      return res.status(404).json({ success: false, message: 'Data quotation tidak ditemukan' });
+    }
+
+    // Auto-Deduct Stock saat status berubah ke PROSES_OPERASIONAL atau PENGIRIMAN
+    const postDeductStatuses = ['PROSES_OPERASIONAL', 'SIAP_KIRIM', 'PENGIRIMAN', 'SELESAI'];
+    const willTriggerDeduction = (status === 'PROSES_OPERASIONAL' || status === 'PENGIRIMAN') && !postDeductStatuses.includes(quotation.status);
+
+    if (willTriggerDeduction) {
+      const unit = await alatBeratRepo.findById(quotation.alat_berat_id);
+      const unitStock = unit ? (unit.stok !== undefined ? unit.stok : (unit.stock || 0)) : 0;
+      if (unitStock <= 0) {
+        return res.status(400).json({ success: false, message: 'Stok unit tidak mencukupi' });
+      }
+
+      const deducted = await alatBeratRepo.deductStock(quotation.alat_berat_id, 1);
+      if (deducted === 0) {
+        return res.status(400).json({ success: false, message: 'Stok unit tidak mencukupi' });
+      }
+
+      if (req.user?.id) {
+        await auditLogService.logActivity(
+          req.user.id,
+          'UPDATE',
+          'alat_berat',
+          quotation.alat_berat_id,
+          `Pengurangan stok otomatis (1 unit) untuk transaksi #${quotation.nomor_pemesanan || id} (Status -> ${status})`
+        );
+      }
+    }
+
     await db.query('UPDATE quotations SET status = ? WHERE id = ?', [status, id]);
     res.json({
       success: true,
@@ -71,7 +107,7 @@ const updateStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Error update status:", error);
-    res.status(500).json({ success: false, message: 'Gagal memperbarui status' });
+    res.status(500).json({ success: false, message: error.message || 'Gagal memperbarui status' });
   }
 };
 

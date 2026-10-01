@@ -73,6 +73,11 @@ const Katalog = () => {
 
   // --- HANDLER FITUR PESAN ---
   const handleOrderClick = (mesin) => {
+    const stockVal = mesin.stok !== undefined ? mesin.stok : (mesin.stock || 0);
+    if (Number(stockVal) <= 0) {
+      alert('Mohon maaf, unit ini sedang tidak memiliki stok tersedia (Stok Habis).');
+      return;
+    }
     setOrderItem(mesin);
     setIsOrderOpen(true);
   };
@@ -139,13 +144,17 @@ const Katalog = () => {
         <div style={styles.gridContainer}>
           {filteredList.map((item) => {
             const isSelected = compareList.some(comp => comp.id === item.id);
+            const stockVal = item.stok !== undefined ? item.stok : (item.stock || 0);
+            const isOutOfStock = Number(stockVal) <= 0;
+
             return (
               <div 
                 key={item.id} 
                 style={{
                   ...styles.card, 
                   borderColor: isSelected ? '#74c02c' : '#e2e8f0',
-                  boxShadow: isSelected ? '0 0 0 2px rgba(116, 192, 44, 0.4)' : '0 2px 8px rgba(13, 20, 30, 0.04)'
+                  boxShadow: isSelected ? '0 0 0 2px rgba(116, 192, 44, 0.4)' : '0 2px 8px rgba(13, 20, 30, 0.04)',
+                  opacity: isOutOfStock ? 0.88 : 1
                 }}
               >
                 <div style={styles.imageBox}>
@@ -158,7 +167,11 @@ const Katalog = () => {
                     </div>
                   )}
                   <span style={styles.brandBadge}>{item.brand}</span>
-                  <span style={styles.readyBadge}>Ready Stock</span>
+                  {isOutOfStock ? (
+                    <span style={styles.outOfStockBadge}>Stok Habis</span>
+                  ) : (
+                    <span style={styles.readyBadge}>Ready ({stockVal} Unit)</span>
+                  )}
                 </div>
 
                 <div style={styles.infoBox}>
@@ -188,10 +201,21 @@ const Katalog = () => {
                     <button onClick={() => handleDetailClick(item)} style={styles.detailBtn}>
                       Detail
                     </button>
-                    <button onClick={() => handleOrderClick(item)} style={styles.orderBtn}>
-                      <FileText size={13} />
-                      <span>Buat RFQ</span>
-                    </button>
+                    {isOutOfStock ? (
+                      <button 
+                        disabled 
+                        style={styles.orderBtnDisabled} 
+                        title="Unit ini sedang tidak memiliki stok tersedia"
+                      >
+                        <FileText size={13} />
+                        <span>Stok Habis</span>
+                      </button>
+                    ) : (
+                      <button onClick={() => handleOrderClick(item)} style={styles.orderBtn}>
+                        <FileText size={13} />
+                        <span>Buat RFQ</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -569,6 +593,19 @@ const styles = {
     fontFamily: "'Urbanist', sans-serif",
     fontWeight: '900',
   },
+  outOfStockBadge: {
+    position: 'absolute',
+    top: '10px',
+    right: '10px',
+    backgroundColor: '#f1f5f9',
+    color: '#64748b',
+    border: '1px solid #cbd5e1',
+    padding: '0.2rem 0.55rem',
+    borderRadius: '5px',
+    fontSize: '0.68rem',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900',
+  },
   infoBox: { 
     padding: '1.15rem', 
     flex: 1 
@@ -648,6 +685,20 @@ const styles = {
     fontFamily: "'Urbanist', sans-serif",
     fontWeight: '900',
     boxShadow: '0 2px 6px rgba(13, 20, 30, 0.25)',
+  },
+  orderBtnDisabled: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.3rem',
+    padding: '0.45rem 0.85rem',
+    backgroundColor: '#f1f5f9',
+    color: '#94a3b8',
+    border: '1px solid #e2e8f0',
+    borderRadius: '6px',
+    cursor: 'not-allowed',
+    fontSize: '0.78rem',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '800'
   },
   orderBtnModal: { 
     display: 'inline-flex',
