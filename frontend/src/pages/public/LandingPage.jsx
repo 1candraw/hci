@@ -892,7 +892,7 @@ const LandingPage = () => {
                       key={item.id || idx}
                       style={{
                         ...s.unitCard,
-                        border: idx === 0 ? '2px solid #74c02c' : '1px solid #e2e8f0',
+                        border: idx === 0 ? '2px solid #74c02c' : '1.5px solid #e2e8f0',
                         boxShadow: idx === 0 ? '0 6px 20px -4px rgba(116, 192, 44, 0.2)' : '0 2px 8px rgba(13, 20, 30, 0.04)',
                       }}
                     >
@@ -908,73 +908,113 @@ const LandingPage = () => {
                         {idx === 0 && <span style={s.topScoreTag}>SKOR TERTINGGI</span>}
                       </div>
 
-                      <div style={s.unitBody}>
-                        {/* Unit Info */}
-                        <div style={s.unitInfoRow}>
-                          <div>
-                            <h4 style={s.unitName}>{item.name || item.nama_unit || 'Excavator Unit'}</h4>
-                            <p style={s.unitBrand}>Brand: <strong>{item.brand}</strong> · Model: {item.model || 'Standard'}</p>
+                      <div style={s.sawCardInner}>
+                        {/* Unit Media / Photo Preview */}
+                        <div
+                          style={s.sawMediaWrap}
+                          onClick={() => handleOpenDetail(item)}
+                          title="Klik untuk melihat foto & spesifikasi lengkap"
+                        >
+                          {item.image_url ? (
+                            <img
+                              src={item.image_url}
+                              alt={item.name || item.nama_unit || 'Unit Excavator'}
+                              style={s.sawCardImg}
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                if (e.target.nextElementSibling) {
+                                  e.target.nextElementSibling.style.display = 'flex';
+                                }
+                              }}
+                            />
+                          ) : null}
+                          <div
+                            style={{
+                              ...s.sawCardPlaceholder,
+                              display: item.image_url ? 'none' : 'flex',
+                            }}
+                          >
+                            <Truck size={38} style={{ color: '#74c02c', opacity: 0.9 }} />
+                            <span style={s.sawPlaceholderText}>{item.brand || 'HEAVY MACHINERY'}</span>
                           </div>
-                          <div style={s.scoreBox}>
-                            <span style={s.scoreLabel}>SKOR SAW</span>
-                            <span style={s.scoreNumber}>{Number(item.skor_akhir || 0).toFixed(4)}</span>
-                          </div>
-                        </div>
-
-                        {/* Specs Grid */}
-                        <div style={s.specsGrid}>
-                          <div style={s.specBox}>
-                            <Zap size={15} style={s.specIcon} />
-                            <span style={s.specVal}>{item.tenaga_mesin || '-'} HP</span>
-                            <span style={s.specLab}>Tenaga Mesin</span>
-                          </div>
-                          <div style={s.specBox}>
-                            <Layers size={15} style={s.specIcon} />
-                            <span style={s.specVal}>{item.kapasitas_bucket || '-'} m³</span>
-                            <span style={s.specLab}>Bucket</span>
-                          </div>
-                          <div style={s.specBox}>
-                            <Maximize2 size={15} style={s.specIcon} />
-                            <span style={s.specVal}>{item.kedalaman_gali || '-'} m</span>
-                            <span style={s.specLab}>Kedalaman</span>
-                          </div>
-                          <div style={s.specBox}>
-                            <Scale size={15} style={s.specIcon} />
-                            <span style={s.specVal}>{item.berat_operasional || item.kapasitas_ton || '-'} Ton</span>
-                            <span style={s.specLab}>Tonase</span>
+                          <div style={s.sawTonBadge}>
+                            Kelas {item.kapasitas_ton || filterTonase} Ton
                           </div>
                         </div>
 
-                        {/* RFQ Scheme & Action */}
-                        <div style={s.unitFooter}>
-                          <div>
-                            <span style={s.priceLabel}>Skema Pembelian</span>
-                            <div style={{ ...s.priceValue, fontSize: '0.98rem', color: '#15803d', fontWeight: '800' }}>
-                              Penawaran Khusus (RFQ)
+                        <div style={s.unitBody}>
+                          {/* Unit Info */}
+                          <div style={s.unitInfoRow}>
+                            <div>
+                              <h4
+                                style={{ ...s.unitName, cursor: 'pointer' }}
+                                onClick={() => handleOpenDetail(item)}
+                              >
+                                {item.name || item.nama_unit || 'Excavator Unit'}
+                              </h4>
+                              <p style={s.unitBrand}>Brand: <strong>{item.brand}</strong> · Model: {item.model || 'Standard'}</p>
+                            </div>
+                            <div style={s.scoreBox}>
+                              <span style={s.scoreLabel}>SKOR SAW</span>
+                              <span style={s.scoreNumber}>{Number(item.skor_akhir || 0).toFixed(4)}</span>
                             </div>
                           </div>
-                          <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center' }}>
-                            <button
-                              type="button"
-                              onClick={() => handleOpenDetail(item)}
-                              style={s.cardDetailBtn}
-                              title="Lihat detail lengkap spesifikasi unit"
-                            >
-                              <Eye size={14} />
-                              <span>Detail</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleRFQClick(item)}
-                              style={{
-                                ...s.rfqButton,
-                                backgroundColor: idx === 0 ? '#74c02c' : '#0d141e',
-                                color: idx === 0 ? '#0d141e' : '#ffffff',
-                              }}
-                            >
-                              <FileText size={15} />
-                              <span>Pesan</span>
-                            </button>
+
+                          {/* Specs Grid */}
+                          <div style={s.specsGrid}>
+                            <div style={s.specBox}>
+                              <Zap size={15} style={s.specIcon} />
+                              <span style={s.specVal}>{item.tenaga_mesin || '-'} HP</span>
+                              <span style={s.specLab}>Tenaga Mesin</span>
+                            </div>
+                            <div style={s.specBox}>
+                              <Layers size={15} style={s.specIcon} />
+                              <span style={s.specVal}>{item.kapasitas_bucket || '-'} m³</span>
+                              <span style={s.specLab}>Bucket</span>
+                            </div>
+                            <div style={s.specBox}>
+                              <Maximize2 size={15} style={s.specIcon} />
+                              <span style={s.specVal}>{item.kedalaman_gali || '-'} m</span>
+                              <span style={s.specLab}>Kedalaman</span>
+                            </div>
+                            <div style={s.specBox}>
+                              <Scale size={15} style={s.specIcon} />
+                              <span style={s.specVal}>{item.berat_operasional || item.kapasitas_ton || '-'} Ton</span>
+                              <span style={s.specLab}>Tonase</span>
+                            </div>
+                          </div>
+
+                          {/* RFQ Scheme & Action */}
+                          <div style={s.unitFooter}>
+                            <div>
+                              <span style={s.priceLabel}>Skema Pembelian</span>
+                              <div style={{ ...s.priceValue, fontSize: '0.98rem', color: '#15803d', fontWeight: '800' }}>
+                                Penawaran Khusus (RFQ)
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center' }}>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenDetail(item)}
+                                style={s.cardDetailBtn}
+                                title="Lihat detail lengkap spesifikasi unit"
+                              >
+                                <Eye size={14} />
+                                <span>Detail</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleRFQClick(item)}
+                                style={{
+                                  ...s.rfqButton,
+                                  backgroundColor: idx === 0 ? '#74c02c' : '#0d141e',
+                                  color: idx === 0 ? '#0d141e' : '#ffffff',
+                                }}
+                              >
+                                <FileText size={15} />
+                                <span>Pesan</span>
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1947,6 +1987,62 @@ const s = {
     overflow: 'hidden',
     transition: 'transform 0.15s, box-shadow 0.2s',
   },
+  sawCardInner: {
+    display: 'flex',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'stretch',
+  },
+  sawMediaWrap: {
+    position: 'relative',
+    width: '240px',
+    minWidth: '200px',
+    minHeight: '190px',
+    backgroundColor: '#f8fafc',
+    borderRight: '1px solid #f1f5f9',
+    overflow: 'hidden',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  sawCardImg: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    transition: 'transform 0.25s ease',
+  },
+  sawCardPlaceholder: {
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f8fafc',
+    padding: '1rem',
+    textAlign: 'center',
+  },
+  sawPlaceholderText: {
+    fontSize: '0.68rem',
+    color: '#94a3b8',
+    marginTop: '0.4rem',
+    fontWeight: '800',
+    letterSpacing: '0.5px',
+  },
+  sawTonBadge: {
+    position: 'absolute',
+    bottom: '8px',
+    left: '8px',
+    backgroundColor: 'rgba(13, 20, 30, 0.85)',
+    color: '#74c02c',
+    fontSize: '0.66rem',
+    fontWeight: '800',
+    padding: '0.15rem 0.45rem',
+    borderRadius: '4px',
+    backdropFilter: 'blur(4px)',
+  },
   ribbonBar: {
     display: 'flex',
     alignItems: 'center',
@@ -1973,6 +2069,11 @@ const s = {
   },
   unitBody: {
     padding: '1.15rem 1.25rem',
+    flex: 1,
+    minWidth: '280px',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
   },
   unitInfoRow: {
     display: 'flex',

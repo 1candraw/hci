@@ -3,12 +3,15 @@ import autoTable from 'jspdf-autotable';
 import { useState, useEffect } from 'react';
 import { sawService } from '../../services/saw.service';
 import FormPemesananModal from '../../components/forms/FormPemesananModal';
+import AlatBeratDetailModal from '../../components/modals/AlatBeratDetailModal';
 import {
   SlidersHorizontal,
   Download,
   Sparkles,
   Trophy,
-  FileText
+  FileText,
+  Truck,
+  Eye
 } from 'lucide-react';
 
 const PRESET_SKENARIO = {
@@ -72,6 +75,13 @@ const Saw = () => {
 
   const [isOrderOpen, setIsOrderOpen] = useState(false);
   const [orderItem, setOrderItem] = useState(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedDetailUnit, setSelectedDetailUnit] = useState(null);
+
+  const handleOpenDetail = (unit) => {
+    setSelectedDetailUnit(unit);
+    setDetailModalOpen(true);
+  };
 
   useEffect(() => {
     fetchRanking();
@@ -379,15 +389,56 @@ const Saw = () => {
                         <span style={{ fontSize: '1.4rem' }}>{getMedal(index)}</span>
                       </td>
                       <td style={styles.td}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <strong style={{ color: '#0d141e', fontSize: '0.92rem' }}>{item.name || item.nama_unit}</strong>
-                          {(Number(item.stok ?? item.stock ?? 1) <= 0) && (
-                            <span style={{ fontSize: '0.68rem', fontWeight: '800', backgroundColor: '#fee2e2', color: '#dc2626', padding: '1px 6px', borderRadius: '4px' }}>
-                              Stok Habis
-                            </span>
-                          )}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div
+                            onClick={() => handleOpenDetail(item)}
+                            style={styles.unitImgThumbWrap}
+                            title="Klik untuk melihat foto & spesifikasi lengkap"
+                          >
+                            {item.image_url ? (
+                              <img
+                                src={item.image_url}
+                                alt={item.name || item.nama_unit || 'Unit Excavator'}
+                                style={styles.unitImgThumb}
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                  if (e.target.nextElementSibling) {
+                                    e.target.nextElementSibling.style.display = 'flex';
+                                  }
+                                }}
+                              />
+                            ) : null}
+                            <div
+                              style={{
+                                ...styles.unitImgPlaceholder,
+                                display: item.image_url ? 'none' : 'flex',
+                              }}
+                            >
+                              <Truck size={22} style={{ color: '#94a3b8' }} />
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                              <strong
+                                onClick={() => handleOpenDetail(item)}
+                                style={styles.unitNameClickable}
+                              >
+                                {item.name || item.nama_unit}
+                              </strong>
+                              {(Number(item.stok ?? item.stock ?? 1) <= 0) && (
+                                <span style={styles.badgeOutOfStock}>
+                                  Stok Habis
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '2px' }}>
+                              {item.brand} · {item.model || 'OEM Unit'}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: '800', marginTop: '3px' }}>
+                              Rp {Number(item.harga || 0).toLocaleString('id-ID')}
+                            </div>
+                          </div>
                         </div>
-                        <span style={{ fontSize: '0.78rem', color: '#64748b' }}>{item.brand} · {item.model || 'OEM Unit'}</span>
                       </td>
                       <td style={styles.td}>
                         <span style={{
@@ -407,28 +458,39 @@ const Saw = () => {
                         )}
                       </td>
                       <td style={{ ...styles.td, textAlign: 'center' }}>
-                        {Number(item.stok ?? item.stock ?? 1) <= 0 ? (
-                          <button 
-                            disabled
-                            style={{
-                              ...styles.orderBtn,
-                              backgroundColor: '#94a3b8',
-                              color: '#ffffff',
-                              cursor: 'not-allowed',
-                              boxShadow: 'none'
-                            }}
+                        <div style={{ display: 'inline-flex', gap: '0.4rem', alignItems: 'center', justifyContent: 'center' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenDetail(item)}
+                            style={styles.detailBtn}
+                            title="Lihat detail spesifikasi & foto unit"
                           >
-                            <span>Stok Habis</span>
+                            <Eye size={13} />
+                            <span>Detail</span>
                           </button>
-                        ) : (
-                          <button 
-                            onClick={() => handleOrderClick(item)} 
-                            style={styles.orderBtn}
-                          >
-                            <FileText size={13} />
-                            <span>Buat RFQ</span>
-                          </button>
-                        )}
+                          {Number(item.stok ?? item.stock ?? 1) <= 0 ? (
+                            <button 
+                              disabled
+                              style={{
+                                ...styles.orderBtn,
+                                backgroundColor: '#94a3b8',
+                                color: '#ffffff',
+                                cursor: 'not-allowed',
+                                boxShadow: 'none'
+                              }}
+                            >
+                              <span>Stok Habis</span>
+                            </button>
+                          ) : (
+                            <button 
+                              onClick={() => handleOrderClick(item)} 
+                              style={styles.orderBtn}
+                            >
+                              <FileText size={13} />
+                              <span>Buat RFQ</span>
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )) : (
@@ -456,6 +518,17 @@ const Saw = () => {
         namaAlat={orderItem?.name || orderItem?.nama_unit}
         sumberPesanan="saw" 
         sawResultId={orderItem?.saw_result_id || null} 
+      />
+
+      {/* Modal Detail Alat Berat */}
+      <AlatBeratDetailModal
+        isOpen={detailModalOpen}
+        onClose={() => setDetailModalOpen(false)}
+        unit={selectedDetailUnit}
+        onRFQ={(mesin) => {
+          setDetailModalOpen(false);
+          handleOrderClick(mesin);
+        }}
       />
     </div>
   );
@@ -700,6 +773,62 @@ const styles = {
     fontWeight: '900', 
     whiteSpace: 'nowrap',
     boxShadow: '0 2px 6px rgba(13, 20, 30, 0.25)',
+  },
+  detailBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.3rem',
+    padding: '0.45rem 0.75rem',
+    backgroundColor: '#f1f5f9',
+    color: '#334155',
+    border: '1.5px solid #cbd5e1',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '0.78rem',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '800',
+    whiteSpace: 'nowrap',
+    transition: 'all 0.15s',
+  },
+  unitImgThumbWrap: {
+    position: 'relative',
+    width: '60px',
+    height: '60px',
+    borderRadius: '8px',
+    overflow: 'hidden',
+    flexShrink: 0,
+    backgroundColor: '#f8fafc',
+    border: '1.5px solid #e2e8f0',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 2px 6px rgba(13, 20, 30, 0.05)',
+  },
+  unitImgThumb: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+  },
+  unitImgPlaceholder: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f8fafc',
+  },
+  unitNameClickable: {
+    color: '#0d141e',
+    fontSize: '0.94rem',
+    cursor: 'pointer',
+  },
+  badgeOutOfStock: {
+    fontSize: '0.68rem',
+    fontWeight: '800',
+    backgroundColor: '#fee2e2',
+    color: '#dc2626',
+    padding: '1px 6px',
+    borderRadius: '4px',
   }
 };
 
