@@ -84,7 +84,7 @@ const Login = () => {
           <form onSubmit={handleSubmit} style={s.form}>
             {/* Email Field */}
             <div style={s.fieldGroup}>
-              <label style={s.label}>Alamat Email Akun</label>
+              <label style={s.label}>Username</label>
               <div style={s.inputWrap}>
                 <Mail size={17} style={s.inputIcon} />
                 <input
@@ -101,7 +101,7 @@ const Login = () => {
             {/* Password Field */}
             <div style={s.fieldGroup}>
               <div style={s.labelRow}>
-                <label style={s.label}>Kata Sandi</label>
+                <label style={s.label}>Password</label>
               </div>
               <div style={s.inputWrap}>
                 <Lock size={17} style={s.inputIcon} />
@@ -131,7 +131,7 @@ const Login = () => {
               ) : (
                 <>
                   <LogInIcon size={17} strokeWidth={2.2} />
-                  <span>Masuk ke Portal Internal</span>
+                  <span>Login</span>
                 </>
               )}
             </button>
