@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS `audit_logs` (
   CONSTRAINT `audit_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table hci.audit_logs: ~24 rows (approximately)
+-- Dumping data for table hci.audit_logs: ~25 rows (approximately)
 INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `entity`, `entity_id`, `description`, `old_value`, `new_value`, `created_at`) VALUES
 	(1, 1, 'INSERT', 'alat_berat', 7, 'Menambahkan alat berat baru: Liugong 906F', NULL, NULL, '2026-07-03 14:23:25'),
 	(2, 5, 'INSERT', 'quotation', 1, 'Customer mengajukan penawaran baru', NULL, NULL, '2026-07-03 17:13:58'),
@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS `delivery_orders` (
   CONSTRAINT `fk_delivery_quotation` FOREIGN KEY (`quotation_id`) REFERENCES `quotations` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table hci.delivery_orders: ~13 rows (approximately)
+-- Dumping data for table hci.delivery_orders: ~1 rows (approximately)
 INSERT INTO `delivery_orders` (`id`, `quotation_id`, `surat_jalan_number`, `driver_name`, `vehicle_number`, `destination`, `notes`, `received_by_customer`, `received_at`, `created_at`) VALUES
 	(14, 22, 'SJ-202610-4653', 'ijkkkl', 'b000089', 'klll', NULL, 1, '2026-10-01 15:23:19', '2026-10-01 15:22:57');
 
@@ -175,7 +175,7 @@ CREATE TABLE IF NOT EXISTS `quotations` (
   CONSTRAINT `quotations_ibfk_3` FOREIGN KEY (`saw_result_id`) REFERENCES `saw_results` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table hci.quotations: ~0 rows (approximately)
+-- Dumping data for table hci.quotations: ~1 rows (approximately)
 INSERT INTO `quotations` (`id`, `nomor_pemesanan`, `customer_id`, `alat_berat_id`, `sales_id`, `manager_id`, `sumber_pesanan`, `saw_result_id`, `metode_pembayaran`, `harga_penawaran`, `ongkos_kirim`, `diskon`, `status`, `catatan`, `rejection_reason`, `guest_name`, `guest_company`, `guest_phone`, `guest_email`, `guest_location`, `dp_bank_name`, `dp_account_number`, `dp_account_name`, `dp_proof_url`, `dp_amount`, `dp_paid_at`, `created_at`, `updated_at`) VALUES
 	(22, 'HC-202610-EGVR', NULL, 2, 1, NULL, 'guest', NULL, 'cash', 600000000.00, 15000000.00, 0.00, 'SELESAI', NULL, NULL, 'mr reza', 'pt uhuy', '081267899', 'uhuy@gmail.com', 'klll', 'bri', '677887787', 'pt yuyu', 'http://localhost:5000/uploads/slip-1790867853841-248979212.jpg', 615000000.00, '2026-10-01 15:17:33', '2026-10-01 15:14:39', '2026-10-01 15:23:19');
 
@@ -209,9 +209,9 @@ CREATE TABLE IF NOT EXISTS `saw_results` (
   KEY `alat_berat_id` (`alat_berat_id`),
   CONSTRAINT `saw_results_ibfk_1` FOREIGN KEY (`saw_session_id`) REFERENCES `saw_sessions` (`id`),
   CONSTRAINT `saw_results_ibfk_2` FOREIGN KEY (`alat_berat_id`) REFERENCES `alat_berat` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2585 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2665 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table hci.saw_results: ~1,870 rows (approximately)
+-- Dumping data for table hci.saw_results: ~2,298 rows (approximately)
 INSERT INTO `saw_results` (`id`, `saw_session_id`, `alat_berat_id`, `score`, `ranking`, `created_at`) VALUES
 	(1, 2, 2, 0.9325, 1, '2026-07-05 05:47:10'),
 	(2, 2, 1, 0.7559, 2, '2026-07-05 05:47:10'),
@@ -2542,7 +2542,87 @@ INSERT INTO `saw_results` (`id`, `saw_session_id`, `alat_berat_id`, `score`, `ra
 	(2581, 680, 12, 0.9800, 1, '2026-10-01 15:23:34'),
 	(2582, 680, 1, 0.9228, 2, '2026-10-01 15:23:34'),
 	(2583, 680, 2, 0.8846, 3, '2026-10-01 15:23:34'),
-	(2584, 680, 13, 0.8675, 4, '2026-10-01 15:23:34');
+	(2584, 680, 13, 0.8675, 4, '2026-10-01 15:23:34'),
+	(2585, 681, 12, 0.9883, 1, '2026-10-06 13:51:03'),
+	(2586, 681, 1, 0.9105, 2, '2026-10-06 13:51:03'),
+	(2587, 681, 2, 0.9022, 3, '2026-10-06 13:51:03'),
+	(2588, 681, 13, 0.8631, 4, '2026-10-06 13:51:03'),
+	(2589, 682, 12, 0.9890, 1, '2026-10-06 13:51:33'),
+	(2590, 682, 2, 0.8965, 2, '2026-10-06 13:51:33'),
+	(2591, 682, 1, 0.8909, 3, '2026-10-06 13:51:33'),
+	(2592, 682, 13, 0.8475, 4, '2026-10-06 13:51:33'),
+	(2593, 683, 12, 0.9856, 1, '2026-10-06 13:51:40'),
+	(2594, 683, 1, 0.9256, 2, '2026-10-06 13:51:40'),
+	(2595, 683, 2, 0.9054, 3, '2026-10-06 13:51:40'),
+	(2596, 683, 13, 0.8792, 4, '2026-10-06 13:51:40'),
+	(2597, 684, 12, 0.9790, 1, '2026-10-06 13:51:56'),
+	(2598, 684, 1, 0.9601, 2, '2026-10-06 13:51:56'),
+	(2599, 684, 2, 0.9233, 3, '2026-10-06 13:51:56'),
+	(2600, 684, 13, 0.9149, 4, '2026-10-06 13:51:56'),
+	(2601, 685, 12, 0.9850, 1, '2026-10-06 13:52:11'),
+	(2602, 685, 1, 0.9179, 2, '2026-10-06 13:52:11'),
+	(2603, 685, 2, 0.9163, 3, '2026-10-06 13:52:11'),
+	(2604, 685, 13, 0.8796, 4, '2026-10-06 13:52:11'),
+	(2605, 686, 12, 0.9866, 1, '2026-10-06 13:52:25'),
+	(2606, 686, 1, 0.9064, 2, '2026-10-06 13:52:25'),
+	(2607, 686, 2, 0.8916, 3, '2026-10-06 13:52:25'),
+	(2608, 686, 13, 0.8582, 4, '2026-10-06 13:52:25'),
+	(2609, 687, 12, 0.9789, 1, '2026-10-06 13:52:43'),
+	(2610, 687, 1, 0.9320, 2, '2026-10-06 13:52:43'),
+	(2611, 687, 2, 0.8885, 3, '2026-10-06 13:52:43'),
+	(2612, 687, 13, 0.8772, 4, '2026-10-06 13:52:43'),
+	(2613, 688, 12, 0.9883, 1, '2026-10-06 13:53:01'),
+	(2614, 688, 1, 0.9105, 2, '2026-10-06 13:53:01'),
+	(2615, 688, 2, 0.9022, 3, '2026-10-06 13:53:01'),
+	(2616, 688, 13, 0.8631, 4, '2026-10-06 13:53:01'),
+	(2617, 689, 12, 0.9890, 1, '2026-10-06 13:53:10'),
+	(2618, 689, 2, 0.8965, 2, '2026-10-06 13:53:10'),
+	(2619, 689, 1, 0.8909, 3, '2026-10-06 13:53:10'),
+	(2620, 689, 13, 0.8475, 4, '2026-10-06 13:53:10'),
+	(2621, 690, 12, 0.9800, 1, '2026-10-08 22:20:55'),
+	(2622, 690, 1, 0.9228, 2, '2026-10-08 22:20:55'),
+	(2623, 690, 2, 0.8846, 3, '2026-10-08 22:20:55'),
+	(2624, 690, 13, 0.8675, 4, '2026-10-08 22:20:55'),
+	(2625, 691, 12, 0.9800, 1, '2026-10-08 22:20:55'),
+	(2626, 691, 1, 0.9228, 2, '2026-10-08 22:20:55'),
+	(2627, 691, 2, 0.8846, 3, '2026-10-08 22:20:55'),
+	(2628, 691, 13, 0.8675, 4, '2026-10-08 22:20:55'),
+	(2629, 692, 12, 0.9800, 1, '2026-10-08 22:21:10'),
+	(2630, 692, 1, 0.9228, 2, '2026-10-08 22:21:10'),
+	(2631, 692, 2, 0.8846, 3, '2026-10-08 22:21:10'),
+	(2632, 692, 13, 0.8675, 4, '2026-10-08 22:21:10'),
+	(2633, 693, 12, 0.9800, 1, '2026-10-08 22:21:25'),
+	(2634, 693, 1, 0.9228, 2, '2026-10-08 22:21:25'),
+	(2635, 693, 2, 0.8846, 3, '2026-10-08 22:21:25'),
+	(2636, 693, 13, 0.8675, 4, '2026-10-08 22:21:25'),
+	(2637, 694, 12, 0.9800, 1, '2026-10-08 22:21:40'),
+	(2638, 694, 1, 0.9228, 2, '2026-10-08 22:21:40'),
+	(2639, 694, 2, 0.8846, 3, '2026-10-08 22:21:40'),
+	(2640, 694, 13, 0.8675, 4, '2026-10-08 22:21:40'),
+	(2641, 695, 12, 0.9800, 1, '2026-10-08 22:21:55'),
+	(2642, 695, 1, 0.9228, 2, '2026-10-08 22:21:55'),
+	(2643, 695, 2, 0.8846, 3, '2026-10-08 22:21:55'),
+	(2644, 695, 13, 0.8675, 4, '2026-10-08 22:21:55'),
+	(2645, 696, 12, 0.9883, 1, '2026-10-10 05:34:07'),
+	(2646, 696, 1, 0.9105, 2, '2026-10-10 05:34:07'),
+	(2647, 696, 2, 0.9022, 3, '2026-10-10 05:34:07'),
+	(2648, 696, 13, 0.8631, 4, '2026-10-10 05:34:07'),
+	(2649, 697, 12, 0.9890, 1, '2026-10-11 07:21:22'),
+	(2650, 697, 2, 0.8965, 2, '2026-10-11 07:21:22'),
+	(2651, 697, 1, 0.8909, 3, '2026-10-11 07:21:22'),
+	(2652, 697, 13, 0.8475, 4, '2026-10-11 07:21:22'),
+	(2653, 698, 12, 0.9883, 1, '2026-10-12 13:20:31'),
+	(2654, 698, 1, 0.9105, 2, '2026-10-12 13:20:31'),
+	(2655, 698, 2, 0.9022, 3, '2026-10-12 13:20:31'),
+	(2656, 698, 13, 0.8631, 4, '2026-10-12 13:20:31'),
+	(2657, 699, 12, 0.9800, 1, '2026-10-12 13:53:26'),
+	(2658, 699, 1, 0.9228, 2, '2026-10-12 13:53:26'),
+	(2659, 699, 2, 0.8846, 3, '2026-10-12 13:53:26'),
+	(2660, 699, 13, 0.8675, 4, '2026-10-12 13:53:26'),
+	(2661, 700, 12, 0.9883, 1, '2026-10-12 13:54:39'),
+	(2662, 700, 1, 0.9105, 2, '2026-10-12 13:54:39'),
+	(2663, 700, 2, 0.9022, 3, '2026-10-12 13:54:39'),
+	(2664, 700, 13, 0.8631, 4, '2026-10-12 13:54:39');
 
 -- Dumping structure for table hci.saw_sessions
 CREATE TABLE IF NOT EXISTS `saw_sessions` (
@@ -2558,9 +2638,9 @@ CREATE TABLE IF NOT EXISTS `saw_sessions` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `saw_sessions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=681 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=701 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table hci.saw_sessions: ~528 rows (approximately)
+-- Dumping data for table hci.saw_sessions: ~681 rows (approximately)
 INSERT INTO `saw_sessions` (`id`, `user_id`, `harga_weight`, `tenaga_mesin_weight`, `kapasitas_bucket_weight`, `kedalaman_gali_weight`, `berat_operasional_weight`, `kapasitas_ton_weight`, `created_at`) VALUES
 	(1, 5, 3.00, 3.00, 3.00, 3.00, 3.00, NULL, '2026-07-05 05:47:10'),
 	(2, 5, 3.00, 3.00, 3.00, 3.00, 3.00, NULL, '2026-07-05 05:47:10'),
@@ -3241,7 +3321,27 @@ INSERT INTO `saw_sessions` (`id`, `user_id`, `harga_weight`, `tenaga_mesin_weigh
 	(677, NULL, 2.00, 2.00, 2.00, 2.00, 2.00, NULL, '2026-10-01 15:22:20'),
 	(678, NULL, 2.00, 2.00, 2.00, 2.00, 2.00, NULL, '2026-10-01 15:22:20'),
 	(679, NULL, 2.00, 2.00, 2.00, 2.00, 2.00, NULL, '2026-10-01 15:23:34'),
-	(680, NULL, 2.00, 2.00, 2.00, 2.00, 2.00, NULL, '2026-10-01 15:23:34');
+	(680, NULL, 2.00, 2.00, 2.00, 2.00, 2.00, NULL, '2026-10-01 15:23:34'),
+	(681, NULL, 1.00, 4.00, 3.00, 3.00, 1.00, NULL, '2026-10-06 13:51:03'),
+	(682, NULL, 1.00, 2.00, 3.00, 2.00, 3.00, NULL, '2026-10-06 13:51:33'),
+	(683, NULL, 2.00, 2.00, 2.00, 3.00, 2.00, NULL, '2026-10-06 13:51:40'),
+	(684, NULL, 4.00, 4.00, 1.00, 3.00, 2.00, NULL, '2026-10-06 13:51:56'),
+	(685, NULL, 1.00, 1.00, 1.00, 1.00, 2.00, NULL, '2026-10-06 13:52:11'),
+	(686, NULL, 3.00, 2.00, 4.00, 4.00, 4.00, NULL, '2026-10-06 13:52:25'),
+	(687, NULL, 4.00, 2.00, 2.00, 2.00, 2.00, NULL, '2026-10-06 13:52:43'),
+	(688, NULL, 1.00, 4.00, 3.00, 3.00, 1.00, NULL, '2026-10-06 13:53:01'),
+	(689, NULL, 1.00, 2.00, 3.00, 2.00, 3.00, NULL, '2026-10-06 13:53:10'),
+	(690, NULL, 2.00, 2.00, 2.00, 2.00, 2.00, NULL, '2026-10-08 22:20:55'),
+	(691, NULL, 2.00, 2.00, 2.00, 2.00, 2.00, NULL, '2026-10-08 22:20:55'),
+	(692, NULL, 2.00, 2.00, 2.00, 2.00, 2.00, NULL, '2026-10-08 22:21:10'),
+	(693, NULL, 2.00, 2.00, 2.00, 2.00, 2.00, NULL, '2026-10-08 22:21:25'),
+	(694, NULL, 2.00, 2.00, 2.00, 2.00, 2.00, NULL, '2026-10-08 22:21:40'),
+	(695, NULL, 2.00, 2.00, 2.00, 2.00, 2.00, NULL, '2026-10-08 22:21:55'),
+	(696, NULL, 1.00, 4.00, 3.00, 3.00, 1.00, NULL, '2026-10-10 05:34:07'),
+	(697, NULL, 1.00, 2.00, 3.00, 2.00, 3.00, NULL, '2026-10-11 07:21:22'),
+	(698, NULL, 1.00, 4.00, 3.00, 3.00, 1.00, NULL, '2026-10-12 13:20:31'),
+	(699, NULL, 2.00, 2.00, 2.00, 2.00, 2.00, NULL, '2026-10-12 13:53:26'),
+	(700, NULL, 1.00, 4.00, 3.00, 3.00, 1.00, NULL, '2026-10-12 13:54:39');
 
 -- Dumping structure for table hci.stock_requests
 CREATE TABLE IF NOT EXISTS `stock_requests` (
@@ -3294,7 +3394,7 @@ CREATE TABLE IF NOT EXISTS `unit_checklists` (
   CONSTRAINT `unit_checklists_ibfk_user` FOREIGN KEY (`operator_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table hci.unit_checklists: ~10 rows (approximately)
+-- Dumping data for table hci.unit_checklists: ~1 rows (approximately)
 INSERT INTO `unit_checklists` (`id`, `quotation_id`, `operator_id`, `engine_check`, `hydraulic_check`, `bucket_check`, `body_check`, `undercarriage_check`, `accessories_check`, `notes`, `created_at`) VALUES
 	(14, 22, 7, 1, 1, 1, 1, 1, 1, '', '2026-10-01 15:22:34');
 

@@ -6,6 +6,7 @@ import AlatBeratDetailModal from '../../components/modals/AlatBeratDetailModal';
 import CompareAlatBeratModal from '../../components/modals/CompareAlatBeratModal';
 import ComparisonDock from '../../components/common/ComparisonDock';
 import { Link } from 'react-router-dom';
+import { generateSAWPDF } from '../../utils/generateSAWPDF';
 import {
   Truck,
   Wrench,
@@ -28,7 +29,8 @@ import {
   Headphones,
   Globe,
   BookOpen,
-  Cpu
+  Cpu,
+  Download
 } from 'lucide-react';
 
 const getLabelKepentingan = (v) =>
@@ -192,6 +194,16 @@ const LandingPage = () => {
     } finally {
       setLoadingCalc(false);
     }
+  };
+
+  const handleDownloadPDF = () => {
+    generateSAWPDF({
+      ranking,
+      filterTonase,
+      bobot,
+      activePreset,
+      userInfo: null,
+    });
   };
 
   const handleOpenDetail = (unit) => {
@@ -827,7 +839,7 @@ const LandingPage = () => {
           {/* Right Result Panel */}
           <div style={s.resultPanel}>
             <div style={s.resultHeader}>
-              <div>
+              <div style={{ flex: '1 1 240px' }}>
                 <h3 style={s.resultTitle}>
                   {hasCalculated
                     ? `Hasil Perangkingan SAW — Kelas ${filterTonase} Ton`
@@ -841,6 +853,18 @@ const LandingPage = () => {
                     : 'Atur bobot kriteria di sebelah kiri dan klik tombol "Hitung Rekomendasi Unit Terbaik" untuk melihat peringkat.'}
                 </p>
               </div>
+
+              {hasCalculated && ranking.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleDownloadPDF}
+                  style={s.downloadPdfBtn}
+                  title="Unduh dokumen PDF resmi hasil perangkingan SAW"
+                >
+                  <Download size={15} />
+                  <span>Download PDF</span>
+                </button>
+              )}
             </div>
 
             {errorSAW && (
@@ -1935,9 +1959,30 @@ const s = {
     minHeight: '460px',
   },
   resultHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '0.85rem',
     marginBottom: '1.25rem',
     paddingBottom: '0.85rem',
     borderBottom: '1px solid #f1f5f9',
+  },
+  downloadPdfBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.45rem',
+    padding: '0.6rem 1.15rem',
+    backgroundColor: '#0d141e',
+    color: '#74c02c',
+    border: '1.5px solid #1e293b',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '800',
+    fontSize: '0.84rem',
+    boxShadow: '0 4px 14px rgba(13, 20, 30, 0.15)',
+    transition: 'all 0.15s ease',
   },
   resultTitle: {
     fontSize: '1.2rem',

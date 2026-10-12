@@ -1,7 +1,7 @@
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { useState, useEffect } from 'react';
 import { sawService } from '../../services/saw.service';
+import { useAuth } from '../../hooks/useAuth';
+import { generateSAWPDF } from '../../utils/generateSAWPDF';
 import FormPemesananModal from '../../components/forms/FormPemesananModal';
 import AlatBeratDetailModal from '../../components/modals/AlatBeratDetailModal';
 import {
@@ -57,12 +57,13 @@ const PRESET_SKENARIO = {
 };
 
 const Saw = () => {
+  const { user } = useAuth();
   const [ranking, setRanking] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Default langsung diarahkan ke kelas 20 Ton
-  const [filterTonase, setFilterTonase] = useState('20');
+  // Default diarahkan ke kelas 5 Ton (sesuai unit aktif di database)
+  const [filterTonase, setFilterTonase] = useState('5');
   const [activePreset, setActivePreset] = useState(null);
 
   const [bobot, setBobot] = useState({
@@ -153,46 +154,13 @@ const Saw = () => {
   };
 
   const exportToPDF = () => {
-    if (ranking.length === 0) {
-      alert("Tidak ada data untuk diekspor!");
-      return;
-    }
-
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text("Laporan Hasil Analisis Rekomendasi Alat Berat (SAW)", 14, 15);
-    doc.setFontSize(11);
-    doc.setTextColor(100);
-    doc.text(`Sistem Pendukung Keputusan - Kelas: ${filterTonase} Ton`, 14, 22);
-    
-    const tanggalCetak = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    doc.setFontSize(10);
-    doc.text(`Dicetak pada: ${tanggalCetak}`, 14, 28);
-
-    const tableColumn = ["Peringkat", "Nama Unit", "Merek", "Kategori", "Skor Akhir"];
-    const tableRows = [];
-
-    ranking.forEach((item, index) => {
-      const rowData = [
-        index + 1,
-        item.nama_unit || item.name || '-',
-        item.brand || '-',
-        item.kategori || 'Excavator',
-        Number(item.skor_akhir || 0).toFixed(3)
-      ];
-      tableRows.push(rowData);
+    generateSAWPDF({
+      ranking,
+      filterTonase,
+      bobot,
+      activePreset,
+      userInfo: user,
     });
-
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 35,
-      theme: 'grid',
-      styles: { fontSize: 10, cellPadding: 3 },
-      headStyles: { fillColor: [13, 20, 30], textColor: [116, 192, 44] } 
-    });
-
-    doc.save(`Laporan_Rekomendasi_SAW_${filterTonase}Ton.pdf`);
   };
 
   const handleOrderClick = (mesin) => {
@@ -217,9 +185,9 @@ const Saw = () => {
           </p>
         </div>
         <div>
-          <button onClick={exportToPDF} style={styles.exportBtn}>
+          <button onClick={exportToPDF} style={styles.exportBtn} title="Download Hasil Perangkingan SAW (PDF)">
             <Download size={15} />
-            <span>Ekspor PDF</span>
+            <span>Download PDF</span>
           </button>
         </div>
       </div>
@@ -352,9 +320,22 @@ const Saw = () => {
 
         {/* Panel Hasil Peringkat */}
         <div style={styles.resultPanel}>
-          <div style={styles.panelHeader}>
-            <Trophy size={18} style={{ color: '#74c02c' }} />
-            <h3 style={styles.sectionTitle}>Hasil Peringkat & Skor Matriks</h3>
+          <div style={{ ...styles.panelHeader, justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Trophy size={18} style={{ color: '#74c02c' }} />
+              <h3 style={styles.sectionTitle}>Hasil Peringkat & Skor Matriks</h3>
+            </div>
+            {ranking.length > 0 && (
+              <button
+                type="button"
+                onClick={exportToPDF}
+                style={styles.exportBtn}
+                title="Download Hasil Perangkingan SAW (PDF)"
+              >
+                <Download size={15} />
+                <span>Download PDF</span>
+              </button>
+            )}
           </div>
           
           {error && <div style={styles.errorBox}>⚠️ {error}</div>}
