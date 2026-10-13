@@ -56,9 +56,9 @@ const GuestRFQModal = ({ isOpen, onClose, alatBeratId, namaAlat, onSuccess }) =>
         <div style={s.infoBanner}>
           <ShieldCheck size={20} style={{ color: '#74c02c', flexShrink: 0, marginTop: '2px' }} />
           <div>
-            <strong>Pengajuan Penawaran Cepat & Transparan.</strong>
+            <strong>Pengajuan Penawaran</strong>
             <p style={{ margin: 0, fontSize: '0.8rem', color: '#475569' }}>
-              Tim Sales & Technical Support akan menghitung penawaran harga resmi (skema Cash atau Kredit Angsuran 5 Tahun) serta menerbitkan Nomor Pelacakan untuk Anda.
+              Dapatkan penawaran menarik dari tim sales kami
             </p>
           </div>
         </div>
@@ -68,7 +68,7 @@ const GuestRFQModal = ({ isOpen, onClose, alatBeratId, namaAlat, onSuccess }) =>
         <form onSubmit={handleSubmit} style={s.form}>
           <div style={s.grid2}>
             <div style={s.fieldGroup}>
-              <label style={s.label}>Nama PIC / Pemohon <span style={s.req}>*</span></label>
+              <label style={s.label}>Nama<span style={s.req}>*</span></label>
               <input
                 style={s.input}
                 name="guest_name"
@@ -79,7 +79,7 @@ const GuestRFQModal = ({ isOpen, onClose, alatBeratId, namaAlat, onSuccess }) =>
               />
             </div>
             <div style={s.fieldGroup}>
-              <label style={s.label}>Nama Perusahaan (PT / CV / Kontraktor) <span style={s.req}>*</span></label>
+              <label style={s.label}>Nama Perusahaan<span style={s.req}>*</span></label>
               <input
                 style={s.input}
                 name="guest_company"
@@ -93,7 +93,7 @@ const GuestRFQModal = ({ isOpen, onClose, alatBeratId, namaAlat, onSuccess }) =>
 
           <div style={s.grid2}>
             <div style={s.fieldGroup}>
-              <label style={s.label}>Nomor WhatsApp Aktif <span style={s.req}>*</span></label>
+              <label style={s.label}>Nomor WhatsApp<span style={s.req}>*</span></label>
               <input
                 style={s.input}
                 name="guest_phone"
@@ -105,7 +105,7 @@ const GuestRFQModal = ({ isOpen, onClose, alatBeratId, namaAlat, onSuccess }) =>
               />
             </div>
             <div style={s.fieldGroup}>
-              <label style={s.label}>Alamat Email Perusahaan <span style={s.req}>*</span></label>
+              <label style={s.label}>Email<span style={s.req}>*</span></label>
               <input
                 style={s.input}
                 name="guest_email"
@@ -119,7 +119,7 @@ const GuestRFQModal = ({ isOpen, onClose, alatBeratId, namaAlat, onSuccess }) =>
           </div>
 
           <div style={s.fieldGroup}>
-            <label style={s.label}>Lokasi Proyek / Pengiriman Unit <span style={s.req}>*</span></label>
+            <label style={s.label}>Lokasi<span style={s.req}>*</span></label>
             <input
               style={s.input}
               name="guest_location"
@@ -131,15 +131,15 @@ const GuestRFQModal = ({ isOpen, onClose, alatBeratId, namaAlat, onSuccess }) =>
           </div>
 
           <div style={s.fieldGroup}>
-            <label style={s.label}>Rencana Metode Pembayaran</label>
+            <label style={s.label}>Metode Pembayaran</label>
             <select
               style={s.select}
               name="metode_pembayaran"
               value={form.metode_pembayaran}
               onChange={handleChange}
             >
-              <option value="cash">Cash / Tunai (Pelunasan Penuh Tanpa Angsuran)</option>
-              <option value="credit">Credit / Kredit (Uang Muka + Angsuran 5 Tahun / 60 Bulan)</option>
+              <option value="cash">Cash</option>
+              <option value="credit">Credit (Angsuran 60 Bulan)</option>
             </select>
           </div>
 
@@ -149,7 +149,7 @@ const GuestRFQModal = ({ isOpen, onClose, alatBeratId, namaAlat, onSuccess }) =>
             </button>
             <button type="submit" disabled={loading} style={s.btnSubmit}>
               <FileText size={16} />
-              <span>{loading ? 'Mengirim Pengajuan...' : 'Kirim Penawaran (RFQ)'}</span>
+              <span>{loading ? 'Mengirim Pengajuan...' : 'Kirim'}</span>
             </button>
           </div>
         </form>

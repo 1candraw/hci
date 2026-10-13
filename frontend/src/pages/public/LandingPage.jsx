@@ -627,13 +627,6 @@ const LandingPage = () => {
 
                         {/* Penawaran Resmi & Actions */}
                         <div style={s.cardFooter}>
-                          <div>
-                            <span style={s.cardPriceLabel}>Penawaran Resmi</span>
-                            <div style={{ ...s.cardPriceVal, fontSize: '0.92rem', color: '#15803d', fontWeight: '800' }}>
-                              Minta Penawaran (RFQ)
-                            </div>
-                          </div>
-
                           <div style={s.cardBtnGroup}>
                             <button
                               type="button"
@@ -669,7 +662,7 @@ const LandingPage = () => {
                                 title="Ajukan penawaran harga resmi (RFQ)"
                               >
                                 <FileText size={13} />
-                                <span>RFQ</span>
+                                <span>Pesan</span>
                               </button>
                             )}
                           </div>
