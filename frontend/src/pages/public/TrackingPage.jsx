@@ -286,7 +286,7 @@ const TrackingPage = () => {
               <div style={s.leftStack}>
                 {/* 1. Card Info Pemohon */}
                 <div style={s.detailCard}>
-                  <h3 style={s.cardTitle}>Informasi Rincian Pesanan</h3>
+                  <h3 style={s.cardTitle}>Rincian Pesanan</h3>
                   <div style={s.infoList}>
                     <div style={s.infoRow}>
                       <span style={s.infoLabel}>Tipe Pengadaan</span>
@@ -327,9 +327,9 @@ const TrackingPage = () => {
                       <div>
                         <div style={s.docBadge}>
                           <Sparkles size={13} style={{ color: '#15803d' }} />
-                          <span>DOKUMEN PENAWARAN RESMI</span>
+                          <span>DOKUMEN PENAWARAN</span>
                         </div>
-                        <h3 style={s.quotationTitle}>Surat Penawaran Harga (SPH)</h3>
+                        <h3 style={s.quotationTitle}>Penawaran Harga</h3>
                         <p style={s.quotationSub}>
                           Ref No: <strong>SPH/{data.nomor_pemesanan || data.id}</strong>
                         </p>
@@ -345,8 +345,8 @@ const TrackingPage = () => {
                       <div style={s.tableLike}>
                         <div style={s.tableRow}>
                           <div style={s.rowLeft}>
-                            <span style={s.itemTitle}>Unit {data.nama_alat}</span>
-                            <span style={s.itemSub}>Brand: {data.brand_alat || 'Excavator'} {data.model_alat || ''} (Ready Stock PDI)</span>
+                            <span style={s.itemTitle}>Harga {data.nama_alat}</span>
+                            <span style={s.itemSub}>Brand: {data.brand_alat || 'Excavator'} {data.model_alat || ''} (Ready Stock)</span>
                           </div>
                           <div style={s.rowRight}>
                             <span style={s.priceVal}>{formatRupiah(data.harga_penawaran)}</span>
@@ -355,8 +355,8 @@ const TrackingPage = () => {
 
                         <div style={s.tableRow}>
                           <div style={s.rowLeft}>
-                            <span style={s.itemTitle}>Ongkos Kirim & Mobilisasi Trailer</span>
-                            <span style={s.itemSub}>Pengiriman langsung ke site proyek + Asuransi Logistik</span>
+                            <span style={s.itemTitle}>Biaya Pengiriman</span>
+                            <span style={s.itemSub}>Biaya sudah termasuk asuransi pengiriman</span>
                           </div>
                           <div style={s.rowRight}>
                             <span style={s.priceVal}>{formatRupiah(data.ongkos_kirim || 0)}</span>
@@ -384,7 +384,7 @@ const TrackingPage = () => {
                           return (
                             <div style={s.totalRow}>
                               <div>
-                                <span style={s.totalLabel}>TOTAL NILAI TRANSAKSI (GRAND TOTAL)</span>
+                                <span style={s.totalLabel}>TOTAL</span>
                                 {isCredit ? (
                                   <div style={{ marginTop: '0.35rem' }}>
                                     <span style={{ ...s.dpNotice, display: 'block', color: '#15803d' }}>
@@ -397,7 +397,7 @@ const TrackingPage = () => {
                                 ) : (
                                   <div style={{ marginTop: '0.35rem' }}>
                                     <span style={{ ...s.dpNotice, color: '#15803d' }}>
-                                      Skema: <strong>CASH / TUNAI (PELUNASAN PENUH 100%)</strong>
+                                      Jenis Pembayaran : <strong>CASH</strong>
                                     </span>
                                   </div>
                                 )}
@@ -419,11 +419,11 @@ const TrackingPage = () => {
                         >
                           <Download size={18} />
                           <span>
-                            {downloadingPdf ? 'Menyiapkan Dokumen PDF...' : 'Unduh Surat Penawaran Resmi (PDF)'}
+                            {downloadingPdf ? 'Menyiapkan Dokumen PDF...' : 'Download Surat Penawaran'}
                           </span>
                         </button>
                         <p style={s.pdfHint}>
-                          📄 Dokumen resmi berkop PT Heavy Care Indonesia lengkap dengan rincian biaya, syarat pembayaran, & pengesahan manajemen.
+                          Dokumen resmi berlogo PT Heavy Care Indonesia yang dilengkapi dengan rincian biaya, syarat pembayaran, dan pengesahan pihak manajemen
                         </p>
                       </div>
                     </div>
@@ -528,7 +528,7 @@ const TrackingPage = () => {
                           </span>
                         </button>
                         <p style={s.pdfHint}>
-                          📄 Faktur & bukti tanda terima sah berkop PT Heavy Care Indonesia lengkap dengan rincian skema ({ (data.metode_pembayaran === 'credit' || data.metode_pembayaran === 'kredit' || data.metode_pembayaran === 'leasing') ? 'Kredit 5 Tahun' : 'Cash 100%' }) & stempel verifikasi keuangan.
+                          📄 Faktur & bukti tanda terima sah berkop PT Heavy Care Indonesia lengkap dengan rincian skema ({(data.metode_pembayaran === 'credit' || data.metode_pembayaran === 'kredit' || data.metode_pembayaran === 'leasing') ? 'Kredit 5 Tahun' : 'Cash 100%'}) & stempel verifikasi keuangan.
                         </p>
                       </div>
                     </div>
@@ -623,7 +623,7 @@ const TrackingPage = () => {
 
               {/* KOLOM KANAN: Aksi Berdasarkan Status */}
               <div style={s.actionCard}>
-                <h3 style={s.cardTitle}>Status Pemrosesan & Aksi</h3>
+                <h3 style={s.cardTitle}>Status Pesanan</h3>
 
                 {/* 1. PENDING / MENUNGGU_APPROVAL */}
                 {['PENDING', 'MENUNGGU_APPROVAL'].includes(data.status) && (
