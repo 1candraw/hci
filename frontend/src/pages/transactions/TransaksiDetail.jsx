@@ -6,6 +6,10 @@ import { generateQuotationPDF } from '../../utils/generateQuotationPDF';
 import { generateBASTPDF } from '../../utils/generateBASTPDF';
 import { generateInvoicePDF } from '../../utils/generateInvoicePDF';
 import { generateSuratJalanPDF } from '../../utils/generateSuratJalanPDF';
+import { generatePDIPDF } from '../../utils/generatePDIPDF';
+import { PDIChecklistForm } from '../../components/pdi/PDIChecklistForm';
+import { PDIInspectionSheetModal } from '../../components/pdi/PDIInspectionSheetModal';
+import { getInitialPdiItems, TOTAL_PDI_ITEMS } from '../../constants/pdiConstants';
 import {
   ArrowLeft,
   FileText,
@@ -34,11 +38,24 @@ const TransaksiDetail = () => {
   const [diskon, setDiskon] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Form states PDI (Operasional)
-  const [pdiCheck, setPdiCheck] = useState({
-    engine: true, hydraulic: true, bucket: true, 
-    body: true, undercarriage: true, accessories: true, notes: ''
+  // Form states PDI (Operasional) - Tidak otomatis terisi, wajib checklist manual satu per satu
+  const [pdiItems, setPdiItems] = useState(getInitialPdiItems());
+  const [pdiHeader, setPdiHeader] = useState({
+    reportNo: '',
+    machineModel: '',
+    machineSerial: '',
+    hm: '0.0',
+    customerName: '',
+    engineModel: '',
+    engineSerial: '',
+    inspectionDate: new Date().toISOString().split('T')[0],
+    machineLocation: 'Workshop HCI - Technical Yard',
+    inspectorName: '',
+    supervisorName: ''
   });
+  const [pdiDefectNotes, setPdiDefectNotes] = useState('');
+  const [showPdiSheetModal, setShowPdiSheetModal] = useState(false);
+  const [pdiModalReadOnly, setPdiModalReadOnly] = useState(false);
 
   // Form states Delivery Order (Operasional)
   const [deliveryForm, setDeliveryForm] = useState({
@@ -62,6 +79,33 @@ const TransaksiDetail = () => {
           ...prev, 
           destination: data.guest_location || data.catatan || data.perusahaan || ''
         }));
+
+        // Inisialisasi metadata formulir PDI
+        const unitName = `${data.brand_alat || data.brand || ''} ${data.model_alat || data.model || ''}`.trim();
+        setPdiHeader(prev => ({
+          ...prev,
+          reportNo: prev.reportNo || `PDI-${data.nomor_pemesanan || data.id || '2026-001'}`,
+          machineModel: prev.machineModel || unitName || 'Excavator Unit',
+          machineSerial: prev.machineSerial || data.serial_number || `SN-${(data.id || 101) * 6382}`,
+          customerName: prev.customerName || data.nama_customer || data.customer_fullname || 'Pelanggan',
+          engineModel: prev.engineModel || (data.tenaga_mesin ? `Standard Engine (${data.tenaga_mesin} HP)` : 'Tier-3 Standard OEM'),
+          engineSerial: prev.engineSerial || `ENG-${(data.id || 101) * 8271}`,
+          machineLocation: prev.machineLocation || data.destination || 'Workshop HCI - Technical Yard',
+          inspectorName: prev.inspectorName || user?.fullname || 'Staff Operasional',
+          supervisorName: prev.supervisorName || data.nama_manager || 'Supervisor Operasional'
+        }));
+
+        // Jika data PDI sebelumnya sudah ada di database, pulihkan datanya
+        if (data.pdi_checklist_data) {
+          try {
+            const parsed = typeof data.pdi_checklist_data === 'string' ? JSON.parse(data.pdi_checklist_data) : data.pdi_checklist_data;
+            if (parsed.items) setPdiItems(parsed.items);
+            if (parsed.header) setPdiHeader(prev => ({ ...prev, ...parsed.header }));
+            if (parsed.notes || parsed.defect_details) setPdiDefectNotes(parsed.notes || parsed.defect_details);
+          } catch (e) {
+            console.error('Error parsing pdi_checklist_data:', e);
+          }
+        }
       }
     } catch (error) {
       console.error(error);
@@ -158,14 +202,49 @@ const TransaksiDetail = () => {
     }
   };
 
+  const handleTogglePdiItem = (itemId) => {
+    setPdiItems(prev => ({
+      ...prev,
+      [itemId]: !prev[itemId]
+    }));
+  };
+
+  const handleChangePdiHeader = (field, val) => {
+    setPdiHeader(prev => ({
+      ...prev,
+      [field]: val
+    }));
+  };
+
   // -- Handler PDI Selesai (Operasional) --
   const handleSelesaiPDI = async (e) => {
     e.preventDefault();
-    if (!window.confirm("Pastikan semua checklist inspeksi unit telah selesai. Lanjutkan?")) return;
+    const checkedCount = Object.values(pdiItems).filter(Boolean).length;
+    if (checkedCount < TOTAL_PDI_ITEMS) {
+      alert(`⚠️ Pengecekan PDI belum selesai! Terdapat ${TOTAL_PDI_ITEMS - checkedCount} item yang belum diperiksa. Sesuai instruksi, seluruh 27 poin harus dicentang manual satu per satu.`);
+      return;
+    }
+
+    if (!window.confirm("Pastikan seluruh 27 item checklist inspeksi fisik telah dicek secara cermat di workshop. Selesaikan PDI dan ubah status menjadi SIAP KIRIM?")) return;
     setSubmitting(true);
     try {
-      await transaksiService.submitPDI(id, pdiCheck);
-      alert("PDI selesai! Unit siap dikirim.");
+      const payload = {
+        items: pdiItems,
+        header: pdiHeader,
+        notes: pdiDefectNotes,
+        defect_details: pdiDefectNotes,
+        inspectorName: pdiHeader.inspectorName || user?.fullname || 'Staff Operasional',
+        supervisorName: pdiHeader.supervisorName || detail?.nama_manager || 'Supervisor Operasional',
+        // Legacy flags compatibility
+        engine: true,
+        hydraulic: true,
+        bucket: true,
+        body: true,
+        undercarriage: true,
+        accessories: true
+      };
+      await transaksiService.submitPDI(id, payload);
+      alert("✅ Sukses! Data inspeksi PDI 27 poin berhasil disimpan. Unit kini berstatus SIAP KIRIM.");
       fetchDetail();
     } catch (err) {
       alert(err);
@@ -699,6 +778,113 @@ const TransaksiDetail = () => {
             </div>
           )}
 
+          {/* Card LEMBAR PRE-DELIVERY INSPECTION (PDI) */}
+          {['SIAP_KIRIM', 'PENGIRIMAN', 'SELESAI'].includes(detail.status) && (
+            <div style={{ ...styles.card, border: '1.5px solid #06b6d4', backgroundColor: '#f0fdfa' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1.5px solid #99f6e4', paddingBottom: '0.6rem' }}>
+                <h3 style={{ ...styles.cardTitle, margin: 0, border: 'none', color: '#0e7490', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Wrench size={18} style={{ color: '#0891b2' }} />
+                  Laporan Pre - Delivery Inspection (PDI)
+                </h3>
+                <span style={{
+                  padding: '0.25rem 0.65rem',
+                  borderRadius: '6px',
+                  fontSize: '0.72rem',
+                  fontFamily: "'Urbanist', sans-serif",
+                  fontWeight: '900',
+                  backgroundColor: '#ccfbf1',
+                  color: '#0f766e',
+                  border: '1px solid #5eead4'
+                }}>
+                  ✅ 27/27 Poin Inspeksi Lolos
+                </span>
+              </div>
+
+              <table style={styles.infoTable}>
+                <tbody>
+                  <tr>
+                    <td style={styles.tdLabel}>No. Laporan PDI</td>
+                    <td>: <strong style={{ color: '#0f766e' }}>{pdiHeader.reportNo || `PDI-${detail.nomor_pemesanan || detail.id}`}</strong></td>
+                  </tr>
+                  <tr>
+                    <td style={styles.tdLabel}>Unit / Model</td>
+                    <td>: <span>{pdiHeader.machineModel}</span></td>
+                  </tr>
+                  <tr>
+                    <td style={styles.tdLabel}>Hour Meter (HM)</td>
+                    <td>: <code>{pdiHeader.hm || '0.0'} Jam</code></td>
+                  </tr>
+                  <tr>
+                    <td style={styles.tdLabel}>Waktu Inspeksi</td>
+                    <td>: <span>{detail.pdi_created_at ? new Date(detail.pdi_created_at).toLocaleString('id-ID') : new Date().toLocaleDateString('id-ID')}</span></td>
+                  </tr>
+                  <tr>
+                    <td style={styles.tdLabel}>Petugas Pemeriksa</td>
+                    <td>: <strong>{pdiHeader.inspectorName || detail.operator_name || 'Staff Operasional'}</strong></td>
+                  </tr>
+                  <tr>
+                    <td style={styles.tdLabel}>Temuan Defect</td>
+                    <td>: <em>{pdiDefectNotes || detail.pdi_notes || 'Kondisi fisik & fungsi prima (Good), tidak ditemukan cacat.'}</em></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #99f6e4', display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPdiModalReadOnly(true);
+                    setShowPdiSheetModal(true);
+                  }}
+                  style={{
+                    flex: 1,
+                    minWidth: '180px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.4rem',
+                    padding: '0.7rem 1rem',
+                    backgroundColor: '#0f766e',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontFamily: "'Urbanist', sans-serif",
+                    fontWeight: '800',
+                    fontSize: '0.84rem',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <FileText size={15} />
+                  <span>Lihat Lembar Formulir PDI</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => generatePDIPDF(detail)}
+                  style={{
+                    flex: 1,
+                    minWidth: '180px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.4rem',
+                    padding: '0.7rem 1rem',
+                    backgroundColor: '#0d141e',
+                    color: '#74c02c',
+                    border: '1.5px solid #74c02c',
+                    borderRadius: '8px',
+                    fontFamily: "'Urbanist', sans-serif",
+                    fontWeight: '800',
+                    fontSize: '0.84rem',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Download size={15} />
+                  <span>Download Lembar PDI (PDF)</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Card SURAT JALAN & EKSPEDISI RESMI */}
           {(detail.surat_jalan_number || ['SIAP_KIRIM', 'PENGIRIMAN', 'SELESAI'].includes(detail.status)) && (
             <div style={{ ...styles.card, border: '1.5px solid #38bdf8', backgroundColor: '#f0f9ff' }}>
@@ -1011,37 +1197,20 @@ const TransaksiDetail = () => {
 
             {/* 6. OPERASIONAL: INSPEKSI PDI */}
             {(user?.role === 'Operasional' || user?.role === 'Admin') && detail.status === 'PROSES_OPERASIONAL' && (
-              <div>
-                <div style={{ backgroundColor: '#cffafe', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #a5f3fc' }}>
-                  <h4 style={{ margin: '0 0 0.35rem', color: '#155e75' }}>🔧 Checklist Pre-Delivery Inspection (PDI)</h4>
-                  <p style={{ margin: 0, fontSize: '0.84rem', color: '#0e7490' }}>Pastikan seluruh 6 komponen vital lolos pengujian fisik.</p>
-                </div>
-                <form onSubmit={handleSelesaiPDI}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
-                    {[
-                      ['engine', 'Pemeriksaan Mesin / Engine'],
-                      ['hydraulic', 'Sistem Hidrolik & Tekanan Pompa'],
-                      ['bucket', 'Kondisi Bucket & Silinder Boom'],
-                      ['body', 'Struktur Bodi, Kabin & Panel Kontrol'],
-                      ['undercarriage', 'Undercarriage & Roller Track'],
-                      ['accessories', 'Aksesoris, Lampu Kerja & Safety K3']
-                    ].map(([key, label]) => (
-                      <label key={key} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.88rem', cursor: 'pointer' }}>
-                        <input 
-                          type="checkbox" 
-                          checked={pdiCheck[key]} 
-                          onChange={(e) => setPdiCheck({ ...pdiCheck, [key]: e.target.checked })}
-                          style={{ accentColor: '#74c02c' }}
-                        />
-                        <span>{label}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <button type="submit" style={styles.btnPrimarySubmit} disabled={submitting}>
-                    {submitting ? 'Menyimpan...' : '✅ Selesaikan PDI → Siap Kirim'}
-                  </button>
-                </form>
-              </div>
+              <PDIChecklistForm 
+                items={pdiItems}
+                onToggleItem={handleTogglePdiItem}
+                headerData={pdiHeader}
+                onChangeHeader={handleChangePdiHeader}
+                defectNotes={pdiDefectNotes}
+                onChangeDefectNotes={setPdiDefectNotes}
+                onSubmit={handleSelesaiPDI}
+                submitting={submitting}
+                onOpenFullSheetModal={() => {
+                  setPdiModalReadOnly(false);
+                  setShowPdiSheetModal(true);
+                }}
+              />
             )}
 
             {/* 7. OPERASIONAL: SURAT JALAN */}
@@ -1109,6 +1278,17 @@ const TransaksiDetail = () => {
                     <Download size={16} />
                     <span>Download Surat Jalan (Delivery Order PDF)</span>
                   </button>
+                  <button
+                    onClick={() => generatePDIPDF(detail)}
+                    style={{
+                      ...styles.btnPrimarySubmit,
+                      backgroundColor: '#0891b2',
+                      color: '#ffffff',
+                    }}
+                  >
+                    <Download size={16} />
+                    <span>Download Lembar Inspeksi PDI (PDF)</span>
+                  </button>
                   <button onClick={handleTerimaUnit} style={styles.btnPrimarySubmit}>
                     📦 Konfirmasi Unit Tiba di Lokasi
                   </button>
@@ -1153,6 +1333,17 @@ const TransaksiDetail = () => {
                     <span>Download Invoice Resmi Pembayaran (PDF)</span>
                   </button>
                   <button
+                    onClick={() => generatePDIPDF(detail)}
+                    style={{
+                      ...styles.btnPrimarySubmit,
+                      backgroundColor: '#0891b2',
+                      color: '#ffffff',
+                    }}
+                  >
+                    <Download size={16} />
+                    <span>Download Lembar Inspeksi PDI (PDF)</span>
+                  </button>
+                  <button
                     onClick={() => generateQuotationPDF(detail)}
                     style={{
                       ...styles.btnPrimarySubmit,
@@ -1171,6 +1362,20 @@ const TransaksiDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal Format Lembar Asli PDI */}
+      <PDIInspectionSheetModal 
+        isOpen={showPdiSheetModal}
+        onClose={() => setShowPdiSheetModal(false)}
+        items={pdiItems}
+        onToggleItem={handleTogglePdiItem}
+        headerData={pdiHeader}
+        onChangeHeader={handleChangePdiHeader}
+        defectNotes={pdiDefectNotes}
+        onChangeDefectNotes={setPdiDefectNotes}
+        readOnly={pdiModalReadOnly}
+        onDownloadPDF={() => generatePDIPDF(detail)}
+      />
     </div>
   );
 };

@@ -5,6 +5,7 @@ import { generateQuotationPDF } from '../../utils/generateQuotationPDF';
 import { generateBASTPDF } from '../../utils/generateBASTPDF';
 import { generateInvoicePDF } from '../../utils/generateInvoicePDF';
 import { generateSuratJalanPDF } from '../../utils/generateSuratJalanPDF';
+import { generatePDIPDF } from '../../utils/generatePDIPDF';
 import {
   Search,
   FileText,
@@ -137,6 +138,16 @@ const TrackingPage = () => {
     } catch (err) {
       console.error('Gagal generate BAST:', err);
       alert('Gagal mengunduh dokumen BAST.');
+    }
+  };
+
+  const handleDownloadPDIPDF = () => {
+    if (!data) return;
+    try {
+      generatePDIPDF(data);
+    } catch (err) {
+      console.error('Gagal generate PDI PDF:', err);
+      alert('Gagal mengunduh dokumen PDI.');
     }
   };
 
@@ -691,7 +702,7 @@ const TrackingPage = () => {
                     <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🔧</div>
                     <h4 style={{ ...s.actionBoxTitle, color: '#0e7490' }}>Unit dalam Tahap Inspeksi (PDI)</h4>
                     <p style={s.actionBoxText}>
-                      Tim Mekanik & Operasional kami sedang melakukan 6 titik checklist uji fungsi mesin, sistem hidrolik, bucket, undercarriage, dan kelengkapan safety.
+                      Tim Mekanik & Operasional kami sedang melakukan 27 titik checklist Pre-Delivery Inspection (PDI) meliputi sistem oli & fluida, maintenance, function test, dan fisik eksternal unit.
                     </p>
                   </div>
                 )}
@@ -704,6 +715,21 @@ const TrackingPage = () => {
                     <p style={s.actionBoxText}>
                       Surat jalan resmi dan armada truk trailer ekspedisi sedang dipersiapkan untuk pengiriman ke lokasi site proyek Anda.
                     </p>
+                    <div style={{ marginTop: '0.85rem' }}>
+                      <button
+                        onClick={handleDownloadPDIPDF}
+                        style={{
+                          ...s.downloadBastBtn,
+                          backgroundColor: '#0891b2',
+                          color: '#ffffff',
+                          padding: '0.6rem 1rem',
+                          fontSize: '0.84rem'
+                        }}
+                      >
+                        <Download size={15} />
+                        <span>Download Lembar Hasil Inspeksi PDI (PDF)</span>
+                      </button>
+                    </div>
                   </div>
                 )}
 
@@ -739,6 +765,17 @@ const TrackingPage = () => {
                       >
                         <Download size={16} />
                         <span>Download Surat Jalan Pengiriman (PDF)</span>
+                      </button>
+                      <button
+                        onClick={handleDownloadPDIPDF}
+                        style={{
+                          ...s.downloadBastBtn,
+                          backgroundColor: '#0891b2',
+                          color: '#ffffff',
+                        }}
+                      >
+                        <Download size={16} />
+                        <span>Download Lembar Hasil Inspeksi PDI (PDF)</span>
                       </button>
                       <button
                         onClick={handleDownloadInvoicePDF}

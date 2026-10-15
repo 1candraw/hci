@@ -136,6 +136,7 @@ const getById = async (id) => {
       uc.undercarriage_check,
       uc.accessories_check,
       uc.notes AS pdi_notes,
+      uc.checklist_data AS pdi_checklist_data,
       uc.created_at AS pdi_created_at
     FROM quotations q
     LEFT JOIN users u ON q.customer_id = u.id
@@ -201,24 +202,39 @@ const updateStatus = async (id, status) => {
 
 // +++ TAMBAHKAN FUNGSI INI +++
 const submitPDI = async (quotationId, operatorId, data) => {
-  const { engine, hydraulic, bucket, body, undercarriage, accessories, notes } = data;
-  
+  const { 
+    engine, hydraulic, bucket, body, undercarriage, accessories, 
+    notes, defect_details, items, header, inspectorName, supervisorName 
+  } = data;
+
+  const defectNotes = notes || defect_details || '';
+  const fullChecklistJson = JSON.stringify(data);
+
+  // Compute legacy flags if items provided
+  const isEngine = engine !== undefined ? (engine ? 1 : 0) : (items ? (items.func_engine && items.engine_cooling ? 1 : 0) : 1);
+  const isHydraulic = hydraulic !== undefined ? (hydraulic ? 1 : 0) : (items ? (items.pump_gear_main && items.cylinder_boom_arm_bucket ? 1 : 0) : 1);
+  const isBucket = bucket !== undefined ? (bucket ? 1 : 0) : (items ? (items.cylinder_boom_arm_bucket ? 1 : 0) : 1);
+  const isBody = body !== undefined ? (body ? 1 : 0) : (items ? (items.ext_paint_welds ? 1 : 0) : 1);
+  const isUndercarriage = undercarriage !== undefined ? (undercarriage ? 1 : 0) : (items ? (items.idler_rollers ? 1 : 0) : 1);
+  const isAccessories = accessories !== undefined ? (accessories ? 1 : 0) : (items ? (items.ext_spare_parts_tools ? 1 : 0) : 1);
+
   const query = `
     INSERT INTO unit_checklists 
-    (quotation_id, operator_id, engine_check, hydraulic_check, bucket_check, body_check, undercarriage_check, accessories_check, notes) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (quotation_id, operator_id, engine_check, hydraulic_check, bucket_check, body_check, undercarriage_check, accessories_check, notes, checklist_data) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
   
   const [result] = await db.query(query, [
     quotationId, 
     operatorId, 
-    engine ? 1 : 0, 
-    hydraulic ? 1 : 0, 
-    bucket ? 1 : 0, 
-    body ? 1 : 0, 
-    undercarriage ? 1 : 0, 
-    accessories ? 1 : 0, 
-    notes || ''
+    isEngine, 
+    isHydraulic, 
+    isBucket, 
+    isBody, 
+    isUndercarriage, 
+    isAccessories, 
+    defectNotes,
+    fullChecklistJson
   ]);
   
   return result.insertId;
@@ -364,6 +380,7 @@ const getByNomor = async (nomor) => {
       uc.undercarriage_check,
       uc.accessories_check,
       uc.notes AS pdi_notes,
+      uc.checklist_data AS pdi_checklist_data,
       uc.created_at AS pdi_created_at
     FROM quotations q
     LEFT JOIN alat_berat a  ON q.alat_berat_id = a.id
