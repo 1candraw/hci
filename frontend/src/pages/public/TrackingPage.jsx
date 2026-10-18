@@ -170,7 +170,6 @@ const TrackingPage = () => {
   ].includes(data?.status);
 
   const isDeliveryOrBeyond = [
-    'SIAP_KIRIM',
     'PENGIRIMAN',
     'SELESAI',
   ].includes(data?.status) || Boolean(data?.surat_jalan_number);
@@ -188,9 +187,9 @@ const TrackingPage = () => {
         {/* ── Header Konsol Lacak ── */}
         <div style={s.hero}>
           <span style={s.heroPill}>PELACAKAN MANDIRI (SELF-SERVICE TRACKING)</span>
-          <h1 style={s.heroTitle}>Lacak Status Pesanan & Pengiriman Unit</h1>
+          <h1 style={s.heroTitle}>Lacak Status Pesanan</h1>
           <p style={s.heroSub}>
-            Pantau status penawaran harga, persetujuan manajemen, verifikasi DP, hingga pengiriman unit alat berat secara realtime.
+            Pantau status pesanan secara realtime.
           </p>
 
           {/* Search Form */}
@@ -464,16 +463,16 @@ const TrackingPage = () => {
                       <div>
                         <div style={{ ...s.docBadge, backgroundColor: '#ecfccb', color: '#15803d' }}>
                           <Sparkles size={13} style={{ color: '#15803d' }} />
-                          <span>FAKTUR & INVOICE RESMI</span>
+                          <span>INVOICE</span>
                         </div>
-                        <h3 style={s.quotationTitle}>Invoice Pembayaran Sah</h3>
+                        <h3 style={s.quotationTitle}>Invoice</h3>
                         <p style={s.quotationSub}>
                           No. Invoice: <strong>INV/{data.nomor_pemesanan || data.id}</strong> · Ref SPH: <strong>SPH/{data.nomor_pemesanan || data.id}</strong>
                         </p>
                       </div>
                       <div style={{ ...s.approvedPill, backgroundColor: '#ecfccb', color: '#15803d', border: '1px solid #84cc16' }}>
                         <CheckCircle2 size={16} />
-                        <span>{(data.metode_pembayaran === 'credit' || data.metode_pembayaran === 'kredit' || data.metode_pembayaran === 'leasing') ? 'Uang Muka Terverifikasi' : 'Lunas 100% (Verified)'}</span>
+                        <span>{(data.metode_pembayaran === 'credit' || data.metode_pembayaran === 'kredit' || data.metode_pembayaran === 'leasing') ? 'Uang Muka Terverifikasi' : 'LUNAS'}</span>
                       </div>
                     </div>
 
@@ -493,7 +492,7 @@ const TrackingPage = () => {
                       }}>
                         <div>
                           <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                            {(data.metode_pembayaran === 'credit' || data.metode_pembayaran === 'kredit' || data.metode_pembayaran === 'leasing') ? 'Pembayaran Awal Diterima (Uang Muka 20%)' : 'Nominal Pelunasan Diterima (Cash 100%)'}
+                            {(data.metode_pembayaran === 'credit' || data.metode_pembayaran === 'kredit' || data.metode_pembayaran === 'leasing') ? 'Pembayaran Diterima (DP 20%)' : 'Nominal Pelunasan'}
                           </span>
                           <div style={{ fontSize: '1.25rem', fontWeight: '900', color: '#15803d', fontFamily: "'Sora', sans-serif" }}>
                             {formatRupiah(data.dp_amount || ((data.metode_pembayaran === 'credit' || data.metode_pembayaran === 'kredit' || data.metode_pembayaran === 'leasing') ? Math.round(totalAkhir * 0.2) : totalAkhir))}
@@ -516,12 +515,12 @@ const TrackingPage = () => {
                         ) : (
                           <div style={{ textAlign: 'right' }}>
                             <span style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: '800', textTransform: 'uppercase' }}>
-                              Status Kewajiban
+                              STATUS
                             </span>
                             <div style={{ fontSize: '1.05rem', fontWeight: '800', color: '#15803d', fontFamily: "'Sora', sans-serif" }}>
-                              LUNAS PENUH (RP 0)
+                              LUNAS (RP 0)
                             </div>
-                            <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Tanpa Beban Cicilan</span>
+                            <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Tanpa Cicilan</span>
                           </div>
                         )}
                       </div>
@@ -535,18 +534,18 @@ const TrackingPage = () => {
                         >
                           <Download size={18} />
                           <span>
-                            {downloadingInvoice ? 'Menyiapkan Dokumen Invoice...' : 'Unduh Invoice Resmi Pembayaran (PDF)'}
+                            {downloadingInvoice ? 'Menyiapkan Dokumen Invoice...' : 'Download Invoice'}
                           </span>
                         </button>
                         <p style={s.pdfHint}>
-                          📄 Faktur & bukti tanda terima sah berkop PT Heavy Care Indonesia lengkap dengan rincian skema ({(data.metode_pembayaran === 'credit' || data.metode_pembayaran === 'kredit' || data.metode_pembayaran === 'leasing') ? 'Kredit 5 Tahun' : 'Cash 100%'}) & stempel verifikasi keuangan.
+                          Invoice PT Heavy Care Indonesia lengkap dengan rincian skema ({(data.metode_pembayaran === 'credit' || data.metode_pembayaran === 'kredit' || data.metode_pembayaran === 'leasing') ? 'Kredit 5 Tahun' : 'Cash 100%'}) & stempel resmi.
                         </p>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* 4. CARD SURAT JALAN PENGIRIMAN RESMI (Muncul saat SIAP_KIRIM / PENGIRIMAN / SELESAI) */}
+                {/* 4. CARD SURAT JALAN PENGIRIMAN RESMI (Muncul saat PENGIRIMAN / SELESAI setelah Surat Jalan diterbitkan) */}
                 {isDeliveryOrBeyond && (
                   <div style={{ ...s.quotationCard, border: '1.5px solid #0284c7', backgroundColor: '#ffffff', marginTop: '1.5rem' }}>
                     {/* Header Card Surat Jalan */}
@@ -554,16 +553,16 @@ const TrackingPage = () => {
                       <div>
                         <div style={{ ...s.docBadge, backgroundColor: '#e0f2fe', color: '#0369a1' }}>
                           <Truck size={13} style={{ color: '#0284c7' }} />
-                          <span>DOKUMEN LOGISTIK & DISPATCH</span>
+                          <span>DOKUMEN LOGISTIK</span>
                         </div>
-                        <h3 style={s.quotationTitle}>Surat Jalan Pengiriman (Delivery Order)</h3>
+                        <h3 style={s.quotationTitle}>Surat Jalan</h3>
                         <p style={s.quotationSub}>
                           No. Surat Jalan: <strong>{data.surat_jalan_number || `SJ-${(data.nomor_pemesanan || data.id || '').toString().replace(/[^a-zA-Z0-9]/g, '')}`}</strong> · Ref PO: <strong>{data.nomor_pemesanan || 'QO-' + data.id}</strong>
                         </p>
                       </div>
                       <div style={{ ...s.approvedPill, backgroundColor: '#e0f2fe', color: '#0369a1', border: '1px solid #7dd3fc' }}>
                         <CheckCircle2 size={16} />
-                        <span>{data.status === 'SELESAI' ? 'Unit Tiba & Diserahterimakan' : 'Dalam Proses Ekspedisi'}</span>
+                        <span>{data.status === 'SELESAI' ? 'Unit Tiba & Diserahterimakan' : 'Dalam Proses Perjalanan'}</span>
                       </div>
                     </div>
 
@@ -581,7 +580,7 @@ const TrackingPage = () => {
                       }}>
                         <div>
                           <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                            Driver / Ekspedisi
+                            Driver
                           </span>
                           <div style={{ fontSize: '0.92rem', fontWeight: '800', color: '#0f172a', marginTop: '0.15rem' }}>
                             {data.driver_name || 'Tim Driver Ekspedisi HeavyCare'}
@@ -589,7 +588,7 @@ const TrackingPage = () => {
                         </div>
                         <div>
                           <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                            Armada / Plat Truk Trailer
+                            Nomor Plat
                           </span>
                           <div style={{ fontSize: '0.92rem', fontWeight: '800', color: '#0f172a', marginTop: '0.15rem' }}>
                             {data.vehicle_number || 'Trailer Flatbed HeavyCare'}
@@ -597,7 +596,7 @@ const TrackingPage = () => {
                         </div>
                         <div style={{ gridColumn: '1 / -1' }}>
                           <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                            Alamat Site Proyek Tujuan
+                            Tujuan
                           </span>
                           <div style={{ fontSize: '0.86rem', fontWeight: '700', color: '#334155', marginTop: '0.15rem' }}>
                             {data.destination || data.guest_location || data.catatan || 'Lokasi Site Proyek Pemesan'}
@@ -620,11 +619,11 @@ const TrackingPage = () => {
                         >
                           <Download size={18} />
                           <span>
-                            {downloadingSuratJalan ? 'Menyiapkan Dokumen Surat Jalan...' : 'Unduh Surat Jalan Pengiriman (PDF)'}
+                            {downloadingSuratJalan ? 'Menyiapkan Dokumen Surat Jalan...' : 'Download Surat Jalan'}
                           </span>
                         </button>
                         <p style={s.pdfHint}>
-                          📄 Dokumen resmi berkop PT Heavy Care Indonesia lengkap untuk dicetak & ditandatangani oleh customer saat serah terima unit di lokasi.
+                          Dokumen surat jalan untuk customer.
                         </p>
                       </div>
                     </div>
@@ -665,9 +664,9 @@ const TrackingPage = () => {
                 {data.status === 'DP_DIBAYAR' && (
                   <div style={s.infoStateBox}>
                     <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>💳</div>
-                    <h4 style={{ ...s.actionBoxTitle, color: '#1e40af' }}>Bukti Pembayaran Telah Terkirim</h4>
+                    <h4 style={{ ...s.actionBoxTitle, color: '#1e40af' }}>Bukti Pembayaran Terkirim</h4>
                     <p style={s.actionBoxText}>
-                      Bukti transfer pembayaran Anda telah tersimpan dan sedang diverifikasi mutasi pembayarannya oleh Tim Sales & Finance.
+                      Bukti pembayaran anda telah tersimpan dan sedang diverifikasi oleh tim kami.
                     </p>
                     {data.dp_bank_name && (
                       <div style={s.dpSummary}>
@@ -677,7 +676,7 @@ const TrackingPage = () => {
                         <div>Nominal: <strong>{formatRupiah(data.dp_amount || ((data.metode_pembayaran === 'credit' || data.metode_pembayaran === 'kredit' || data.metode_pembayaran === 'leasing') ? Math.round(totalAkhir * 0.2) : totalAkhir))}</strong></div>
                         {data.dp_proof_url && (
                           <a href={data.dp_proof_url} target="_blank" rel="noopener noreferrer" style={s.viewSlipBtn}>
-                            🔍 Lihat File Slip Transfer
+                            Lihat Bukti Transfer
                           </a>
                         )}
                       </div>
@@ -878,7 +877,7 @@ const PaymentConfirmForm = ({ nomor, totalAkhir, metodePembayaran, onSuccess }) 
       <div style={s2.headerWrap}>
         <div style={s2.headerTop}>
           <h4 style={s2.dpTitle}>
-            {isCredit ? '💳 Konfirmasi Pembayaran Awal' : '💳 Konfirmasi Pembayaran Pelunasan'}
+            {isCredit ? 'Konfirmasi Pembayaran' : 'Konfirmasi Pembayaran'}
           </h4>
           <span style={{
             ...s2.schemeBadge,
@@ -886,13 +885,13 @@ const PaymentConfirmForm = ({ nomor, totalAkhir, metodePembayaran, onSuccess }) 
             color: isCredit ? '#b45309' : '#15803d',
             border: isCredit ? '1px solid #fde68a' : '1px solid #84cc16'
           }}>
-            {isCredit ? 'UANG MUKA (DP 20%)' : 'CASH LUNAS (100%)'}
+            {isCredit ? 'CREDIT' : 'CASH'}
           </span>
         </div>
         <p style={s2.headerDesc}>
           {isCredit
-            ? 'Penawaran telah disetujui. Silakan transfer pembayaran awal (Uang Muka 20%) ke rekening resmi di bawah ini, lalu unggah slip bukti transfer.'
-            : 'Penawaran telah disetujui. Silakan transfer pelunasan penuh (100%) ke rekening resmi di bawah ini, lalu unggah slip bukti transfer.'}
+            ? 'Penawaran telah disetujui. Silakan transfer pembayaran awal (DP 20%) ke rekening resmi di bawah ini, lalu unggah bukti transfer.'
+            : 'Penawaran telah disetujui. Silakan transfer pelunasan ke rekening resmi di bawah ini, lalu unggah bukti transfer.'}
         </p>
       </div>
 
@@ -901,9 +900,9 @@ const PaymentConfirmForm = ({ nomor, totalAkhir, metodePembayaran, onSuccess }) 
         <div style={s2.dpAmountBox}>
           <div style={s2.amountHeaderRow}>
             <span style={s2.amountLabel}>
-              {isCredit ? 'Total Pembayaran Awal (Uang Muka 20%)' : 'Total Tagihan Pelunasan Tunai (100%)'}
+              {isCredit ? 'Total Pembayaran Awal (DP 20%)' : 'Total Tagihan'}
             </span>
-            <span style={s2.otrBadge}>Total OTR Termasuk Ongkir</span>
+            <span style={s2.otrBadge}>Total Termasuk Ongkir</span>
           </div>
 
           <div style={s2.dpAmountVal}>
@@ -924,8 +923,7 @@ const PaymentConfirmForm = ({ nomor, totalAkhir, metodePembayaran, onSuccess }) 
       {/* Rekening Tujuan Card */}
       <div style={s2.rekCard}>
         <div style={s2.rekHeader}>
-          <span>🏛️</span>
-          <span>REKENING TUJUAN TRANSFER RESMI</span>
+          <span>REKENING PERUSAHAAN</span>
         </div>
         <div style={s2.rekContent}>
           <div>
@@ -938,8 +936,7 @@ const PaymentConfirmForm = ({ nomor, totalAkhir, metodePembayaran, onSuccess }) 
           </div>
         </div>
         <div style={s2.rekFooterNote}>
-          <span>🔒</span>
-          <span>Pastikan nominal transfer sesuai tagihan di atas untuk mempercepat verifikasi Finance.</span>
+          <span>Pastikan nominal transfer sesuai tagihan di atas untuk mempercepat verifikasi pembayaran.</span>
         </div>
       </div>
 
@@ -960,7 +957,7 @@ const PaymentConfirmForm = ({ nomor, totalAkhir, metodePembayaran, onSuccess }) 
       {/* Form Input */}
       <form onSubmit={handleSubmit} style={s2.formWrap}>
         <div style={s2.field}>
-          <label style={s2.label}>Nama Bank Pengirim *</label>
+          <label style={s2.label}>Nama Bank</label>
           <input
             style={s2.input}
             placeholder="Contoh: BCA / Mandiri / BRI / BNI"
@@ -971,7 +968,7 @@ const PaymentConfirmForm = ({ nomor, totalAkhir, metodePembayaran, onSuccess }) 
         </div>
 
         <div style={s2.field}>
-          <label style={s2.label}>Nomor Rekening Pengirim *</label>
+          <label style={s2.label}>Nomor Rekening</label>
           <input
             style={s2.input}
             placeholder="Contoh: 1234567890"
@@ -982,7 +979,7 @@ const PaymentConfirmForm = ({ nomor, totalAkhir, metodePembayaran, onSuccess }) 
         </div>
 
         <div style={s2.field}>
-          <label style={s2.label}>Nama Pemilik Rekening (Sesuai Rekening) *</label>
+          <label style={s2.label}>Nama Pemilik Rekening</label>
           <input
             style={s2.input}
             placeholder="Contoh: PT Konstruksi Jaya / Budi Santoso"
@@ -993,7 +990,7 @@ const PaymentConfirmForm = ({ nomor, totalAkhir, metodePembayaran, onSuccess }) 
         </div>
 
         <div style={s2.field}>
-          <label style={s2.label}>Upload File Bukti Transfer (Foto / Struk / PDF) *</label>
+          <label style={s2.label}>Upload Bukti Transfer</label>
           <div style={s2.uploadArea}>
             <input
               type="file"
@@ -1016,7 +1013,7 @@ const PaymentConfirmForm = ({ nomor, totalAkhir, metodePembayaran, onSuccess }) 
         )}
 
         <button type="submit" style={s2.submitBtn} disabled={loading}>
-          {loading ? '⏳ Mengunggah Bukti...' : (isCredit ? '🚀 Kirim Bukti Pembayaran Awal (DP 20%)' : '🚀 Kirim Bukti Pembayaran Lunas (Cash 100%)')}
+          {loading ? '⏳ Mengunggah Bukti...' : (isCredit ? 'Kirim' : 'Kirim')}
         </button>
       </form>
     </div>
@@ -1050,7 +1047,7 @@ const ReceiveUnitBox = ({ data, onSuccess }) => {
       <Truck size={40} style={{ color: '#a16207', margin: '0 auto 0.5rem' }} />
       <h4 style={{ ...s2.dpTitle, color: '#0f172a', textAlign: 'center' }}>Unit Sedang Dalam Perjalanan</h4>
       <p style={{ fontSize: '0.88rem', color: '#64748b', textAlign: 'center', marginBottom: '1rem' }}>
-        Armada trailer sedang mengangkut excavator menuju lokasi site proyek Anda.
+        Armada trailer sedang mengangkut excavator menuju lokasi Anda.
       </p>
 
       {data?.surat_jalan_number && (
@@ -1077,7 +1074,7 @@ const ReceiveUnitBox = ({ data, onSuccess }) => {
       )}
 
       <button onClick={handleReceive} style={s2.receiveBtn} disabled={loading}>
-        {loading ? '⏳ Memproses...' : '📦 Konfirmasi Unit Telah Tiba di Lokasi'}
+        {loading ? '⏳ Memproses...' : 'Konfirmasi Penerimaan Unit'}
       </button>
     </div>
   );
