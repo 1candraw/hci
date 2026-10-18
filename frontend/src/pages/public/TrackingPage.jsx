@@ -39,7 +39,7 @@ const getStatusBadge = (status) => {
     PROSES_OPERASIONAL: { label: 'Proses PDI (Inspeksi Unit)', bg: '#cffafe', text: '#0e7490', border: '#67e8f9' },
     SIAP_KIRIM: { label: 'PDI Lolos — Unit Siap Dikirim', bg: '#dcfce7', text: '#15803d', border: '#86efac' },
     PENGIRIMAN: { label: 'Unit Dalam Perjalanan', bg: '#fef9c3', text: '#a16207', border: '#facc15' },
-    SELESAI: { label: 'Transaksi Selesai (BAST Terbit)', bg: '#bbf7d0', text: '#166534', border: '#22c55e' },
+    SELESAI: { label: 'Transaksi Selesai', bg: '#bbf7d0', text: '#166534', border: '#22c55e' },
   };
   return map[status] || { label: status, bg: '#f1f5f9', text: '#475569', border: '#cbd5e1' };
 };
@@ -751,7 +751,7 @@ const TrackingPage = () => {
                     <div style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                       <button onClick={handleDownloadBAST} style={s.downloadBastBtn}>
                         <Download size={16} />
-                        <span>Download Berita Acara Serah Terima (BAST)</span>
+                        <span>Download Berita Acara Serah Terima</span>
                       </button>
                       <button
                         onClick={handleDownloadSuratJalanPDF}
@@ -763,7 +763,7 @@ const TrackingPage = () => {
                         }}
                       >
                         <Download size={16} />
-                        <span>Download Surat Jalan Pengiriman (PDF)</span>
+                        <span>Download Surat Jalan</span>
                       </button>
                       <button
                         onClick={handleDownloadPDIPDF}
@@ -774,7 +774,7 @@ const TrackingPage = () => {
                         }}
                       >
                         <Download size={16} />
-                        <span>Download Lembar Hasil Inspeksi PDI (PDF)</span>
+                        <span>Download Hasil PDI</span>
                       </button>
                       <button
                         onClick={handleDownloadInvoicePDF}
@@ -785,11 +785,11 @@ const TrackingPage = () => {
                         }}
                       >
                         <FileText size={16} />
-                        <span>Download Invoice Pembayaran Sah (PDF)</span>
+                        <span>Download Invoice</span>
                       </button>
                       <button onClick={handleDownloadQuotationPDF} style={s.downloadQuotationAltBtn}>
                         <FileText size={16} />
-                        <span>Download Arsip Surat Penawaran (PDF)</span>
+                        <span>Download Surat Penawaran</span>
                       </button>
                     </div>
                   </div>
