@@ -90,6 +90,21 @@ const submitPenawaran = async (req, res) => {
     
     const { harga_penawaran, ongkos_kirim, diskon } = req.body;
 
+    // Validasi terhadap Harga Patokan Katalog
+    const existing = await quotationRepo.getById(id);
+    if (!existing) {
+      return res.status(404).json({ message: 'Data pesanan tidak ditemukan' });
+    }
+    const hargaPatokan = Number(existing.harga_unit) || 0;
+    if (hargaPatokan > 0) {
+      if (Number(harga_penawaran || 0) < hargaPatokan) {
+        return res.status(400).json({ message: 'Nominal harga unit tidak boleh di bawah harga standar' });
+      }
+      if (Number(diskon || 0) > hargaPatokan * 0.10) {
+        return res.status(400).json({ message: 'Nominal diskon tidak boleh melebihi 10 %' });
+      }
+    }
+
     // Susun data untuk dikirim ke Repository
     const updateData = {
       harga_penawaran: harga_penawaran || 0,
@@ -340,6 +355,7 @@ const trackQuotation = async (req, res) => {
       'APPROVED':             1,
       'REJECTED':             1,
       'DP_DIBAYAR':           2,
+      'PEMBAYARAN_DITOLAK':   2,
       'VERIFIKASI_DP_SALES':  2,
       'PROSES_OPERASIONAL':   3,
       'SIAP_KIRIM':           3,
@@ -381,6 +397,11 @@ const uploadDPProof = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Pesanan tidak ditemukan' });
     }
 
+    // Upload hanya boleh saat menunggu pembayaran atau setelah pembayaran ditolak (upload ulang)
+    if (!['APPROVED', 'PEMBAYARAN_DITOLAK'].includes(quotation.status)) {
+      return res.status(400).json({ success: false, message: 'Pesanan ini tidak sedang menunggu bukti pembayaran.' });
+    }
+
     // Hitung nominal otomatis jika amount tidak dikirim (20% untuk kredit, 100% untuk cash)
     const totalAkhir = quotation.harga_penawaran 
       ? Number(quotation.harga_penawaran) + Number(quotation.ongkos_kirim || 0) - Number(quotation.diskon || 0)
@@ -416,6 +437,46 @@ const uploadDPProof = async (req, res) => {
   }
 };
 
+// ★ SALES TOLAK PEMBAYARAN: wajib menyertakan alasan, customer dapat upload ulang bukti
+const rejectPayment = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const reason = (req.body.reason || '').trim();
+
+    if (!reason) {
+      return res.status(400).json({ message: 'Alasan penolakan pembayaran wajib diisi' });
+    }
+
+    const quotation = await quotationRepo.getById(id);
+    if (!quotation) {
+      return res.status(404).json({ message: 'Data pesanan tidak ditemukan' });
+    }
+    if (quotation.status !== 'DP_DIBAYAR') {
+      return res.status(400).json({ message: 'Pembayaran hanya dapat ditolak saat status menunggu verifikasi' });
+    }
+
+    const affected = await quotationRepo.rejectPayment(id, reason);
+    if (affected === 0) {
+      return res.status(404).json({ message: 'Gagal menolak pembayaran' });
+    }
+
+    if (req.user?.id) {
+      await auditLogService.logActivity(
+        req.user.id,
+        'UPDATE',
+        'quotations',
+        id,
+        `Sales menolak pembayaran pesanan #${quotation.nomor_pemesanan || id}. Alasan: ${reason}`
+      );
+    }
+
+    res.status(200).json({ message: 'Pembayaran berhasil ditolak. Customer akan diminta mengunggah ulang bukti pembayaran.' });
+  } catch (error) {
+    console.error('Error rejectPayment:', error);
+    res.status(500).json({ message: 'Terjadi kesalahan saat menolak pembayaran', error: error.message });
+  }
+};
+
 module.exports = {
   createQuotation,
   getAllQuotations, 
@@ -429,4 +490,5 @@ module.exports = {
   createGuestQuotation,
   trackQuotation,
   uploadDPProof,
+  rejectPayment,
 };

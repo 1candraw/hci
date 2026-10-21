@@ -56,7 +56,7 @@ const Sidebar = () => {
           <li>
             <Link to="/transaksi" style={isCurrent('/transaksi') ? styles.activeLink : styles.link}>
               <ClipboardList size={18} strokeWidth={isCurrent('/transaksi') ? 2.2 : 1.75} style={isCurrent('/transaksi') ? styles.activeIcon : styles.icon} />
-              <span style={styles.linkText}>Daftar Pesanan (RFQ)</span>
+              <span style={styles.linkText}>Daftar Pesanan</span>
               {isCurrent('/transaksi') && <ChevronRight size={14} style={styles.chevron} />}
             </Link>
           </li>

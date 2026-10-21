@@ -35,6 +35,7 @@ const getStatusBadge = (status) => {
     APPROVED: { label: 'Penawaran Disetujui — Menunggu Pembayaran', bg: '#dcfce7', text: '#15803d', border: '#4ade80' },
     REJECTED: { label: 'Penawaran Ditolak', bg: '#fee2e2', text: '#991b1b', border: '#f87171' },
     DP_DIBAYAR: { label: 'Bukti Bayar Dikirim — Verifikasi Sales', bg: '#e0e7ff', text: '#4338ca', border: '#818cf8' },
+    PEMBAYARAN_DITOLAK: { label: 'Pembayaran Ditolak — Upload Ulang Bukti', bg: '#fee2e2', text: '#991b1b', border: '#f87171' },
     VERIFIKASI_DP_SALES: { label: 'Pembayaran Terverifikasi — Approval Manager', bg: '#ede9fe', text: '#6d28d9', border: '#c4b5fd' },
     PROSES_OPERASIONAL: { label: 'Proses PDI (Inspeksi Unit)', bg: '#cffafe', text: '#0e7490', border: '#67e8f9' },
     SIAP_KIRIM: { label: 'PDI Lolos — Unit Siap Dikirim', bg: '#dcfce7', text: '#15803d', border: '#86efac' },
@@ -154,6 +155,7 @@ const TrackingPage = () => {
   const isApprovedOrBeyond = [
     'APPROVED',
     'DP_DIBAYAR',
+    'PEMBAYARAN_DITOLAK',
     'VERIFIKASI_DP_SALES',
     'PROSES_OPERASIONAL',
     'SIAP_KIRIM',
@@ -660,6 +662,55 @@ const TrackingPage = () => {
                   />
                 )}
 
+                {/* 2b. PEMBAYARAN_DITOLAK → Pemberitahuan + alasan + form upload ulang */}
+                {data.status === 'PEMBAYARAN_DITOLAK' && (
+                  <>
+                    <div style={{
+                      backgroundColor: '#fef2f2',
+                      border: '1.5px solid #fca5a5',
+                      borderRadius: '12px',
+                      padding: '1rem 1.15rem',
+                      marginBottom: '1rem',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                        <AlertCircle size={20} style={{ color: '#dc2626', flexShrink: 0 }} />
+                        <h4 style={{ ...s.actionBoxTitle, margin: 0, color: '#991b1b', textAlign: 'left' }}>Pembayaran Anda Ditolak</h4>
+                      </div>
+                      <p style={{ ...s.actionBoxText, textAlign: 'left', color: '#7f1d1d', margin: '0 0 0.65rem' }}>
+                        Tim Sales kami tidak dapat memverifikasi bukti pembayaran yang Anda kirim. Silakan periksa alasan berikut, lalu unggah ulang bukti pembayaran yang benar.
+                      </p>
+                      <div style={{
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #fecaca',
+                        borderLeft: '4px solid #dc2626',
+                        borderRadius: '8px',
+                        padding: '0.65rem 0.85rem',
+                        fontSize: '0.86rem',
+                        color: '#7f1d1d',
+                        lineHeight: '1.45',
+                        textAlign: 'left',
+                      }}>
+                        <div style={{ fontSize: '0.72rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#b91c1c', marginBottom: '0.2rem' }}>
+                          Alasan dari Sales
+                        </div>
+                        {data.payment_reject_reason || 'Tidak ada catatan.'}
+                        {data.payment_rejected_at && (
+                          <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '0.35rem' }}>
+                            Ditolak pada {new Date(data.payment_rejected_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <PaymentConfirmForm
+                      nomor={data.nomor_pemesanan || data.id}
+                      totalAkhir={totalAkhir}
+                      metodePembayaran={data.metode_pembayaran}
+                      isResubmit
+                      onSuccess={() => handleSearch(null, data.nomor_pemesanan)}
+                    />
+                  </>
+                )}
+
                 {/* 3. DP_DIBAYAR → Menunggu verifikasi Sales */}
                 {data.status === 'DP_DIBAYAR' && (
                   <div style={s.infoStateBox}>
@@ -815,7 +866,7 @@ const TrackingPage = () => {
 };
 
 // ── Sub-komponen: Form Konfirmasi Pembayaran ──
-const PaymentConfirmForm = ({ nomor, totalAkhir, metodePembayaran, onSuccess }) => {
+const PaymentConfirmForm = ({ nomor, totalAkhir, metodePembayaran, onSuccess, isResubmit = false }) => {
   const [form, setForm] = useState({ bank: '', no_rek: '', nama_pemilik: '', slip: null });
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ type: '', text: '' });
@@ -877,7 +928,7 @@ const PaymentConfirmForm = ({ nomor, totalAkhir, metodePembayaran, onSuccess }) 
       <div style={s2.headerWrap}>
         <div style={s2.headerTop}>
           <h4 style={s2.dpTitle}>
-            {isCredit ? 'Konfirmasi Pembayaran' : 'Konfirmasi Pembayaran'}
+            {isResubmit ? 'Upload Ulang Bukti Pembayaran' : 'Konfirmasi Pembayaran'}
           </h4>
           <span style={{
             ...s2.schemeBadge,
@@ -889,9 +940,11 @@ const PaymentConfirmForm = ({ nomor, totalAkhir, metodePembayaran, onSuccess }) 
           </span>
         </div>
         <p style={s2.headerDesc}>
-          {isCredit
-            ? 'Penawaran telah disetujui. Silakan transfer pembayaran awal (DP 20%) ke rekening resmi di bawah ini, lalu unggah bukti transfer.'
-            : 'Penawaran telah disetujui. Silakan transfer pelunasan ke rekening resmi di bawah ini, lalu unggah bukti transfer.'}
+          {isResubmit
+            ? 'Pastikan nominal, data rekening pengirim, dan foto bukti transfer sudah benar dan jelas sebelum mengirim ulang.'
+            : isCredit
+              ? 'Penawaran telah disetujui. Silakan transfer pembayaran awal (DP 20%) ke rekening resmi di bawah ini, lalu unggah bukti transfer.'
+              : 'Penawaran telah disetujui. Silakan transfer pelunasan ke rekening resmi di bawah ini, lalu unggah bukti transfer.'}
         </p>
       </div>
 

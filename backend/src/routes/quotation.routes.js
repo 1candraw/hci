@@ -31,6 +31,9 @@ router.put('/:id/review', authenticate, quotationController.reviewPenawaran);
 // PUT update status pesanan (fleksibel untuk berbagai tahapan)
 router.put('/:id/status', authenticate, quotationController.updateStatusPesanan);
 
+// PUT Sales menolak bukti pembayaran (wajib alasan)
+router.put('/:id/reject-payment', authenticate, quotationController.rejectPayment);
+
 // POST submit form PDI oleh Operasional
 router.post('/:id/pdi', authenticate, quotationController.submitChecklistPDI);
 

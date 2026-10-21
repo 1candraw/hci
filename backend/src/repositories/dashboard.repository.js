@@ -39,6 +39,7 @@ const getStatusDistribution = async () => {
     APPROVED: 'Disetujui (Menunggu Pembayaran)',
     REJECTED: 'Ditolak',
     DP_DIBAYAR: 'Pembayaran Masuk',
+    PEMBAYARAN_DITOLAK: 'Pembayaran Ditolak',
     VERIFIKASI_DP_SALES: 'Verifikasi Pembayaran',
     PROSES_OPERASIONAL: 'Inspeksi PDI',
     SIAP_KIRIM: 'Siap Kirim',

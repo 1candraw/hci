@@ -98,7 +98,7 @@ const getById = async (id) => {
       q.dp_account_name,
       q.dp_proof_url,
       q.dp_amount,
-      q.dp_paid_at,
+      q.dp_paid_at, q.payment_reject_reason, q.payment_rejected_at,
       COALESCE(q.guest_company, u.fullname, q.guest_name, 'Guest RFQ') AS perusahaan, 
       COALESCE(q.guest_email, u.email, '-') AS email_perusahaan,
       COALESCE(q.guest_phone, u.phone, '-') AS telepon_perusahaan,
@@ -339,7 +339,7 @@ const getByNomor = async (nomor) => {
       q.dp_account_name,
       q.dp_proof_url,
       q.dp_amount,
-      q.dp_paid_at,
+      q.dp_paid_at, q.payment_reject_reason, q.payment_rejected_at,
       q.created_at,
       q.updated_at,
       COALESCE(q.guest_company, u.fullname, q.guest_name, 'Guest RFQ') AS perusahaan,
@@ -418,6 +418,15 @@ const saveDPPayment = async (identifier, data) => {
   return result.affectedRows;
 };
 
+// ★ TOLAK PEMBAYARAN OLEH SALES (dengan alasan)
+const rejectPayment = async (id, reason) => {
+  const [result] = await db.query(
+    `UPDATE quotations SET status = 'PEMBAYARAN_DITOLAK', payment_reject_reason = ?, payment_rejected_at = NOW() WHERE id = ?`,
+    [reason, id]
+  );
+  return result.affectedRows;
+};
+
 // Jangan lupa mengekspor getById
 module.exports = {
   create,
@@ -432,4 +441,5 @@ module.exports = {
   createGuest,
   getByNomor,
   saveDPPayment,
+  rejectPayment,
 };

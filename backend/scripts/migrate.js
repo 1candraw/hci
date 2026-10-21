@@ -145,6 +145,7 @@ async function runMigrations(conn) {
     'APPROVED',
     'REJECTED',
     'DP_DIBAYAR',
+    'PEMBAYARAN_DITOLAK',
     'VERIFIKASI_DP_SALES',
     'PROSES_OPERASIONAL',
     'SIAP_KIRIM',
@@ -186,6 +187,27 @@ async function runMigrations(conn) {
     );
   } else {
     console.log(`  ${c.yellow('⚠')} Kolom rejection_reason sudah ada, dilewati.`);
+  }
+
+  // Kolom alasan penolakan pembayaran oleh Sales
+  if (!(await columnExists(conn, 'quotations', 'payment_reject_reason'))) {
+    await runQuery(
+      conn,
+      'Tambah kolom payment_reject_reason ke tabel quotations',
+      `ALTER TABLE quotations ADD COLUMN payment_reject_reason TEXT DEFAULT NULL`
+    );
+  } else {
+    console.log(`  ${c.yellow('⚠')} Kolom payment_reject_reason sudah ada, dilewati.`);
+  }
+
+  if (!(await columnExists(conn, 'quotations', 'payment_rejected_at'))) {
+    await runQuery(
+      conn,
+      'Tambah kolom payment_rejected_at ke tabel quotations',
+      `ALTER TABLE quotations ADD COLUMN payment_rejected_at DATETIME DEFAULT NULL`
+    );
+  } else {
+    console.log(`  ${c.yellow('⚠')} Kolom payment_rejected_at sudah ada, dilewati.`);
   }
 
   // ────────────────────────────────────────────────────────

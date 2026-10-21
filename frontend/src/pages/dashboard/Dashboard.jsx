@@ -31,6 +31,7 @@ const STATUS_BADGE = {
   APPROVED: { label: 'Disetujui (Menunggu Pembayaran)', bg: '#ecfccb', text: '#15803d', border: '#84cc16' },
   REJECTED: { label: 'Ditolak', bg: '#fee2e2', text: '#991b1b', border: '#f87171' },
   DP_DIBAYAR: { label: 'Pembayaran Masuk (Verifikasi)', bg: '#e0e7ff', text: '#4338ca', border: '#818cf8' },
+  PEMBAYARAN_DITOLAK: { label: 'Pembayaran Ditolak', bg: '#fee2e2', text: '#991b1b', border: '#f87171' },
   VERIFIKASI_DP_SALES: { label: 'Pembayaran Diverifikasi Sales', bg: '#ede9fe', text: '#6d28d9', border: '#c4b5fd' },
   PROSES_OPERASIONAL: { label: 'Proses PDI', bg: '#cffafe', text: '#0e7490', border: '#67e8f9' },
   SIAP_KIRIM: { label: 'PDI Lolos (Siap Kirim)', bg: '#ecfccb', text: '#15803d', border: '#84cc16' },

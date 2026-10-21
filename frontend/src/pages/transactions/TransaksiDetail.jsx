@@ -38,6 +38,10 @@ const TransaksiDetail = () => {
   const [diskon, setDiskon] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // Form state Tolak Pembayaran (Sales)
+  const [showRejectPayment, setShowRejectPayment] = useState(false);
+  const [rejectPaymentReason, setRejectPaymentReason] = useState('');
+
   // Form states PDI (Operasional) - Tidak otomatis terisi, wajib checklist manual satu per satu
   const [pdiItems, setPdiItems] = useState(getInitialPdiItems());
   const [pdiHeader, setPdiHeader] = useState({
@@ -118,11 +122,37 @@ const TransaksiDetail = () => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka || 0);
   };
 
+  // -- Validasi Harga & Diskon terhadap Harga Patokan Katalog --
+  const MAX_DISKON_PERSEN = 10;
+  const hargaPatokan = Number(detail?.harga_unit) || 0;
+  const getHargaUnitError = () => {
+    if (hargaPatokan > 0 && hargaPenawaran !== '' && Number(hargaPenawaran) < hargaPatokan) {
+      return 'Nominal harga unit tidak boleh di bawah harga standar';
+    }
+    return '';
+  };
+  const getDiskonError = () => {
+    if (hargaPatokan > 0 && diskon !== '' && Number(diskon) > hargaPatokan * (MAX_DISKON_PERSEN / 100)) {
+      return 'Nominal diskon tidak boleh melebihi 10 %';
+    }
+    return '';
+  };
+  const hargaUnitError = getHargaUnitError();
+  const diskonError = getDiskonError();
+
   // -- Handler Sales Kirim Penawaran --
   const handleKirimPenawaran = async (e) => {
     e.preventDefault();
     if (!hargaPenawaran || Number(hargaPenawaran) <= 0) {
       alert("Harap masukkan harga penawaran yang valid.");
+      return;
+    }
+    if (hargaUnitError) {
+      alert(hargaUnitError);
+      return;
+    }
+    if (diskonError) {
+      alert(diskonError);
       return;
     }
     setSubmitting(true);
@@ -179,6 +209,29 @@ const TransaksiDetail = () => {
     try {
       await transaksiService.updateStatus(id, 'VERIFIKASI_DP_SALES');
       alert("Pembayaran berhasil diverifikasi oleh Sales!");
+      fetchDetail();
+    } catch (err) {
+      alert(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // -- Handler Tolak Pembayaran oleh Sales --
+  const handleTolakPembayaran = async (e) => {
+    e.preventDefault();
+    const reason = rejectPaymentReason.trim();
+    if (!reason) {
+      alert('Harap isi catatan alasan penolakan pembayaran.');
+      return;
+    }
+    if (!window.confirm('Tolak pembayaran ini? Customer akan diminta mengunggah ulang bukti pembayaran.')) return;
+    setSubmitting(true);
+    try {
+      await transaksiService.rejectPayment(id, reason);
+      alert('Pembayaran berhasil ditolak. Customer akan menerima pemberitahuan beserta alasannya.');
+      setShowRejectPayment(false);
+      setRejectPaymentReason('');
       fetchDetail();
     } catch (err) {
       alert(err);
@@ -670,11 +723,11 @@ const TransaksiDetail = () => {
                   fontSize: '0.72rem',
                   fontFamily: "'Urbanist', sans-serif",
                   fontWeight: '900',
-                  backgroundColor: detail.status === 'DP_DIBAYAR' ? '#fef3c7' : '#ecfccb',
-                  color: detail.status === 'DP_DIBAYAR' ? '#b45309' : '#15803d',
-                  border: detail.status === 'DP_DIBAYAR' ? '1px solid #fde68a' : '1px solid #84cc16'
+                  backgroundColor: detail.status === 'DP_DIBAYAR' ? '#fef3c7' : detail.status === 'PEMBAYARAN_DITOLAK' ? '#fee2e2' : '#ecfccb',
+                  color: detail.status === 'DP_DIBAYAR' ? '#b45309' : detail.status === 'PEMBAYARAN_DITOLAK' ? '#991b1b' : '#15803d',
+                  border: detail.status === 'DP_DIBAYAR' ? '1px solid #fde68a' : detail.status === 'PEMBAYARAN_DITOLAK' ? '1px solid #fca5a5' : '1px solid #84cc16'
                 }}>
-                  {detail.status === 'DP_DIBAYAR' ? '⏳ Menunggu Verifikasi Sales' : '✅ Pembayaran Terverifikasi'}
+                  {detail.status === 'DP_DIBAYAR' ? '⏳ Menunggu Verifikasi Sales' : detail.status === 'PEMBAYARAN_DITOLAK' ? '❌ Pembayaran Ditolak' : '✅ Pembayaran Terverifikasi'}
                 </span>
               </div>
 
@@ -708,7 +761,7 @@ const TransaksiDetail = () => {
               {detail.dp_proof_url && (
                 <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #d9f99d', textAlign: 'center' }}>
                   <p style={{ fontSize: '0.84rem', fontWeight: '800', color: '#334155', marginBottom: '0.5rem' }}>
-                    Foto / Slip Bukti Pembayaran:
+                    Bukti Pembayaran:
                   </p>
                   <a href={detail.dp_proof_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block' }}>
                     <img
@@ -1018,6 +1071,11 @@ const TransaksiDetail = () => {
                       onChange={(e) => setHargaPenawaran(e.target.value)}
                       required
                     />
+                    {hargaUnitError && (
+                      <div style={{ color: '#dc2626', fontSize: '0.8rem', fontWeight: '600', marginTop: '0.3rem' }}>
+                        ⚠️ {hargaUnitError}
+                      </div>
+                    )}
                   </div>
                   <div style={styles.inputGroup}>
                     <label style={styles.label}>Ongkos Kirim Armada (Rp)</label>
@@ -1038,6 +1096,16 @@ const TransaksiDetail = () => {
                       value={diskon}
                       onChange={(e) => setDiskon(e.target.value)}
                     />
+                    {hargaPatokan > 0 && (
+                      <div style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                        Maksimal diskon 10%: {formatRupiah(hargaPatokan * (MAX_DISKON_PERSEN / 100))}
+                      </div>
+                    )}
+                    {diskonError && (
+                      <div style={{ color: '#dc2626', fontSize: '0.8rem', fontWeight: '600', marginTop: '0.3rem' }}>
+                        ⚠️ {diskonError}
+                      </div>
+                    )}
                   </div>
                   <button
                     type="submit"
@@ -1046,7 +1114,7 @@ const TransaksiDetail = () => {
                       backgroundColor: detail.status === 'REJECTED' ? '#dc2626' : '#0d141e',
                       color: detail.status === 'REJECTED' ? '#ffffff' : '#74c02c'
                     }}
-                    disabled={submitting}
+                    disabled={submitting || !!hargaUnitError || !!diskonError}
                   >
                     {submitting ? 'Mengirim...' : (detail.status === 'REJECTED' ? '🔄 Ajukan Ulang Penawaran ke Manager' : '🚀 Ajukan Penawaran ke Manager')}
                   </button>
@@ -1154,14 +1222,81 @@ const TransaksiDetail = () => {
             {(user?.role === 'Sales' || user?.role === 'Admin') && detail.status === 'DP_DIBAYAR' && (
               <div>
                 <div style={{ backgroundColor: '#e0e7ff', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #c7d2fe' }}>
-                  <h4 style={{ margin: '0 0 0.35rem', color: '#3730a3' }}>💳 Bukti Pembayaran Masuk!</h4>
+                  <h4 style={{ margin: '0 0 0.35rem', color: '#3730a3' }}>Pembayaran Masuk !</h4>
                   <p style={{ margin: 0, fontSize: '0.86rem', color: '#4338ca', lineHeight: '1.4' }}>
-                    Pembeli telah mengirim slip transfer pembayaran. Cek data mutasi bank, lalu klik verifikasi.
+                    Customer telah mengirim bukti transfer pembayaran. Cek data mutasi bank, lalu klik verifikasi.
                   </p>
+                  {detail.payment_reject_reason && (
+                    <div style={{ marginTop: '0.6rem', padding: '0.5rem 0.7rem', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px dashed #a5b4fc', fontSize: '0.8rem', color: '#3730a3' }}>
+                      🔁 <strong>Upload ulang.</strong> Alasan penolakan sebelumnya: <em>"{detail.payment_reject_reason}"</em>
+                    </div>
+                  )}
                 </div>
-                <button onClick={handleVerifikasiSales} style={styles.btnPrimarySubmit} disabled={submitting}>
-                  {submitting ? 'Memproses...' : '✅ Verifikasi Pembayaran Masuk'}
-                </button>
+
+                {!showRejectPayment ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                    <button onClick={handleVerifikasiSales} style={styles.btnPrimarySubmit} disabled={submitting}>
+                      {submitting ? 'Memproses...' : 'Verifikasi Pembayaran'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowRejectPayment(true)}
+                      style={{ ...styles.btnPrimarySubmit, backgroundColor: '#ffffff', color: '#dc2626', border: '1.5px solid #dc2626' }}
+                      disabled={submitting}
+                    >
+                      Tolak Pembayaran
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleTolakPembayaran} style={{ backgroundColor: '#fef2f2', padding: '1rem', borderRadius: '8px', border: '1.5px solid #fecaca' }}>
+                    <h4 style={{ margin: '0 0 0.5rem', color: '#991b1b' }}>Tolak Pembayaran</h4>
+                    <label style={styles.label}>Catatan Alasan Penolakan *</label>
+                    <textarea
+                      style={{ ...styles.input, minHeight: '90px', resize: 'vertical', fontFamily: 'inherit' }}
+                      placeholder="Contoh: Nominal transfer tidak sesuai tagihan / bukti transfer tidak terbaca / dana belum masuk ke rekening perusahaan."
+                      value={rejectPaymentReason}
+                      onChange={(e) => setRejectPaymentReason(e.target.value)}
+                      required
+                    />
+                    <p style={{ fontSize: '0.76rem', color: '#7f1d1d', margin: '0.4rem 0 0.8rem' }}>
+                      Catatan ini akan ditampilkan kepada customer pada halaman Lacak Status Pesanan.
+                    </p>
+                    <div style={{ display: 'flex', gap: '0.6rem' }}>
+                      <button
+                        type="button"
+                        onClick={() => { setShowRejectPayment(false); setRejectPaymentReason(''); }}
+                        style={{ ...styles.btnPrimarySubmit, flex: 1, backgroundColor: '#ffffff', color: '#334155', border: '1px solid #cbd5e1' }}
+                        disabled={submitting}
+                      >
+                        Batal
+                      </button>
+                      <button
+                        type="submit"
+                        style={{ ...styles.btnPrimarySubmit, flex: 1, backgroundColor: '#dc2626', color: '#ffffff' }}
+                        disabled={submitting || !rejectPaymentReason.trim()}
+                      >
+                        {submitting ? 'Memproses...' : 'Kirim Penolakan'}
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            )}
+
+            {/* 4b. PEMBAYARAN DITOLAK: menunggu customer upload ulang */}
+            {detail.status === 'PEMBAYARAN_DITOLAK' && (
+              <div style={{ backgroundColor: '#fee2e2', padding: '1rem', borderRadius: '8px', border: '1.5px solid #fca5a5' }}>
+                <h4 style={{ margin: '0 0 0.35rem', color: '#991b1b' }}>❌ Pembayaran Ditolak</h4>
+                <p style={{ margin: '0 0 0.5rem', fontSize: '0.86rem', color: '#7f1d1d', lineHeight: '1.4' }}>
+                  {user?.role === 'Customer'
+                    ? 'Bukti pembayaran Anda ditolak. Silakan unggah ulang bukti pembayaran melalui halaman Lacak Status Pesanan.'
+                    : 'Menunggu customer mengunggah ulang bukti pembayaran.'}
+                </p>
+                {detail.payment_reject_reason && (
+                  <div style={{ backgroundColor: '#ffffff', padding: '0.6rem 0.8rem', borderRadius: '6px', border: '1px solid #fecaca', fontSize: '0.84rem', color: '#7f1d1d' }}>
+                    <strong>Alasan:</strong> {detail.payment_reject_reason}
+                  </div>
+                )}
               </div>
             )}
 

@@ -78,6 +78,16 @@ const receiveUnit = async (id) => {
   }
 };
 
+// Fungsi Sales menolak pembayaran beserta alasannya
+const rejectPayment = async (id, reason) => {
+  try {
+    const response = await api.put(`/quotations/${id}/reject-payment`, { reason });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || 'Gagal menolak pembayaran';
+  }
+};
+
 export const transaksiService = {
   getAll,
   getById,
@@ -86,5 +96,6 @@ export const transaksiService = {
   updateStatus,
   submitPDI,
   submitDeliveryOrder,
-  receiveUnit
+  receiveUnit,
+  rejectPayment
 };
