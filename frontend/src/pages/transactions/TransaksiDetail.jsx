@@ -1116,7 +1116,7 @@ const TransaksiDetail = () => {
                     }}
                     disabled={submitting || !!hargaUnitError || !!diskonError}
                   >
-                    {submitting ? 'Mengirim...' : (detail.status === 'REJECTED' ? '🔄 Ajukan Ulang Penawaran ke Manager' : '🚀 Ajukan Penawaran ke Manager')}
+                    {submitting ? 'Mengirim...' : (detail.status === 'REJECTED' ? '🔄 Ajukan Ulang Penawaran ke Manager' : 'Ajukan Penawaran ke Manager')}
                   </button>
                 </form>
               </div>
@@ -1311,13 +1311,13 @@ const TransaksiDetail = () => {
             {(user?.role === 'Manager' || user?.role === 'Admin') && detail.status === 'VERIFIKASI_DP_SALES' && (
               <div>
                 <div style={{ backgroundColor: '#ecfccb', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #d9f99d' }}>
-                  <h4 style={{ margin: '0 0 0.35rem', color: '#15803d' }}>📋 Pembayaran Telah Diverifikasi Sales</h4>
+                  <h4 style={{ margin: '0 0 0.35rem', color: '#15803d' }}>Pembayaran Telah Diverifikasi Sales</h4>
                   <p style={{ margin: 0, fontSize: '0.86rem', color: '#166534', lineHeight: '1.4' }}>
-                    Sales telah memvalidasi dana pembayaran. Klik tombol di bawah untuk menyetujui pelepasan unit ke Tim Operasional (PDI).
+                    Sales telah memvalidasi pembayaran. Klik tombol di bawah untuk menyetujui pengecekan unit oleh Tim Operasional.
                   </p>
                 </div>
                 <button onClick={handleApproveManager} style={styles.btnPrimarySubmit} disabled={submitting}>
-                  {submitting ? 'Memproses...' : '🚀 Setujui & Teruskan ke Operasional'}
+                  {submitting ? 'Memproses...' : 'Setujui & Teruskan ke Operasional'}
                 </button>
               </div>
             )}
