@@ -29,9 +29,13 @@ const submitPenawaran = async (id, data) => {
 };
 
 // Fungsi untuk Manager menyetujui/menolak
-const reviewPenawaran = async (id, action) => {
+const reviewPenawaran = async (id, action, rejectionReason = null) => {
   try {
-    const response = await api.put(`/quotations/${id}/review`, { action });
+    const payload = { action };
+    if (rejectionReason) {
+      payload.rejection_reason = rejectionReason;
+    }
+    const response = await api.put(`/quotations/${id}/review`, payload);
     return response.data;
   } catch (error) {
     throw error.response?.data?.message || 'Gagal memproses review penawaran';

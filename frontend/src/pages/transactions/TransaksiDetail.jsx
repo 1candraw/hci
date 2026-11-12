@@ -21,7 +21,9 @@ import {
   Wrench,
   Tag,
   Package,
-  Truck
+  Truck,
+  X,
+  AlertCircle
 } from 'lucide-react';
 
 const TransaksiDetail = () => {
@@ -41,6 +43,10 @@ const TransaksiDetail = () => {
   // Form state Tolak Pembayaran (Sales)
   const [showRejectPayment, setShowRejectPayment] = useState(false);
   const [rejectPaymentReason, setRejectPaymentReason] = useState('');
+
+  // Modal state Tolak Penawaran (Manager)
+  const [showRejectQuotationModal, setShowRejectQuotationModal] = useState(false);
+  const [rejectQuotationReason, setRejectQuotationReason] = useState('');
 
   // Form states PDI (Operasional) - Tidak otomatis terisi, wajib checklist manual satu per satu
   const [pdiItems, setPdiItems] = useState(getInitialPdiItems());
@@ -173,15 +179,44 @@ const TransaksiDetail = () => {
 
   // -- Handler Manager Review Penawaran --
   const handleReviewManager = async (action) => {
-    const confirmMsg = action === 'approve'
-      ? 'Setujui penawaran harga ini untuk diteruskan ke customer?'
-      : 'Tolak penawaran harga ini?';
-    if (!window.confirm(confirmMsg)) return;
+    if (action === 'reject') {
+      handleOpenRejectModal();
+      return;
+    }
+
+    if (!window.confirm('Setujui penawaran harga ini untuk diteruskan ke customer?')) return;
 
     setSubmitting(true);
     try {
-      await transaksiService.reviewPenawaran(id, action);
-      alert(`Pesanan berhasil di-${action === 'approve' ? 'setujui' : 'tolak'}!`);
+      await transaksiService.reviewPenawaran(id, 'approve');
+      alert('Pesanan berhasil disetujui!');
+      fetchDetail();
+    } catch (err) {
+      alert(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleOpenRejectModal = () => {
+    setRejectQuotationReason('');
+    setShowRejectQuotationModal(true);
+  };
+
+  const handleConfirmRejectQuotation = async (e) => {
+    e.preventDefault();
+    const reason = rejectQuotationReason.trim();
+    if (!reason) {
+      alert('Harap isi alasan penolakan penawaran.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await transaksiService.reviewPenawaran(id, 'reject', reason);
+      alert('Penawaran berhasil ditolak beserta alasan penolakan.');
+      setShowRejectQuotationModal(false);
+      setRejectQuotationReason('');
       fetchDetail();
     } catch (err) {
       alert(err);
@@ -1043,6 +1078,37 @@ const TransaksiDetail = () => {
                       ? 'Penawaran sebelumnya telah ditolak oleh Manager. Silakan sesuaikan kalkulasi harga, ongkos kirim, atau diskon, lalu ajukan ulang dokumen penawaran ke Manager.'
                       : 'Tentukan harga penawaran OTR dan ajukan untuk disetujui Manager.'}
                   </p>
+                  {detail.status === 'REJECTED' && (
+                    <div style={{
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #fecaca',
+                      borderLeft: '4px solid #dc2626',
+                      borderRadius: '6px',
+                      padding: '0.7rem 0.85rem',
+                      marginBottom: '0.75rem',
+                      fontSize: '0.84rem',
+                      color: '#7f1d1d',
+                      lineHeight: '1.45',
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        fontSize: '0.72rem',
+                        fontWeight: '800',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        color: '#b91c1c',
+                        marginBottom: '0.25rem',
+                      }}>
+                        <AlertCircle size={13} />
+                        <span>Alasan Penolakan Manager</span>
+                      </div>
+                      <div style={{ whiteSpace: 'pre-wrap' }}>
+                        {detail.rejection_reason || 'Tidak ada catatan alasan penolakan.'}
+                      </div>
+                    </div>
+                  )}
                   <div style={{
                     backgroundColor: '#ffffff',
                     padding: '0.65rem 0.85rem',
@@ -1140,6 +1206,18 @@ const TransaksiDetail = () => {
                       Penawaran Terakhir Ditolak: {formatRupiah(totalAkhir)}
                     </div>
                   )}
+                  {detail.rejection_reason && (
+                    <div style={{
+                      marginTop: '0.55rem',
+                      paddingTop: '0.55rem',
+                      borderTop: '1px dashed #fecaca',
+                      color: '#7f1d1d',
+                      lineHeight: '1.45',
+                      whiteSpace: 'pre-wrap',
+                    }}>
+                      <strong>Alasan Penolakan:</strong> {detail.rejection_reason}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1181,7 +1259,8 @@ const TransaksiDetail = () => {
                     <span>Setujui Penawaran</span>
                   </button>
                   <button
-                    onClick={() => handleReviewManager('reject')}
+                    type="button"
+                    onClick={handleOpenRejectModal}
                     style={{ ...styles.btnPrimarySubmit, backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', flex: 1 }}
                     disabled={submitting}
                   >
@@ -1510,6 +1589,97 @@ const TransaksiDetail = () => {
         readOnly={pdiModalReadOnly}
         onDownloadPDF={() => generatePDIPDF(detail)}
       />
+
+      {/* Kotak Dialog Alasan Penolakan Penawaran (Manager) */}
+      {showRejectQuotationModal && (
+        <div
+          style={styles.modalOverlay}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !submitting) {
+              setShowRejectQuotationModal(false);
+            }
+          }}
+        >
+          <div style={styles.modalContent}>
+            <div style={styles.modalHeader}>
+              <div>
+                <span style={styles.modalTag}>PENOLAKAN PENAWARAN</span>
+                <h3 style={styles.modalTitle}>Tolak Penawaran Sales</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => !submitting && setShowRejectQuotationModal(false)}
+                style={styles.closeBtn}
+                disabled={submitting}
+                aria-label="Tutup dialog"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmRejectQuotation}>
+              <div style={styles.modalSummaryBox}>
+                <div style={{ fontWeight: '800', color: '#0d141e', fontSize: '0.88rem' }}>
+                  {detail.nomor_dokumen || detail.nomor_pemesanan || `RFQ-#${detail.id}`} — {detail.brand_alat || detail.brand || 'Unit'} {detail.model_alat || detail.model || ''}
+                </div>
+                {totalAkhir && (
+                  <div style={{ color: '#991b1b', fontWeight: '700', fontSize: '0.82rem', marginTop: '0.2rem' }}>
+                    Total Penawaran OTR: {formatRupiah(totalAkhir)}
+                  </div>
+                )}
+              </div>
+
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>
+                  Alasan Penolakan <span style={{ color: '#dc2626' }}>*</span>
+                </label>
+                <textarea
+                  rows="4"
+                  required
+                  autoFocus
+                  value={rejectQuotationReason}
+                  onChange={(e) => setRejectQuotationReason(e.target.value)}
+                  style={{ ...styles.input, minHeight: '100px', resize: 'vertical', fontFamily: 'inherit' }}
+                  placeholder="Tuliskan alasan penolakan penawaran (misal: harga terlalu rendah, diskon melebihi batas margin, atau perlu penyesuaian ongkos kirim)..."
+                />
+                <p style={{ margin: '0.4rem 0 0', fontSize: '0.78rem', color: '#64748b', lineHeight: '1.4' }}>
+                  Alasan penolakan ini akan langsung tampil pada akun Sales sebagai catatan revisi.
+                </p>
+              </div>
+
+              <div style={styles.modalFooter}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowRejectQuotationModal(false);
+                    setRejectQuotationReason('');
+                  }}
+                  style={styles.btnCancel}
+                  disabled={submitting}
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting || !rejectQuotationReason.trim()}
+                  style={{
+                    ...styles.btnPrimarySubmit,
+                    width: 'auto',
+                    flex: 1,
+                    backgroundColor: '#dc2626',
+                    color: '#ffffff',
+                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.25)',
+                    opacity: submitting || !rejectQuotationReason.trim() ? 0.65 : 1,
+                  }}
+                >
+                  <XCircle size={16} />
+                  <span>{submitting ? 'Memproses...' : 'Konfirmasi Tolak Penawaran'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1649,6 +1819,89 @@ const styles = {
     fontSize: '0.88rem',
     color: '#0d141e',
     fontWeight: '800'
+  },
+  modalOverlay: {
+    position: 'fixed',
+    inset: 0,
+    backgroundColor: 'rgba(13, 20, 30, 0.55)',
+    backdropFilter: 'blur(3px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '1rem',
+    zIndex: 1000,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: '500px',
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    padding: '1.5rem',
+    boxShadow: '0 20px 50px rgba(13, 20, 30, 0.25)',
+    border: '1.5px solid #e2e8f0',
+  },
+  modalHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: '1rem',
+    marginBottom: '1rem',
+    paddingBottom: '0.85rem',
+    borderBottom: '1.5px solid #f1f5f9',
+  },
+  modalTag: {
+    display: 'inline-block',
+    backgroundColor: '#fee2e2',
+    color: '#991b1b',
+    fontSize: '0.68rem',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '900',
+    letterSpacing: '0.8px',
+    padding: '0.2rem 0.55rem',
+    borderRadius: '6px',
+    marginBottom: '0.35rem',
+  },
+  modalTitle: {
+    margin: 0,
+    fontSize: '1.15rem',
+    fontFamily: "'Sora', sans-serif",
+    fontWeight: '900',
+    color: '#0d141e',
+  },
+  closeBtn: {
+    backgroundColor: '#f1f5f9',
+    color: '#475569',
+    border: 'none',
+    borderRadius: '8px',
+    width: '34px',
+    height: '34px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+  },
+  modalSummaryBox: {
+    backgroundColor: '#fef2f2',
+    border: '1px solid #fecaca',
+    borderRadius: '10px',
+    padding: '0.75rem 0.9rem',
+    marginBottom: '1rem',
+  },
+  modalFooter: {
+    display: 'flex',
+    gap: '0.75rem',
+    marginTop: '1.25rem',
+  },
+  btnCancel: {
+    padding: '0.85rem 1.2rem',
+    backgroundColor: '#f1f5f9',
+    color: '#334155',
+    border: '1px solid #cbd5e1',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontFamily: "'Urbanist', sans-serif",
+    fontWeight: '800',
+    fontSize: '0.9rem',
   }
 };
 

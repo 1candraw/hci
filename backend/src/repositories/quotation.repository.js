@@ -33,6 +33,7 @@ const getAll = async () => {
       q.sales_id,
       q.manager_id,
       q.status, 
+      q.rejection_reason,
       q.created_at,
       q.created_at AS tanggal,
       q.sumber_pesanan,
@@ -84,6 +85,7 @@ const getById = async (id) => {
       q.updated_at,
       q.metode_pembayaran,
       COALESCE(q.catatan, q.guest_location, '-') AS catatan,
+      q.rejection_reason,
       q.sumber_pesanan,
       q.harga_penawaran, 
       q.ongkos_kirim,    
@@ -182,14 +184,15 @@ const updatePenawaran = async (id, data) => {
 };
 
 // TAMBAHKAN FUNGSI BARU INI UNTUK MANAGER ---
-const updateStatusManager = async (id, status, manager_id) => {
+const updateStatusManager = async (id, status, manager_id, rejection_reason = null) => {
   const query = `
     UPDATE quotations 
-    SET status = ?, manager_id = ? 
+    SET status = ?, manager_id = ?, rejection_reason = ? 
     WHERE id = ?
   `;
   
-  const [result] = await db.query(query, [status, manager_id, id]);
+  const reasonValue = status === 'REJECTED' ? (rejection_reason || null) : null;
+  const [result] = await db.query(query, [status, manager_id, reasonValue, id]);
   return result.affectedRows;
 };
 
@@ -329,6 +332,7 @@ const getByNomor = async (nomor) => {
       q.sales_id,
       q.manager_id,
       q.catatan,
+      q.rejection_reason,
       q.guest_name,
       q.guest_company,
       q.guest_phone,

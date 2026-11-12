@@ -132,6 +132,7 @@ const reviewPenawaran = async (req, res) => {
     const id = req.params.id;
     const manager_id = req.user.id; // Ambil ID Manager dari token
     const { action } = req.body; // Isinya nanti 'approve' atau 'reject'
+    const rejectionReason = (req.body.rejection_reason || req.body.reason || req.body.alasan || '').trim();
 
     // Tentukan status berdasarkan aksi Manager
     let statusFinal = '';
@@ -139,6 +140,9 @@ const reviewPenawaran = async (req, res) => {
       statusFinal = 'APPROVED';
     } else if (action === 'reject') {
       statusFinal = 'REJECTED';
+      if (!rejectionReason) {
+        return res.status(400).json({ message: 'Alasan penolakan wajib diisi' });
+      }
     } else {
       return res.status(400).json({ message: 'Aksi tidak valid' });
     }
@@ -157,10 +161,28 @@ const reviewPenawaran = async (req, res) => {
       }
     }
 
-    const affectedRows = await quotationRepo.updateStatusManager(id, statusFinal, manager_id);
+    const affectedRows = await quotationRepo.updateStatusManager(
+      id,
+      statusFinal,
+      manager_id,
+      action === 'reject' ? rejectionReason : null
+    );
 
     if (affectedRows === 0) {
       return res.status(404).json({ message: 'Data pesanan tidak ditemukan' });
+    }
+
+    if (req.user?.id) {
+      const logDesc = action === 'reject'
+        ? `Manager menolak penawaran pesanan #${quotation.nomor_pemesanan || id}. Alasan: ${rejectionReason}`
+        : `Manager menyetujui penawaran pesanan #${quotation.nomor_pemesanan || id}`;
+      await auditLogService.logActivity(
+        req.user.id,
+        'UPDATE',
+        'quotations',
+        id,
+        logDesc
+      );
     }
 
     res.status(200).json({ message: `Pesanan berhasil di-${action}!` });

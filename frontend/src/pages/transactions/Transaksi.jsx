@@ -200,6 +200,26 @@ const Transaksi = () => {
                       </td>
                       <td style={styles.td}>
                         {getStatusBadge(item.status)}
+                        {item.status === 'REJECTED' && item.rejection_reason && ['Sales', 'Manager', 'Admin'].includes(user?.role) && (
+                          <div
+                            title={item.rejection_reason}
+                            style={{
+                              marginTop: '0.35rem',
+                              fontSize: '0.74rem',
+                              color: '#991b1b',
+                              backgroundColor: '#fef2f2',
+                              border: '1px solid #fecaca',
+                              borderRadius: '6px',
+                              padding: '0.25rem 0.5rem',
+                              maxWidth: '240px',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            Alasan: {item.rejection_reason}
+                          </div>
+                        )}
                       </td>
                       <td style={{ ...styles.td, textAlign: 'center' }}>
                         <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center', alignItems: 'center' }}>

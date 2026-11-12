@@ -28,6 +28,7 @@ const getAll = async (req, res) => {
         a.description AS deskripsi_unit,
         q.created_at AS tanggal,
         q.status,
+        q.rejection_reason,
         q.sumber_pesanan,
         q.metode_pembayaran,
         q.harga_penawaran,
