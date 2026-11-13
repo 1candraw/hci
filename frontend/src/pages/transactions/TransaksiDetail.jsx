@@ -30,6 +30,8 @@ const TransaksiDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const userRole = (user?.role || user?.role_name || '').trim().toLowerCase();
+  const isOperasional = userRole === 'operasional';
 
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -362,6 +364,10 @@ const TransaksiDetail = () => {
 
   // -- Handler Konfirmasi Terima Unit (Customer) --
   const handleTerimaUnit = async () => {
+    if (isOperasional) {
+      alert("Operasional tidak memiliki akses untuk konfirmasi unit tiba.");
+      return;
+    }
     if (!window.confirm("Pastikan unit alat berat telah tiba di lokasi proyek Anda dan sesuai dengan pesanan. Lanjutkan konfirmasi terima unit?")) return;
     try {
       await transaksiService.receiveUnit(id);
@@ -1502,9 +1508,11 @@ const TransaksiDetail = () => {
                     <Download size={16} />
                     <span>Download Hasil PDI</span>
                   </button>
-                  <button onClick={handleTerimaUnit} style={styles.btnPrimarySubmit}>
-                    📦 Konfirmasi Unit Tiba di Lokasi
-                  </button>
+                  {!isOperasional && (
+                    <button onClick={handleTerimaUnit} style={styles.btnPrimarySubmit}>
+                      📦 Konfirmasi Unit Tiba di Lokasi
+                    </button>
+                  )}
                 </div>
               </div>
             )}
