@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import { alatBeratService } from '../../services/alatBerat.service';
 import FormPemesananModal from '../../components/forms/FormPemesananModal';
 import {
@@ -13,6 +14,11 @@ import {
 } from 'lucide-react';
 
 const Katalog = () => {
+  const { user } = useAuth();
+  const userRole = (user?.role || user?.role_name || '').trim().toLowerCase();
+  // Role internal (Manager, Sales, Operasional, Admin) tidak membuat RFQ pembelian unit
+  const canCreateRFQ = userRole === 'customer';
+
   const [alatBerat, setAlatBerat] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -73,6 +79,7 @@ const Katalog = () => {
 
   // --- HANDLER FITUR PESAN ---
   const handleOrderClick = (mesin) => {
+    if (!canCreateRFQ) return;
     const stockVal = mesin.stok !== undefined ? mesin.stok : (mesin.stock || 0);
     if (Number(stockVal) <= 0) {
       alert('Mohon maaf, unit ini sedang tidak memiliki stok tersedia (Stok Habis).');
@@ -113,23 +120,25 @@ const Katalog = () => {
         </div>
       </div>
 
-      {/* Smart Assistant Banner */}
-      <div style={styles.banner}>
-        <div>
-          <span style={styles.bannerTag}>SISTEM PENDUKUNG KEPUTUSAN (SPK)</span>
-          <h3 style={styles.bannerTitle}>Butuh Rekomendasi Unit Paling Efisien untuk Proyek?</h3>
-          <p style={styles.bannerText}>
-            Gunakan kalkulator algoritma Simple Additive Weighting (SAW) untuk perangkingan objektif berdasarkan bobot harga, kapasitas, dan tenaga mesin.
-          </p>
+      {/* Smart Assistant Banner (hanya untuk peran yang memiliki akses ke SAW) */}
+      {user?.role?.toLowerCase() !== 'operasional' && (
+        <div style={styles.banner}>
+          <div>
+            <span style={styles.bannerTag}>SISTEM PENDUKUNG KEPUTUSAN (SPK)</span>
+            <h3 style={styles.bannerTitle}>Butuh Rekomendasi Unit Paling Efisien untuk Proyek?</h3>
+            <p style={styles.bannerText}>
+              Gunakan kalkulator algoritma Simple Additive Weighting (SAW) untuk perangkingan objektif berdasarkan bobot harga, kapasitas, dan tenaga mesin.
+            </p>
+          </div>
+          <Link to="/saw" style={{ textDecoration: 'none' }}>
+            <button style={styles.bannerBtn}>
+              <SlidersHorizontal size={16} />
+              <span>Hitung Rekomendasi SAW</span>
+              <ArrowRight size={15} />
+            </button>
+          </Link>
         </div>
-        <Link to="/saw" style={{ textDecoration: 'none' }}>
-          <button style={styles.bannerBtn}>
-            <SlidersHorizontal size={16} />
-            <span>Hitung Rekomendasi SAW</span>
-            <ArrowRight size={15} />
-          </button>
-        </Link>
-      </div>
+      )}
 
       {error && <div style={styles.errorBox}>⚠️ {error}</div>}
       {loading && (
@@ -201,20 +210,22 @@ const Katalog = () => {
                     <button onClick={() => handleDetailClick(item)} style={styles.detailBtn}>
                       Detail
                     </button>
-                    {isOutOfStock ? (
-                      <button 
-                        disabled 
-                        style={styles.orderBtnDisabled} 
-                        title="Unit ini sedang tidak memiliki stok tersedia"
-                      >
-                        <FileText size={13} />
-                        <span>Stok Habis</span>
-                      </button>
-                    ) : (
-                      <button onClick={() => handleOrderClick(item)} style={styles.orderBtn}>
-                        <FileText size={13} />
-                        <span>Buat RFQ</span>
-                      </button>
+                    {canCreateRFQ && (
+                      isOutOfStock ? (
+                        <button 
+                          disabled 
+                          style={styles.orderBtnDisabled} 
+                          title="Unit ini sedang tidak memiliki stok tersedia"
+                        >
+                          <FileText size={13} />
+                          <span>Stok Habis</span>
+                        </button>
+                      ) : (
+                        <button onClick={() => handleOrderClick(item)} style={styles.orderBtn}>
+                          <FileText size={13} />
+                          <span>Buat RFQ</span>
+                        </button>
+                      )
                     )}
                   </div>
                 </div>
@@ -306,16 +317,18 @@ const Katalog = () => {
                     </tbody>
                   </table>
 
-                  <button 
-                    onClick={() => {
-                      setIsDetailOpen(false);
-                      handleOrderClick(selectedItem);
-                    }} 
-                    style={styles.orderBtnModal}
-                  >
-                    <FileText size={16} />
-                    <span>Buat Pengajuan Penawaran (RFQ)</span>
-                  </button>
+                  {canCreateRFQ && (
+                    <button 
+                      onClick={() => {
+                        setIsDetailOpen(false);
+                        handleOrderClick(selectedItem);
+                      }} 
+                      style={styles.orderBtnModal}
+                    >
+                      <FileText size={16} />
+                      <span>Buat Pengajuan Penawaran (RFQ)</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

@@ -50,8 +50,8 @@ const AppRoutes = () => {
             <Route path="/saw" element={<Saw />} />
           </Route>
 
-          {/* Audit Log: Manager & Operasional */}
-          <Route element={<ProtectedRoute allowedRoles={['Manager', 'Operasional']} />}>
+          {/* Audit Log: Manager & Admin */}
+          <Route element={<ProtectedRoute allowedRoles={['Manager', 'Admin']} />}>
             <Route path="/audit-log" element={<AuditLog />} />
           </Route>
 

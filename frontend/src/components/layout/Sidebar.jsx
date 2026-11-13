@@ -17,6 +17,13 @@ const Sidebar = () => {
 
   const isCurrent = (path) => location.pathname === path || (path === '/profile' && location.pathname === '/pengaturan-profil');
 
+  const userRole = (user?.role || user?.role_name || '').trim().toLowerCase();
+  const isOperasional = userRole === 'operasional';
+  const isManager = userRole === 'manager';
+  const isSales = userRole === 'sales';
+  const isAdmin = userRole === 'admin';
+  const isCustomer = userRole === 'customer';
+
   return (
     <aside style={styles.sidebar}>
       {/* Brand Header */}
@@ -60,13 +67,15 @@ const Sidebar = () => {
               {isCurrent('/transaksi') && <ChevronRight size={14} style={styles.chevron} />}
             </Link>
           </li>
-          <li>
-            <Link to="/saw" style={isCurrent('/saw') ? styles.activeLink : styles.link}>
-              <SlidersHorizontal size={18} strokeWidth={isCurrent('/saw') ? 2.2 : 1.75} style={isCurrent('/saw') ? styles.activeIcon : styles.icon} />
-              <span style={styles.linkText}>Rekomendasi SAW</span>
-              {isCurrent('/saw') && <ChevronRight size={14} style={styles.chevron} />}
-            </Link>
-          </li>
+          {!isOperasional && (isCustomer || isSales || isManager || isAdmin) && (
+            <li>
+              <Link to="/saw" style={isCurrent('/saw') ? styles.activeLink : styles.link}>
+                <SlidersHorizontal size={18} strokeWidth={isCurrent('/saw') ? 2.2 : 1.75} style={isCurrent('/saw') ? styles.activeIcon : styles.icon} />
+                <span style={styles.linkText}>Rekomendasi SAW</span>
+                {isCurrent('/saw') && <ChevronRight size={14} style={styles.chevron} />}
+              </Link>
+            </li>
+          )}
           <li>
             <Link to="/profile" style={isCurrent('/profile') ? styles.activeLink : styles.link}>
               <UserCog size={18} strokeWidth={isCurrent('/profile') ? 2.2 : 1.75} style={isCurrent('/profile') ? styles.activeIcon : styles.icon} />
@@ -77,7 +86,7 @@ const Sidebar = () => {
         </ul>
 
         {/* INVENTORY & MANAGEMENT */}
-        {(user?.role === 'Manager' || user?.role === 'Sales') && (
+        {(isManager || isSales) && (
           <>
             <div style={styles.sectionHeading}>
               <span>MANAJEMEN ALAT</span>
@@ -95,7 +104,7 @@ const Sidebar = () => {
         )}
 
         {/* SECURITY & AUDIT */}
-        {(user?.role === 'Manager' || user?.role === 'Operasional') && (
+        {(isManager || isAdmin) && (
           <>
             <div style={styles.sectionHeading}>
               <span>SISTEM & AUDIT</span>

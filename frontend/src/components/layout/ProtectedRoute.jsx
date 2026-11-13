@@ -17,9 +17,13 @@ const ProtectedRoute = ({ allowedRoles }) => {
 
   // 2. TAMBAHAN BARU: Pengecekan Hak Akses (Role)
   // Jika rute meminta role tertentu, dan role user tidak ada di dalam daftar itu
-  if (allowedRoles && !allowedRoles.includes(user?.role)) {
-    alert("Akses Ditolak: Anda tidak memiliki hak akses ke halaman ini.");
-    return <Navigate to="/dashboard" replace />; // Lempar kembali ke dashboard
+  if (allowedRoles) {
+    const userRole = (user?.role || user?.role_name || '').trim().toLowerCase();
+    const hasAccess = allowedRoles.some((r) => r.toLowerCase() === userRole);
+    if (!hasAccess) {
+      alert("Akses Ditolak: Anda tidak memiliki hak akses ke halaman ini.");
+      return <Navigate to="/dashboard" replace />; // Lempar kembali ke dashboard
+    }
   }
 
   // Jika aman, persilakan masuk ke halaman yang dituju

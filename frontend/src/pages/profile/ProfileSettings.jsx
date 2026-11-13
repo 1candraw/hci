@@ -623,7 +623,9 @@ const ProfileSettings = () => {
                 </li>
                 <li style={s.privilegeItem}>
                   <CheckCircle2 size={16} style={{ color: '#15803d' }} />
-                  <span>Eksplorasi Katalog Unit & Simulasi Rekomendasi SAW</span>
+                  <span>
+                    {user?.role === 'Operasional' ? 'Eksplorasi Katalog Unit Alat Berat' : 'Eksplorasi Katalog Unit & Simulasi Rekomendasi SAW'}
+                  </span>
                 </li>
                 <li style={s.privilegeItem}>
                   <CheckCircle2 size={16} style={{ color: '#15803d' }} />
@@ -641,7 +643,7 @@ const ProfileSettings = () => {
                     <span>Otorisasi / Approval Penawaran Harga & Mutasi DP</span>
                   </li>
                 )}
-                {(user?.role === 'Manager' || user?.role === 'Operasional') && (
+                {(user?.role === 'Manager' || user?.role === 'Admin') && (
                   <li style={s.privilegeItem}>
                     <CheckCircle2 size={16} style={{ color: '#15803d' }} />
                     <span>Live Audit Log Aktivitas & Pemantauan Keamanan Sistem</span>

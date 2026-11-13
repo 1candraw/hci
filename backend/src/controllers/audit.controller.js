@@ -4,6 +4,14 @@ const { auditEvents } = require('../services/auditlog.service');
 // 1. Ambil seluruh riwayat log aktivitas
 const getAllLogs = async (req, res) => {
   try {
+    const userRole = req.user?.role ? req.user.role.toLowerCase() : '';
+    if (userRole === 'operasional' || (userRole !== 'manager' && userRole !== 'admin')) {
+      return res.status(403).json({
+        success: false,
+        message: 'Akses ditolak: Anda tidak memiliki izin untuk mengakses audit log aktivitas.'
+      });
+    }
+
     const query = `
       SELECT 
         a.id, 
@@ -35,6 +43,14 @@ const getAllLogs = async (req, res) => {
 
 // 2. Stream Realtime Log Aktivitas menggunakan Server-Sent Events (SSE)
 const streamLogs = (req, res) => {
+  const userRole = req.user?.role ? req.user.role.toLowerCase() : '';
+  if (userRole === 'operasional' || (userRole !== 'manager' && userRole !== 'admin')) {
+    return res.status(403).json({
+      success: false,
+      message: 'Akses ditolak: Anda tidak memiliki izin untuk mengakses stream audit log aktivitas.'
+    });
+  }
+
   // Set headers untuk SSE
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache, no-transform');
