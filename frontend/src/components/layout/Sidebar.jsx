@@ -76,6 +76,24 @@ const Sidebar = () => {
               </Link>
             </li>
           )}
+          {(isManager || isSales) && (
+            <li>
+              <Link to="/master-alat-berat" style={isCurrent('/master-alat-berat') ? styles.activeLink : styles.link}>
+                <Wrench size={18} strokeWidth={isCurrent('/master-alat-berat') ? 2.2 : 1.75} style={isCurrent('/master-alat-berat') ? styles.activeIcon : styles.icon} />
+                <span style={styles.linkText}>Kelola Master Unit</span>
+                {isCurrent('/master-alat-berat') && <ChevronRight size={14} style={styles.chevron} />}
+              </Link>
+            </li>
+          )}
+          {(isManager || isAdmin) && (
+            <li>
+              <Link to="/audit-log" style={isCurrent('/audit-log') ? styles.activeLink : styles.link}>
+                <Activity size={18} strokeWidth={isCurrent('/audit-log') ? 2.2 : 1.75} style={isCurrent('/audit-log') ? styles.activeIcon : styles.icon} />
+                <span style={styles.linkText}>Audit Log Aktivitas</span>
+                {isCurrent('/audit-log') && <ChevronRight size={14} style={styles.chevron} />}
+              </Link>
+            </li>
+          )}
           <li>
             <Link to="/profile" style={isCurrent('/profile') ? styles.activeLink : styles.link}>
               <UserCog size={18} strokeWidth={isCurrent('/profile') ? 2.2 : 1.75} style={isCurrent('/profile') ? styles.activeIcon : styles.icon} />
@@ -84,42 +102,6 @@ const Sidebar = () => {
             </Link>
           </li>
         </ul>
-
-        {/* INVENTORY & MANAGEMENT */}
-        {(isManager || isSales) && (
-          <>
-            <div style={styles.sectionHeading}>
-              <span>MANAJEMEN ALAT</span>
-            </div>
-            <ul style={styles.menuList}>
-              <li>
-                <Link to="/master-alat-berat" style={isCurrent('/master-alat-berat') ? styles.activeLink : styles.link}>
-                  <Wrench size={18} strokeWidth={isCurrent('/master-alat-berat') ? 2.2 : 1.75} style={isCurrent('/master-alat-berat') ? styles.activeIcon : styles.icon} />
-                  <span style={styles.linkText}>Kelola Master Unit</span>
-                  {isCurrent('/master-alat-berat') && <ChevronRight size={14} style={styles.chevron} />}
-                </Link>
-              </li>
-            </ul>
-          </>
-        )}
-
-        {/* SECURITY & AUDIT */}
-        {(isManager || isAdmin) && (
-          <>
-            <div style={styles.sectionHeading}>
-              <span>SISTEM & AUDIT</span>
-            </div>
-            <ul style={styles.menuList}>
-              <li>
-                <Link to="/audit-log" style={isCurrent('/audit-log') ? styles.activeLink : styles.link}>
-                  <Activity size={18} strokeWidth={isCurrent('/audit-log') ? 2.2 : 1.75} style={isCurrent('/audit-log') ? styles.activeIcon : styles.icon} />
-                  <span style={styles.linkText}>Audit Log Aktivitas</span>
-                  {isCurrent('/audit-log') && <ChevronRight size={14} style={styles.chevron} />}
-                </Link>
-              </li>
-            </ul>
-          </>
-        )}
       </div>
 
       {/* Footer Info Box */}
