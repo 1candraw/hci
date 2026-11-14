@@ -1,3 +1,4 @@
+import { useAuth } from '../../hooks/useAuth';
 import {
   Truck,
   Zap,
@@ -19,9 +20,17 @@ const AlatBeratDetailModal = ({
   unit,
   onRFQ,
   onToggleCompare,
-  isCompared = false
+  isCompared = false,
+  showRFQ
 }) => {
   if (!isOpen || !unit) return null;
+
+  const { user } = useAuth();
+  const userRole = (user?.role || user?.role_name || '').trim().toLowerCase();
+  const isInternalRole = ['manager', 'sales', 'operasional', 'admin'].includes(userRole);
+  const canCreateRFQ = showRFQ !== undefined
+    ? Boolean(showRFQ && onRFQ)
+    : (user ? (userRole === 'customer' && Boolean(onRFQ)) : Boolean(onRFQ));
 
   const stockQty = unit.stok !== undefined ? unit.stok : (unit.stock !== undefined ? unit.stock : 0);
   const isOutOfStock = Number(stockQty) <= 0;
@@ -100,51 +109,57 @@ const AlatBeratDetailModal = ({
               </div>
 
               {/* Quick Actions in Summary */}
-              <div style={s.quickActionWrap}>
-                {isOutOfStock ? (
-                  <button
-                    disabled
-                    style={s.btnPrimaryRFQDisabled}
-                    title="Unit ini sedang tidak memiliki stok tersedia"
-                  >
-                    <FileText size={16} />
-                    <span>Stok Unit Habis</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      onClose();
-                      onRFQ(unit);
-                    }}
-                    style={s.btnPrimaryRFQ}
-                  >
-                    <FileText size={16} />
-                    <span>Ajukan Penawaran (RFQ)</span>
-                  </button>
-                )}
-
-                <button
-                  onClick={() => onToggleCompare(unit)}
-                  style={{
-                    ...s.btnToggleCompare,
-                    backgroundColor: isCompared ? '#ecfccb' : '#ffffff',
-                    color: isCompared ? '#14532d' : '#334155',
-                    borderColor: isCompared ? '#84cc16' : '#cbd5e1',
-                  }}
-                >
-                  {isCompared ? (
-                    <>
-                      <Check size={16} style={{ color: '#15803d' }} />
-                      <span>Dipilih untuk Dibandingkan</span>
-                    </>
-                  ) : (
-                    <>
-                      <Scale size={16} />
-                      <span>+ Bandingkan Unit Ini</span>
-                    </>
+              {(canCreateRFQ || onToggleCompare) && (
+                <div style={s.quickActionWrap}>
+                  {canCreateRFQ && (
+                    isOutOfStock ? (
+                      <button
+                        disabled
+                        style={s.btnPrimaryRFQDisabled}
+                        title="Unit ini sedang tidak memiliki stok tersedia"
+                      >
+                        <FileText size={16} />
+                        <span>Stok Unit Habis</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          onClose();
+                          onRFQ?.(unit);
+                        }}
+                        style={s.btnPrimaryRFQ}
+                      >
+                        <FileText size={16} />
+                        <span>Ajukan Penawaran (RFQ)</span>
+                      </button>
+                    )
                   )}
-                </button>
-              </div>
+
+                  {onToggleCompare && (
+                    <button
+                      onClick={() => onToggleCompare(unit)}
+                      style={{
+                        ...s.btnToggleCompare,
+                        backgroundColor: isCompared ? '#ecfccb' : '#ffffff',
+                        color: isCompared ? '#14532d' : '#334155',
+                        borderColor: isCompared ? '#84cc16' : '#cbd5e1',
+                      }}
+                    >
+                      {isCompared ? (
+                        <>
+                          <Check size={16} style={{ color: '#15803d' }} />
+                          <span>Dipilih untuk Dibandingkan</span>
+                        </>
+                      ) : (
+                        <>
+                          <Scale size={16} />
+                          <span>+ Bandingkan Unit Ini</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* Key Trust Badges */}
               <div style={s.trustBadgeList}>
@@ -276,47 +291,51 @@ const AlatBeratDetailModal = ({
             Tutup
           </button>
           <div style={s.footerRightActions}>
-            <button
-              onClick={() => onToggleCompare(unit)}
-              style={{
-                ...s.btnCompareFooter,
-                backgroundColor: isCompared ? '#ecfccb' : '#ffffff',
-                color: isCompared ? '#14532d' : '#334155',
-                borderColor: isCompared ? '#84cc16' : '#cbd5e1',
-              }}
-            >
-              {isCompared ? (
-                <>
-                  <Check size={15} style={{ color: '#15803d' }} />
-                  <span>Dalam Daftar Banding</span>
-                </>
-              ) : (
-                <>
-                  <Scale size={15} />
-                  <span>+ Bandingkan</span>
-                </>
-              )}
-            </button>
-            {isOutOfStock ? (
+            {onToggleCompare && (
               <button
-                disabled
-                style={s.btnPrimaryActionDisabled}
-                title="Unit ini sedang tidak memiliki stok tersedia"
-              >
-                <FileText size={16} />
-                <span>Stok Habis</span>
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  onClose();
-                  onRFQ(unit);
+                onClick={() => onToggleCompare(unit)}
+                style={{
+                  ...s.btnCompareFooter,
+                  backgroundColor: isCompared ? '#ecfccb' : '#ffffff',
+                  color: isCompared ? '#14532d' : '#334155',
+                  borderColor: isCompared ? '#84cc16' : '#cbd5e1',
                 }}
-                style={s.btnPrimaryAction}
               >
-                <FileText size={16} />
-                <span>Ajukan RFQ Unit Ini</span>
+                {isCompared ? (
+                  <>
+                    <Check size={15} style={{ color: '#15803d' }} />
+                    <span>Dalam Daftar Banding</span>
+                  </>
+                ) : (
+                  <>
+                    <Scale size={15} />
+                    <span>+ Bandingkan</span>
+                  </>
+                )}
               </button>
+            )}
+            {canCreateRFQ && (
+              isOutOfStock ? (
+                <button
+                  disabled
+                  style={s.btnPrimaryActionDisabled}
+                  title="Unit ini sedang tidak memiliki stok tersedia"
+                >
+                  <FileText size={16} />
+                  <span>Stok Habis</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onRFQ?.(unit);
+                  }}
+                  style={s.btnPrimaryAction}
+                >
+                  <FileText size={16} />
+                  <span>Ajukan RFQ Unit Ini</span>
+                </button>
+              )
             )}
           </div>
         </div>

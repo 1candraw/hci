@@ -58,6 +58,10 @@ const PRESET_SKENARIO = {
 
 const Saw = () => {
   const { user } = useAuth();
+  const userRole = (user?.role || user?.role_name || '').trim().toLowerCase();
+  // Role internal (Manager, Sales, Operasional, Admin) tidak membuat RFQ pembelian unit
+  const canCreateRFQ = userRole === 'customer';
+
   const [ranking, setRanking] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -164,6 +168,7 @@ const Saw = () => {
   };
 
   const handleOrderClick = (mesin) => {
+    if (!canCreateRFQ) return;
     const stock = Number(mesin.stok ?? mesin.stock ?? 1);
     if (stock <= 0) {
       alert('Maaf, stok unit ini sedang habis (0 unit). Silakan pilih unit rekomendasi lainnya.');
@@ -449,27 +454,29 @@ const Saw = () => {
                             <Eye size={13} />
                             <span>Detail</span>
                           </button>
-                          {Number(item.stok ?? item.stock ?? 1) <= 0 ? (
-                            <button 
-                              disabled
-                              style={{
-                                ...styles.orderBtn,
-                                backgroundColor: '#94a3b8',
-                                color: '#ffffff',
-                                cursor: 'not-allowed',
-                                boxShadow: 'none'
-                              }}
-                            >
-                              <span>Stok Habis</span>
-                            </button>
-                          ) : (
-                            <button 
-                              onClick={() => handleOrderClick(item)} 
-                              style={styles.orderBtn}
-                            >
-                              <FileText size={13} />
-                              <span>Buat RFQ</span>
-                            </button>
+                          {canCreateRFQ && (
+                            Number(item.stok ?? item.stock ?? 1) <= 0 ? (
+                              <button 
+                                disabled
+                                style={{
+                                  ...styles.orderBtn,
+                                  backgroundColor: '#94a3b8',
+                                  color: '#ffffff',
+                                  cursor: 'not-allowed',
+                                  boxShadow: 'none'
+                                }}
+                              >
+                                <span>Stok Habis</span>
+                              </button>
+                            ) : (
+                              <button 
+                                onClick={() => handleOrderClick(item)} 
+                                style={styles.orderBtn}
+                              >
+                                <FileText size={13} />
+                                <span>Buat RFQ</span>
+                              </button>
+                            )
                           )}
                         </div>
                       </td>
@@ -506,10 +513,11 @@ const Saw = () => {
         isOpen={detailModalOpen}
         onClose={() => setDetailModalOpen(false)}
         unit={selectedDetailUnit}
-        onRFQ={(mesin) => {
+        showRFQ={canCreateRFQ}
+        onRFQ={canCreateRFQ ? ((mesin) => {
           setDetailModalOpen(false);
           handleOrderClick(mesin);
-        }}
+        }) : null}
       />
     </div>
   );
